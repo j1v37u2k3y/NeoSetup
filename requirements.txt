@@ -16,7 +16,7 @@ pylint>=2.15.0
 # Security Scanning
 detect-secrets>=1.4.0
 bandit>=1.7.0
-safety==2.3.5
+safety==3.6.1
 
 # Documentation Tools
 markdown>=3.4.0
