@@ -49,7 +49,7 @@ jobs:
           - { name: 'fedora-37', dockerfile: 'Dockerfile.fedora-37' }
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -103,7 +103,7 @@ jobs:
         ]
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v4
@@ -155,7 +155,7 @@ jobs:
           - { name: 'rocky-9' }
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v4
@@ -190,7 +190,7 @@ jobs:
     if: github.event.inputs.test_all_operators == 'true'
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v4
