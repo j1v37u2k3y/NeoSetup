@@ -1,0 +1,18 @@
+---
+# Markdownlint configuration for NeoSetup
+# Stricter rules for better code quality
+
+# Default state for all rules
+default: true
+
+# Line length - reasonable limit for readability
+MD013:
+  line_length: 120
+  code_blocks: false
+  tables: false
+
+# Allow inline HTML (sometimes needed for formatting)
+MD033: false
+
+# First line in file should be a heading (disable for flexibility)
+MD041: false

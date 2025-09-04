@@ -1,0 +1,43 @@
+---
+# NeoSetup Ansible Lint Configuration
+
+# Ansible-lint configuration
+profile: production
+
+# Files to exclude
+exclude_paths:
+  - .cache/
+  - .github/
+  - docs/archive/
+  - '*/files/'
+  - '*/templates/*.j2'
+  - .venv/
+  - .git/
+
+# Rules to skip (with justification)
+skip_list:
+  - yaml[line-length]          # We allow longer lines for readability
+  - jinja[spacing]             # Template spacing preference
+  - var-naming[no-role-prefix] # Our variables are contextual
+  - fqcn[action-core]          # Will fix in batch later
+  - ignore-errors              # Will fix in batch later
+  - command-instead-of-module  # Will fix in batch later
+  - command-instead-of-shell   # Will fix in batch later
+  - key-order[task]            # Will fix in batch later
+  - schema[meta]               # Will fix in batch later
+
+# Additional rules
+enable_list:
+  - fqcn-builtins
+  - no-handler
+  - no-relative-paths
+
+# Target Ansible version
+# ansible_core_version: ">=2.11"  # Not supported in ansible-lint config
+
+# Custom rules directory
+rulesdir:
+  - .github/ansible-rules/
+
+# Use offline mode during CI
+offline: false

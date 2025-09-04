@@ -1,0 +1,70 @@
+# Gitleaks configuration for NeoSetup
+# Prevents false positives in our development workflow
+
+title = "gitleaks config for NeoSetup"
+
+[extend]
+# Use default rules but customize for our use case
+useDefault = true
+
+[[rules]]
+description = "Generic Secret"
+id = "generic-secret"
+regex = '''(?i)(password\s*[=:]\s*['"](.{4,}?)['"])'''
+keywords = ["password", "passwd", "pwd"]
+
+[[rules]]
+description = "Generic API Key"
+id = "generic-api-key"
+regex = '''(?i)(api[_-]?key\s*[=:]\s*['"](.{16,})['"])'''
+keywords = ["api", "key"]
+
+# Allowlist for false positives
+[[rules.allowlist]]
+description = "Ignore test passwords and placeholder values"
+paths = [
+  '''.*test.*''',
+  '''.*example.*''',
+  '''.*template.*''',
+  '''.*\.md$''',
+  '''.*CLAUDE\.md$''',
+  '''.*README\.md$'''
+]
+
+[[rules.allowlist]]
+description = "Ignore example configurations"
+regexes = [
+  '''password.*example''',
+  '''password.*placeholder''',
+  '''password.*changeme''',
+  '''password.*test''',
+  '''YOUR_.*_HERE''',
+  '''<.*>''',
+  '''\$\{.*\}''',
+  '''\{\{.*\}\}'''
+]
+
+# Skip certain file types entirely
+[allowlist]
+paths = [
+  '''.*\.git/.*''',
+  '''.*\.venv/.*''',
+  '''.*__pycache__/.*''',
+  '''.*\.pyc$''',
+  '''.*\.lock$''',
+  '''.*\.log$'''
+]
+
+commits = [
+  # Add commit hashes here if needed to skip specific commits
+]
+
+# Global allowlist for common false positives
+regexes = [
+  '''password.*placeholder''',
+  '''password.*example''',
+  '''key.*example''',
+  '''secret.*placeholder''',
+  '''token.*example''',
+  '''ansible_ssh_pass.*test'''
+]

@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""
+Generate CI/CD test summary for GitHub Actions.
+Outputs results to both console and GitHub Step Summary.
+"""
+
+import os
+import sys
+
+
+def log_both(message, summary_file=None):
+    """Output message to both console and GitHub Step Summary"""
+    print(message)
+    if summary_file:
+        summary_file.write(message + "\n")
+
+
+def get_job_status_emoji(result):
+    """Get emoji and formatting for job result"""
+    if result == "success":
+        return "✅", "**PASSED**"
+    if result == "failure":
+        return "❌", "**FAILED**"
+    return "⚠️", f"**{result.upper()}**"
+
+
+def generate_summary():
+    """Generate comprehensive test summary"""
+    # Get GitHub Step Summary file path
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+
+    # Job results from environment variables
+    jobs = {
+        "yaml-validation": os.environ.get("YAML_VALIDATION_RESULT", "unknown"),
+        "ansible-lint": os.environ.get("ANSIBLE_LINT_RESULT", "unknown"),
+        "python-quality": os.environ.get("PYTHON_QUALITY_RESULT", "unknown"),
+        "shell-scripts": os.environ.get("SHELL_SCRIPTS_RESULT", "unknown"),
+        "markdown-quality": os.environ.get("MARKDOWN_QUALITY_RESULT", "unknown"),
+        "security-scan": os.environ.get("SECURITY_SCAN_RESULT", "unknown"),
+        "secret-scan": os.environ.get("SECRET_SCAN_RESULT", "unknown"),
+        "operator-validation": os.environ.get("OPERATOR_VALIDATION_RESULT", "unknown"),
+        "ansible-syntax": os.environ.get("ANSIBLE_SYNTAX_RESULT", "unknown"),
+        "docs-validation": os.environ.get("DOCS_VALIDATION_RESULT", "unknown"),
+    }
+
+    # Critical jobs that must pass for success
+    critical_jobs = ["yaml-validation", "ansible-lint", "operator-validation", "ansible-syntax"]
+
+    # Open summary file with proper context manager
+    if summary_path:
+        try:
+            with open(summary_path, "a", encoding="utf-8") as summary_file:
+                _write_summary(jobs, critical_jobs, summary_file)
+        except OSError as e:
+            print(f"Warning: Could not open summary file: {e}")
+            _write_summary(jobs, critical_jobs, None)
+    else:
+        _write_summary(jobs, critical_jobs, None)
+
+    # Set exit code based on critical job results
+    critical_passed = all(jobs[job] == "success" for job in critical_jobs)
+    return 0 if critical_passed else 1
+
+
+def _write_summary(jobs, critical_jobs, summary_file):
+    """Write the actual summary content"""
+    # Header
+    log_both("# 🚀 NeoSetup CI/CD Test Summary", summary_file)
+    log_both("", summary_file)
+    log_both("## 📋 Test Results", summary_file)
+    log_both("", summary_file)
+
+    # Core validation results
+    log_both("### 🔍 Core Validation", summary_file)
+    core_jobs = ["yaml-validation", "ansible-lint", "operator-validation", "ansible-syntax"]
+    for job in core_jobs:
+        emoji, status = get_job_status_emoji(jobs[job])
+        log_both(f"{emoji} {job}: {status}", summary_file)
+
+    log_both("", summary_file)
+
+    # Quality checks
+    log_both("### 🛠️ Code Quality", summary_file)
+    quality_jobs = ["python-quality", "shell-scripts", "markdown-quality"]
+    for job in quality_jobs:
+        emoji, status = get_job_status_emoji(jobs[job])
+        log_both(f"{emoji} {job}: {status}", summary_file)
+
+    log_both("", summary_file)
+
+    # Security scans
+    log_both("### 🔒 Security Scanning", summary_file)
+    security_jobs = ["security-scan", "secret-scan"]
+    for job in security_jobs:
+        emoji, status = get_job_status_emoji(jobs[job])
+        log_both(f"{emoji} {job}: {status}", summary_file)
+
+    log_both("", summary_file)
+
+    # Additional validations
+    log_both("### 📚 Additional Validations", summary_file)
+    additional_jobs = ["docs-validation"]
+    for job in additional_jobs:
+        emoji, status = get_job_status_emoji(jobs[job])
+        log_both(f"{emoji} {job}: {status}", summary_file)
+
+    log_both("", summary_file)
+
+    # Overall status
+    critical_passed = all(jobs[job] == "success" for job in critical_jobs)
+
+    if critical_passed:
+        log_both("## 🎉 Overall Status: SUCCESS", summary_file)
+        log_both("", summary_file)
+        log_both("🎯 **Operator System**: Ready for deployment!", summary_file)
+        log_both("🟢 **Matrix Theme**: Fully operational!", summary_file)
+        log_both("🚀 **All critical tests passed! NeoSetup is ready to rock!**", summary_file)
+    else:
+        failed_critical = [job for job in critical_jobs if jobs[job] != "success"]
+        log_both("## ⚠️ Overall Status: CRITICAL ISSUES", summary_file)
+        log_both("", summary_file)
+        log_both(f"❌ Critical jobs failed: {', '.join(failed_critical)}", summary_file)
+        log_both("🔧 **Action Required**: Fix critical issues before deployment", summary_file)
+
+    log_both("", summary_file)
+    log_both("---", summary_file)
+    log_both("*Generated by NeoSetup CI/CD Pipeline*", summary_file)
+
+
+def main():
+    """Main entry point"""
+    sys.exit(generate_summary())
+
+
+if __name__ == "__main__":
+    main()

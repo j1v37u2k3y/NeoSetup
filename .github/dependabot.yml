@@ -1,0 +1,55 @@
+---
+# Dependabot configuration for NeoSetup
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    reviewers:
+      - "jiveturkey"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Python dependencies (for scripts)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    reviewers:
+      - "jiveturkey"
+    labels:
+      - "dependencies"
+      - "python"
+    # Only security updates for Python to avoid breaking changes
+    open-pull-requests-limit: 5
+
+  # Docker dependencies (if we add Dockerfiles later)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "11:00"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    reviewers:
+      - "jiveturkey"
+    labels:
+      - "dependencies"
+      - "docker"

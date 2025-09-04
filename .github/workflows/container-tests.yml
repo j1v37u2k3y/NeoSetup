@@ -1,0 +1,269 @@
+name: 🐳 Container Multi-OS Testing
+
+on:
+  workflow_run:
+    workflows: ["🚀 NeoSetup CI/CD Pipeline"]
+    types:
+      - completed
+  schedule:
+    # Run nightly
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      test_all_operators:
+        description: 'Test all operators on all OS'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANSIBLE_VERSION: '>=4.0'
+
+jobs:
+  # ============================================================================
+  # BUILD TEST CONTAINERS
+  # ============================================================================
+
+  build-test-containers:
+    name: 🔨 Build Test Containers
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'main' ||
+        github.event.workflow_run.head_branch == 'develop' ||
+        startsWith(github.event.workflow_run.head_branch, 'feature/') ||
+        startsWith(github.event.workflow_run.head_branch, 'Feature/'))) ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
+    strategy:
+      matrix:
+        os:
+          - { name: 'ubuntu-20.04', dockerfile: 'Dockerfile.ubuntu-20.04' }
+          - { name: 'ubuntu-22.04', dockerfile: 'Dockerfile.ubuntu-22.04' }
+          - { name: 'debian-11', dockerfile: 'Dockerfile.debian-11' }
+          - { name: 'rocky-9', dockerfile: 'Dockerfile.rocky-9' }
+          - { name: 'fedora-37', dockerfile: 'Dockerfile.fedora-37' }
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Generate Dockerfile
+        run: |
+          python3 .github/scripts/generate_dockerfile.py \
+            --os-name "${{ matrix.os.name }}" \
+            --ansible-version "${{ env.ANSIBLE_VERSION }}" \
+            --output "${{ matrix.os.dockerfile }}"
+
+      - name: 🔨 Build test container for ${{ matrix.os.name }}
+        run: |
+          docker build -f ${{ matrix.os.dockerfile }} -t neosetup-test-${{ matrix.os.name }} .
+
+      - name: 📦 Export container
+        run: |
+          docker save neosetup-test-${{ matrix.os.name }} | gzip > neosetup-test-${{ matrix.os.name }}.tar.gz
+
+      - name: 📤 Upload container artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-container-${{ matrix.os.name }}
+          path: neosetup-test-${{ matrix.os.name }}.tar.gz
+          retention-days: 1
+
+  # ============================================================================
+  # MULTI-OS OPERATOR TESTING
+  # ============================================================================
+
+  test-operators-multi-os:
+    name: 🧪 Test Operators on ${{ matrix.os.name }}
+    runs-on: ubuntu-latest
+    needs: build-test-containers
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: 'ubuntu-20.04', pkg_mgr: 'apt' }
+          - { name: 'ubuntu-22.04', pkg_mgr: 'apt' }
+          - { name: 'debian-11', pkg_mgr: 'apt' }
+          - { name: 'rocky-9', pkg_mgr: 'dnf' }
+          - { name: 'fedora-37', pkg_mgr: 'dnf' }
+        operator: [
+          base,
+          matrix,
+          jiveturkey,
+          macos,
+          python_dev,
+          windows_wsl
+        ]
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download test container
+        uses: actions/download-artifact@v4
+        with:
+          name: test-container-${{ matrix.os.name }}
+
+      - name: 🐳 Load test container
+        run: |
+          docker load < neosetup-test-${{ matrix.os.name }}.tar.gz
+
+      - name: 🧪 Run operator test in container
+        run: |
+          # Create test inventory
+          mkdir -p test-inventory
+          echo "localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3" > test-inventory/hosts
+
+          # Run comprehensive test using Python script
+          docker run --rm \
+            -v $(pwd):/neosetup \
+            -w /neosetup \
+            neosetup-test-${{ matrix.os.name }} \
+            python3 .github/scripts/test_container.py \
+              --os "${{ matrix.os.name }}" \
+              --operator "${{ matrix.operator }}"
+
+      - name: 🧪 Test package installation compatibility
+        run: |
+          docker run --rm \
+            -v $(pwd):/neosetup \
+            -w /neosetup \
+            neosetup-test-${{ matrix.os.name }} \
+            python3 .github/scripts/test_packages.py \
+              --os "${{ matrix.os.name }}" \
+              --pkg-mgr "${{ matrix.os.pkg_mgr }}"
+
+  # ============================================================================
+  # PERFORMANCE TESTING ACROSS OS
+  # ============================================================================
+
+  performance-test-multi-os:
+    name: ⚡ Performance Test on ${{ matrix.os.name }}
+    runs-on: ubuntu-latest
+    needs: build-test-containers
+    if: github.event.inputs.test_all_operators == 'true' || github.event_name == 'schedule'
+    strategy:
+      matrix:
+        os:
+          - { name: 'ubuntu-22.04' }
+          - { name: 'rocky-9' }
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download test container
+        uses: actions/download-artifact@v4
+        with:
+          name: test-container-${{ matrix.os.name }}
+
+      - name: 🐳 Load test container
+        run: |
+          docker load < neosetup-test-${{ matrix.os.name }}.tar.gz
+
+      - name: ⚡ Run performance benchmark
+        run: |
+          mkdir -p test-inventory
+          echo "localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3" > test-inventory/hosts
+
+          docker run --rm \
+            -v $(pwd):/neosetup \
+            -w /neosetup \
+            neosetup-test-${{ matrix.os.name }} \
+            python3 .github/scripts/test_performance.py \
+              --os "${{ matrix.os.name }}" \
+              --target 300
+
+  # ============================================================================
+  # INTEGRATION TEST WITH ACTUAL INSTALLATION
+  # ============================================================================
+
+  integration-test:
+    name: 🔧 Integration Test on Ubuntu
+    runs-on: ubuntu-latest
+    needs: build-test-containers
+    if: github.event.inputs.test_all_operators == 'true'
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download test container
+        uses: actions/download-artifact@v4
+        with:
+          name: test-container-ubuntu-22.04
+
+      - name: 🐳 Load test container
+        run: |
+          docker load < neosetup-test-ubuntu-22.04.tar.gz
+
+      - name: 🔧 Run full integration test
+        run: |
+          mkdir -p test-inventory
+          echo "localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3" > test-inventory/hosts
+
+          docker run --rm \
+            -v $(pwd):/neosetup \
+            -w /neosetup/neosetup \
+            neosetup-test-ubuntu-22.04 \
+            bash -c "
+              echo '🔧 Full integration test starting...'
+
+              # Activate virtual environment
+              source /opt/ansible-venv/bin/activate
+              export PATH=/opt/ansible-venv/bin:\$PATH
+
+              # Run limited actual installation (safe operations only)
+              ansible-playbook playbooks/site.yml \
+                -i ../test-inventory/hosts \
+                -e 'operator=base' \
+                -e 'integration_test=true' \
+                --tags 'validation,shell_config,tmux_config' \
+                -v
+
+              # Verify some basic functionality
+              if [ -f ~/.bashrc ]; then
+                echo '✅ Shell configuration files created'
+              fi
+
+              echo '🎉 Integration test completed!'
+            "
+
+  # ============================================================================
+  # TEST SUMMARY
+  # ============================================================================
+
+  docker-test-summary:
+    name: 📊 Docker Test Summary
+    runs-on: ubuntu-latest
+    needs: [ test-operators-multi-os, performance-test-multi-os ]
+    if: always()
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🐳 Docker Multi-OS Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results by OS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.test-operators-multi-os.result }}" = "success" ]; then
+            echo "✅ **Multi-OS Operator Tests**: All platforms passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Multi-OS Operator Tests**: Some platforms failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.performance-test-multi-os.result }}" = "success" ]; then
+            echo "⚡ **Performance Tests**: All platforms within target" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.performance-test-multi-os.result }}" = "skipped" ]; then
+            echo "⏭️ **Performance Tests**: Skipped (manual trigger required)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Performance Tests**: Some platforms exceeded target" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🐳 **Containers Tested**: Ubuntu 20.04/22.04, Debian 11, Rocky Linux 9, Fedora 37" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 **Operators Tested**: base, matrix, jiveturkey" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,80 @@
+---
+# YAML Lint Configuration for NeoSetup
+# Comprehensive rules for formatting, security, and best practices
+
+extends: default
+
+rules:
+  # Line length - accommodate Ansible variables and templates
+  line-length:
+    max: 250
+    level: warning
+
+  # Comments - allow reasonable comment spacing
+  comments:
+    min-spaces-from-content: 1
+
+  # Comments indentation - be flexible with Ansible docs
+  comments-indentation: disable
+
+  # Document start - require --- for clarity
+  document-start:
+    present: true
+
+  # Empty lines - be more flexible for readability
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  # Indentation - standard 2 spaces
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Key ordering - don't enforce (Ansible roles have logical grouping)
+  key-ordering: disable
+
+  # Octal values - prevent security issues with file permissions
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+  # Quoted strings - disable for Ansible compatibility
+  quoted-strings: disable
+
+  # Truthy values - enforce boolean consistency
+  truthy:
+    allowed-values: [ 'true', 'false', 'yes', 'no' ]
+    check-keys: true
+
+  # Brackets and braces - consistent spacing
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Colons - consistent spacing
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  # Commas - consistent spacing
+  commas:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+# File patterns to check
+ignore: |
+  .github/workflows/
+  node_modules/
+  venv/
+  .venv/
+  build/
+  dist/
+  *.min.yml
+  *.min.yaml
