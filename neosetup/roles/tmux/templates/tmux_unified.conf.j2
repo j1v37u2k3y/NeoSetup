@@ -1,0 +1,88 @@
+{% include 'shared/header.j2' %}
+
+{% include 'shared/basic_settings.j2' %}
+
+{% include 'shared/key_bindings.j2' %}
+
+# ============================================================================
+# THEME SELECTION
+# ============================================================================
+{% set tmux_theme = tmux_config.theme | default('matrix' if neosetup_operator in ['matrix', 'jiveturkey'] else 'base') %}
+{% if tmux_theme == 'matrix' %}
+  {% include 'themes/matrix.j2' %}
+{% elif tmux_theme == 'base' %}
+  {% include 'themes/base.j2' %}
+{% else %}
+  # Custom theme: {{ tmux_theme }}
+  {% if tmux_config.custom_theme is defined %}
+    {{ tmux_config.custom_theme }}
+  {% endif %}
+{% endif %}
+
+{% include 'shared/status_bar.j2' %}
+
+# ============================================================================
+# COPY MODE SETTINGS
+# ============================================================================
+# Use vi keys in copy mode
+setw -g mode-keys vi
+
+# Setup copy mode bindings
+bind -T copy-mode-vi 'v' send -X begin-selection
+bind -T copy-mode-vi 'V' send -X select-line
+bind -T copy-mode-vi 'r' send -X rectangle-toggle
+
+# Platform-specific copy commands
+{% if ansible_os_family == 'Darwin' %}
+  bind -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'pbcopy'
+  bind -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'pbcopy'
+{% else %}
+  bind -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+  bind -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+{% endif %}
+
+# ============================================================================
+# WINDOW & PANE SETTINGS
+# ============================================================================
+# Automatically set window title
+set-window-option -g automatic-rename {{ 'on' if tmux_config.auto_rename | default(true) else 'off' }}
+set-option -g set-titles {{ 'on' if tmux_config.set_titles | default(true) else 'off' }}
+set-option -g set-titles-string '#{pane_current_path} - #{pane_current_command}'
+
+# Pane settings
+set -g pane-base-index 1
+set -g main-pane-width 80
+set -g main-pane-height 24
+
+# ============================================================================
+# PERFORMANCE SETTINGS
+# ============================================================================
+# Increase scrollback buffer size
+set -g history-limit {{ tmux_config.history_limit | default('50000') }}
+
+# Increase tmux messages display duration
+set -g display-time {{ tmux_config.display_time | default('4000') }}
+
+# Refresh 'status-left' and 'status-right' more often
+set -g status-interval {{ tmux_config.status_interval | default('5') }}
+
+# Address vim mode switching delay
+set -s escape-time 0
+
+# ============================================================================
+# CUSTOM CONFIGURATIONS
+# ============================================================================
+{% if tmux_config.custom_configs is defined %}
+  # Custom configurations from operator
+  {% for config in tmux_config.custom_configs %}
+    {{ config }}
+  {% endfor %}
+{% endif %}
+
+# ============================================================================
+# LOCAL OVERRIDES
+# ============================================================================
+# Source local configuration if it exists
+if-shell "[ -f ~/.tmux.conf.local ]" 'source ~/.tmux.conf.local'
+
+{% include 'shared/plugins.j2' %}

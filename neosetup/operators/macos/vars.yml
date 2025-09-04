@@ -1,0 +1,68 @@
+---
+# macOS Operator - Enhanced macOS experience with Homebrew integration
+# Extends base operator with macOS-specific tools and configurations
+
+# Required operator metadata
+operator_name: "macos"
+operator_version: "1.0.0"
+operator_description: "Optimized setup for macOS with Homebrew, productivity tools, and window management"
+operator_author: "NeoSetup Team"
+operator_tags:
+  - "productivity"
+  - "development"
+extends: "base"
+
+# Operator info for display
+operator_info:
+  name: "macOS Power User"
+  description: "Optimized setup for macOS with Homebrew, productivity tools, and window management"
+  version: "1.0.0"
+  supported_platforms:
+    - darwin
+  features:
+    - "🍎 Complete Homebrew integration with proper architecture detection"
+    - "🪟 Window management with Rectangle"
+    - "📊 System monitoring with Stats"
+    - "⚙️ Configuration sync with Mackup"
+    - "🛍️ Mac App Store CLI with mas"
+    - "📁 Enhanced file type associations with duti"
+    - "🔧 macOS-optimized shell configuration"
+
+# macOS-specific configuration
+macos_config:
+  enable_homebrew_analytics: false
+  install_xcode_tools: true
+  configure_dock: true
+  setup_finder: true
+
+# Tool configuration
+tools_config:
+  additional_tools:
+    - duti
+    - mas
+    - mackup
+    - stats
+    - rectangle
+  macos_specific_tools: true
+
+# Shell configuration optimized for macOS
+shell_config:
+  enable_homebrew_completions: true
+  paths:
+    - "/opt/homebrew/bin"
+    - "/opt/homebrew/sbin"
+    - "/usr/local/bin"
+    - "/usr/local/sbin"
+  aliases:
+    - { alias: "brewup", command: "brew update && brew upgrade && brew cleanup" }
+    - { alias: "cask", command: "brew install --cask" }
+    - { alias: "services", command: "brew services" }
+    - { alias: "showfiles", command: "defaults write com.apple.finder AppleShowAllFiles YES; killall Finder" }
+    - { alias: "hidefiles", command: "defaults write com.apple.finder AppleShowAllFiles NO; killall Finder" }
+
+# Tmux configuration for macOS
+tmux_config:
+  enable_mouse: true
+  copy_command: "pbcopy"
+  paste_command: "pbpaste"
+  macos_specific_bindings: true

@@ -1,0 +1,45 @@
+---
+# Docker Role Default Variables
+
+# Basic installation options
+neosetup_install_docker: true
+neosetup_add_user_to_docker: true
+
+# Docker installation options
+docker_install_compose: true
+docker_compose_version: "v2"  # v2 is now the default
+docker_install_buildx: true
+docker_enable_buildkit: true
+
+# Docker daemon configuration
+docker_config:
+  log_driver: "json-file"
+  log_opts:
+    max_size: "10m"
+    max_file: "3"
+  storage_driver: "overlay2"
+  live_restore: true
+  experimental: true
+
+# Security options
+docker_security:
+  userns_remap: false  # Enable user namespace remapping
+  icc: false  # Disable inter-container communication by default
+
+# BuildKit configuration
+docker_buildkit:
+  enabled: true
+  inline_cache: true
+
+# Docker Compose v2 settings
+docker_compose_v2:
+  install_method: "plugin"  # plugin or standalone
+
+# Container runtime options
+docker_runtime:
+  default: "runc"
+
+# Cleanup configuration
+docker_prune:
+  enabled: false
+  schedule: "weekly"  # daily, weekly, monthly

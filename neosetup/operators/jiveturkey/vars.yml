@@ -1,0 +1,450 @@
+---
+# JiveTurkey Operator Configuration
+# Power-user setup with security tools and productivity enhancements
+
+# Operator metadata
+operator_name: "jiveturkey"
+operator_version: "2.1.0"
+operator_description: "Power-user setup with security tools and productivity enhancements"
+extends: "matrix"
+
+# Shell configuration (extends matrix)
+shell_config:
+  # Keep Matrix theme
+  oh_my_zsh_theme: "powerlevel10k/powerlevel10k"
+
+  # Power-user plugins
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - kubectl
+    - terraform
+    - aws
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    - history-substring-search
+    - colored-man-pages
+    - command-not-found
+    - extract
+    - z
+
+  # JiveTurkey's productivity aliases (includes matrix aliases)
+  aliases:
+    # Matrix aliases (inherited from matrix operator)
+    "matrix": "cmatrix"
+    "rain": "cmatrix -b"
+    "neo": "neofetch"
+    "hack": "echo '🎭 Hacking the Matrix...'"
+    "redpill": "echo '🔴💊 Welcome to the real world'"
+    "bluepill": "echo '🔵💊 Back to sleep...'"
+
+    # Enhanced navigation
+    "..": "cd .."
+    "...": "cd ../.."
+    "....": "cd ../../.."
+    ".....": "cd ../../../.."
+    "~": "cd ~"
+    "back": "cd -"
+
+    # Better ls with eza fallback
+    "ll": "eza -la --color=always --group-directories-first 2>/dev/null || ls -alF --color=auto"
+    "la": "eza -a --color=always --group-directories-first 2>/dev/null || ls -A --color=auto"
+    "ls": "eza --color=always --group-directories-first 2>/dev/null || ls --color=auto"
+    "lt": "eza -T --color=always --group-directories-first 2>/dev/null || tree"
+    "l.": "eza -a | grep -E '^\\.' 2>/dev/null || ls -la | grep '^\\.' "
+
+    # Git power user
+    "g": "git"
+    "gs": "git status -sb"
+    "ga": "git add"
+    "gaa": "git add --all"
+    "gc": "git commit"
+    "gcm": "git commit -m"
+    "gca": "git commit --amend"
+    "gp": "git push"
+    "gpl": "git pull"
+    "gf": "git fetch"
+    "gd": "git diff"
+    "gdc": "git diff --cached"
+    "gb": "git branch"
+    "gco": "git checkout"
+    "gcb": "git checkout -b"
+    "gm": "git merge"
+    "gr": "git rebase"
+    "gri": "git rebase -i"
+    "glog": "git log --oneline --graph --decorate --all"
+    "gst": "git stash"
+    "gstp": "git stash pop"
+    "gundo": "git reset HEAD~1"
+    "gwip": "git add -A && git commit -m 'WIP'"
+
+    # Docker mastery
+    "d": "docker"
+    "dc": "docker compose"
+    "dps": "docker ps"
+    "dpsa": "docker ps -a"
+    "dimg": "docker images"
+    "dexec": "docker exec -it"
+    "dlogs": "docker logs -f --tail 100"
+    "dprune": "docker system prune -af"
+    "dstop": "docker stop $(docker ps -q)"
+    "drm": "docker rm $(docker ps -aq)"
+
+    # Kubernetes ninja
+    "k": "kubectl"
+    "kgp": "kubectl get pods"
+    "kgs": "kubectl get services"
+    "kgd": "kubectl get deployments"
+    "kdp": "kubectl describe pod"
+    "klog": "kubectl logs -f"
+    "kexec": "kubectl exec -it"
+
+    # System monitoring
+    "top": "btop 2>/dev/null || htop"
+    "htop": "btop 2>/dev/null || htop"
+    "df": "df -h"
+    "du": "du -h"
+    "free": "free -h"
+    "ports": "lsof -i -P -n | grep LISTEN"
+    "psg": "ps aux | grep"
+
+    # Network tools
+    "myip": "curl -s https://ipinfo.io/ip"
+
+    # Development shortcuts
+    "code": "code ."
+    "serve": "python -m http.server 8000"
+    "json": "python -m json.tool"
+    "em": "emacs -nw"
+    "dd": "dd status=progress"
+    "_": "sudo"
+    "_i": "sudo -i"
+    "please": "sudo"
+    "fucking": "sudo"
+
+  # Power-user environment
+  environment:
+    EDITOR: "code"
+    VISUAL: "code"
+    PAGER: "less"
+    TZ: "America/New_York"
+    HISTSIZE: "50000"
+    SAVEHIST: "50000"
+    GOPATH: "$HOME/go"
+    PYENV_ROOT: "$HOME/.pyenv"
+    NVM_DIR: "$HOME/.nvm"
+
+# JiveTurkey shell functions
+shell_functions:
+  - name: "gbclean"
+    description: "Clean merged git branches"
+    body: |
+      git branch --merged | grep -v "\\*\\|main\\|master\\|develop" | xargs -r -n 1 git branch -d 2>/dev/null
+
+  - name: "qcommit"
+    description: "Quick commit with message"
+    body: |
+      git add -A && git commit -m "$*"
+
+  - name: "mkcd"
+    description: "Create directory and cd into it"
+    body: |
+      mkdir -p "$1" && cd "$1"
+
+  - name: "extract"
+    description: "Extract any archive"
+    body: |
+      if [ -f $1 ]; then
+          case $1 in
+              *.tar.bz2)   tar xjf $1     ;;
+              *.tar.gz)    tar xzf $1     ;;
+              *.bz2)       bunzip2 $1     ;;
+              *.rar)       unrar x $1     ;;
+              *.gz)        gunzip $1      ;;
+              *.tar)       tar xf $1      ;;
+              *.tbz2)      tar xjf $1     ;;
+              *.tgz)       tar xzf $1     ;;
+              *.zip)       unzip $1       ;;
+              *.Z)         uncompress $1  ;;
+              *.7z)        7z x $1        ;;
+              *)           echo "'$1' cannot be extracted" ;;
+          esac
+      else
+          echo "'$1' is not a valid file"
+      fi
+
+  - name: "dsh"
+    description: "Docker shell helper"
+    body: |
+      docker exec -it "$1" ${2:-/bin/bash}
+
+  - name: "gpush"
+    description: "Git push with upstream"
+    body: |
+      local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+      git push -u origin "$branch"
+
+  - name: "sysinfo"
+    description: "System information display"
+    body: |
+      echo "🖥️  System Information"
+      echo "════════════════════"
+      echo "OS: $(uname -s) $(uname -r)"
+      echo "Architecture: $(uname -m)"
+      echo "Hostname: $(hostname)"
+      echo "User: $USER"
+      echo "Shell: $SHELL"
+      if command -v uptime &> /dev/null; then
+          echo "Uptime: $(uptime | awk '{print $3,$4}' | sed 's/,//')"
+      fi
+
+  # Security Docker functions
+  - name: "dockershell"
+    description: "Run Docker container with bash shell"
+    body: |
+      docker run --rm -i -t --entrypoint=/bin/bash "$@"
+
+  - name: "dockershellhere"
+    description: "Run Docker container with current directory mounted"
+    body: |
+      dirname=${PWD##*/}
+      docker run --rm -it --entrypoint=/bin/bash -v `pwd`:/${dirname} -w /${dirname} "$@"
+
+  - name: "impacket"
+    description: "Run Impacket tools via Docker"
+    body: |
+      docker run --rm -it rflathers/impacket "$@"
+
+  - name: "smbservehere"
+    description: "SMB server in current directory"
+    body: |
+      local sharename
+      [[ -z $1 ]] && sharename="SHARE" || sharename=$1
+      docker run --rm -it -p 445:445 -v "${PWD}:/tmp/serve" rflathers/impacket smbserver.py -smb2support $sharename /tmp/serve
+
+  - name: "nginxhere"
+    description: "Nginx server in current directory"
+    body: |
+      docker run --rm -it -p 80:80 -p 443:443 -v "${PWD}:/srv/data" rflathers/nginxserve
+
+  - name: "webdavhere"
+    description: "WebDAV server in current directory"
+    body: |
+      docker run --rm -it -p 80:80 -v "${PWD}:/srv/data/share" rflathers/webdav
+
+  - name: "metasploit"
+    description: "Run Metasploit Framework"
+    body: |
+      docker run --rm -it -v "${HOME}/.msf4:/home/msf/.msf4" metasploitframework/metasploit-framework ./msfconsole "$@"
+
+  - name: "metasploitports"
+    description: "Run Metasploit with port forwarding"
+    body: |
+      docker run --rm -it -v "${HOME}/.msf4:/home/msf/.msf4" -p 8443-8500:8443-8500 metasploitframework/metasploit-framework ./msfconsole "$@"
+
+  - name: "msfvenomhere"
+    description: "Run msfvenom in current directory"
+    body: |
+      docker run --rm -it -v "${HOME}/.msf4:/home/msf/.msf4" -v "${PWD}:/data" metasploitframework/metasploit-framework ./msfvenom "$@"
+
+  - name: "reqdump"
+    description: "HTTP request dumper"
+    body: |
+      docker run --rm -it -p 80:3000 rflathers/reqdump
+
+  - name: "postfiledumphere"
+    description: "POST file dumper in current directory"
+    body: |
+      docker run --rm -it -p80:3000 -v "${PWD}:/data" rflathers/postfiledump
+
+# Tools configuration (extends matrix)
+tools_config:
+  # JiveTurkey power-user tools
+  power_user_tools:
+    - name: "eza"
+      description: "Better ls"
+      package:
+        macos: "eza"
+        debian: "exa"  # fallback name
+        redhat: "exa"
+    - name: "bat"
+      description: "Better cat"
+      package:
+        macos: "bat"
+        debian: "bat"
+        redhat: "bat"
+    - name: "btop"
+      description: "Better htop"
+      package:
+        macos: "btop"
+        debian: "btop"
+        redhat: "btop"
+    - name: "delta"
+      description: "Better git diff"
+      package:
+        macos: "git-delta"
+        debian: "git-delta"
+        redhat: "git-delta"
+    - name: "ncdu"
+      description: "Disk usage analyzer"
+      package:
+        macos: "ncdu"
+        debian: "ncdu"
+        redhat: "ncdu"
+    - name: "yq"
+      description: "YAML processor"
+      package:
+        macos: "yq"
+        debian: "yq"
+        redhat: "yq"
+    - name: "httpie"
+      description: "Modern HTTP client"
+      package:
+        macos: "httpie"
+        debian: "httpie"
+        redhat: "httpie"
+    - name: "tldr"
+      description: "Simplified man pages"
+      package:
+        macos: "tldr"
+        debian: "tldr"
+        redhat: "tldr"
+    - name: "nmap"
+      description: "Network scanner"
+      package:
+        macos: "nmap"
+        debian: "nmap"
+        redhat: "nmap"
+    - name: "netcat"
+      description: "Network utility"
+      package:
+        macos: "netcat"
+        debian: "netcat"
+        redhat: "netcat"
+    - name: "ranger"
+      description: "Terminal file manager"
+      package:
+        macos: "ranger"
+        debian: "ranger"
+        redhat: "ranger"
+    - name: "mc"
+      description: "Midnight Commander"
+      package:
+        macos: "midnight-commander"
+        debian: "mc"
+        redhat: "mc"
+    - name: "font-meslo-lg-nerd-font"
+      description: "Meslo LG Nerd Font for Powerlevel10k icons"
+      package:
+        macos: "font-meslo-lg-nerd-font"
+        debian: null  # Manual install needed
+        redhat: null  # Manual install needed
+    - name: "font-fira-code-nerd-font"
+      description: "FiraCode Nerd Font (alternative)"
+      package:
+        macos: "font-fira-code-nerd-font"
+        debian: null
+        redhat: null
+
+  # Security and DevOps tools
+  security_tools:
+    - name: "wireshark"
+      description: "Network protocol analyzer"
+      package:
+        macos: "wireshark"
+        debian: "wireshark"
+        redhat: "wireshark"
+    - name: "gobuster"
+      description: "Directory/file brute-forcer"
+      package:
+        macos: "gobuster"
+        debian: "gobuster"
+        redhat: null
+    - name: "ffuf"
+      description: "Fast web fuzzer"
+      package:
+        macos: "ffuf"
+        debian: null  # Install via go
+        redhat: null  # Install via go
+    - name: "john"
+      description: "John the Ripper password cracker"
+      package:
+        macos: "john"
+        debian: "john"
+        redhat: "john"
+    - name: "hashcat"
+      description: "Advanced password recovery"
+      package:
+        macos: "hashcat"
+        debian: "hashcat"
+        redhat: "hashcat"
+    - name: "sqlmap"
+      description: "SQL injection tool"
+      package:
+        macos: "sqlmap"
+        debian: "sqlmap"
+        redhat: "sqlmap"
+
+  # Additional development tools
+  advanced_dev_tools:
+    - name: "gh"
+      description: "GitHub CLI"
+      package:
+        macos: "gh"
+        debian: "gh"
+        redhat: "gh"
+    - name: "terraform"
+      description: "Infrastructure as Code"
+      package:
+        macos: "terraform"
+        debian: "terraform"
+        redhat: "terraform"
+    - name: "ansible"
+      description: "Configuration management"
+      package:
+        macos: "ansible"
+        debian: "ansible"
+        redhat: "ansible"
+    - name: "kubectl"
+      description: "Kubernetes CLI"
+      package:
+        macos: "kubectl"
+        debian: "kubectl"
+        redhat: "kubectl"
+    - name: "helm"
+      description: "Kubernetes package manager"
+      package:
+        macos: "helm"
+        debian: "helm"
+        redhat: "helm"
+    - name: "awscli"
+      description: "AWS command line"
+      package:
+        macos: "awscli"
+        debian: "awscli"
+        redhat: "awscli"
+
+# Matrix theme with JiveTurkey customizations
+matrix_greeting: "🚀 Welcome back, JiveTurkey! Let's build something awesome!"
+startup_command: "neofetch 2>/dev/null || echo '$matrix_greeting'"
+
+# JiveTurkey-specific configurations
+jiveturkey_config:
+  # Security settings
+  security:
+    enable_fail2ban: true
+    ufw_enable: true
+    ssh_hardening: true
+
+  # Development settings
+  development:
+    install_docker_desktop: false  # Use Docker Engine instead
+    enable_buildkit: true
+    install_compose_v2: true
+
+  # Productivity settings
+  productivity:
+    install_fonts: true
+    setup_git_aliases: true
+    configure_vim: true
+    install_vscode_extensions: false  # Manual choice

@@ -1,0 +1,54 @@
+---
+# Custom installation for Poetry - Python dependency management and packaging
+
+- name: "📜 Install Poetry - Python dependency management"
+  block:
+    - name: "🔍 Check if Poetry is already installed"
+      command: poetry --version
+      register: poetry_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "🔽 Install Poetry via installer script"
+      when: poetry_check.rc != 0
+      shell: |
+        curl -sSL https://install.python-poetry.org | python3 -
+      args:
+        creates: "{{ ansible_env.HOME }}/.local/bin/poetry"
+
+    - name: "📝 Add Poetry to shell PATH"
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        line: 'export PATH="$HOME/.local/bin:$PATH"'
+        create: yes
+
+    - name: "⚙️ Configure Poetry settings"
+      shell: |
+        export PATH="$HOME/.local/bin:$PATH"
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project {{ 'true' if python_config.create_virtual_env | default(true) else 'false' }}
+        poetry config virtualenvs.prefer-active-python true
+      when: poetry_check.rc != 0
+
+    - name: "🔧 Enable Poetry shell completion"
+      shell: |
+        export PATH="$HOME/.local/bin:$PATH"
+        poetry completions {{ ansible_env.SHELL | basename }} > {{ ansible_env.HOME }}/.poetry_completion
+        echo 'source ~/.poetry_completion' >> {{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc
+      when: poetry_check.rc != 0
+      ignore_errors: yes
+
+- name: "✅ Poetry installation complete"
+  debug:
+    msg: |
+      📜 Poetry installed successfully
+      📂 Location: {{ ansible_env.HOME }}/.local/bin/poetry
+      🔧 Virtual envs: {{ 'In project' if python_config.create_virtual_env | default(true) else 'Global' }}
+
+      💡 Usage:
+      - New project: poetry new myproject
+      - Init in existing: poetry init
+      - Add dependency: poetry add package
+      - Install deps: poetry install
+      - Run in venv: poetry run python script.py
+      - Shell in venv: poetry shell

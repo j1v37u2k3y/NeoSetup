@@ -1,0 +1,62 @@
+---
+# Custom installation for PowerShell Core in WSL2/Linux environments
+
+- name: "⚡ Install PowerShell Core on WSL2/Ubuntu/Debian"
+  when: platform_key in ['wsl', 'ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if PowerShell is already installed"
+      command: which pwsh
+      register: pwsh_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "🔑 Add Microsoft package signing key"
+      when: pwsh_check.rc != 0
+      shell: |
+        wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+        sudo dpkg -i packages-microsoft-prod.deb
+        rm packages-microsoft-prod.deb
+      args:
+        warn: false
+
+    - name: "📦 Update package cache"
+      apt:
+        update_cache: yes
+      when: pwsh_check.rc != 0
+
+    - name: "⚡ Install PowerShell Core"
+      package:
+        name: powershell
+        state: present
+      when: pwsh_check.rc != 0
+
+- name: "⚡ Install PowerShell Core on RedHat/CentOS"
+  when: platform_key == 'redhat'
+  become: yes
+  block:
+    - name: "🔍 Check if PowerShell is already installed"
+      command: which pwsh
+      register: pwsh_check_rhel
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "🔑 Add Microsoft repository"
+      when: pwsh_check_rhel.rc != 0
+      shell: |
+        curl -sSL https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm -o packages-microsoft-prod.rpm
+        sudo rpm -Uvh packages-microsoft-prod.rpm
+        rm packages-microsoft-prod.rpm
+
+    - name: "⚡ Install PowerShell Core"
+      package:
+        name: powershell
+        state: present
+      when: pwsh_check_rhel.rc != 0
+
+- name: "✅ PowerShell Core installation complete"
+  debug:
+    msg: |
+      PowerShell Core installed successfully
+      Test with: pwsh --version
+      Windows integration available in WSL2

@@ -1,0 +1,82 @@
+---
+# Windows WSL2 Operator - Enhanced WSL2 experience with cross-platform tool integration
+# Extends base operator with WSL2-specific tools and configurations
+
+# Required operator metadata
+operator_name: "windows_wsl"
+operator_version: "1.0.0"
+operator_description: "Optimized setup for Windows WSL2 with enhanced Linux integration and Windows interoperability"
+operator_author: "NeoSetup Team"
+operator_tags:
+  - "development"
+  - "productivity"
+extends: "base"
+
+# Operator info for display
+operator_info:
+  name: "Windows WSL2 Power User"
+  description: "Optimized setup for Windows WSL2 with enhanced Linux integration and Windows interoperability"
+  version: "1.0.0"
+  supported_platforms:
+    - wsl
+    - wsl2
+  features:
+    - "🪟 Windows-WSL2 interoperability tools"
+    - "🔗 Seamless file system integration"
+    - "💻 Windows Terminal integration"
+    - "🐧 Linux tools optimized for WSL2"
+    - "⚡ Performance tuning for WSL2 environment"
+    - "🔧 Cross-platform development setup"
+
+# WSL2-specific configuration
+wsl_config:
+  enable_systemd: true
+  configure_windows_integration: true
+  optimize_memory: true
+  enable_gpu_support: true
+  configure_networking: true
+
+# Tool configuration optimized for WSL2
+tools_config:
+  additional_tools:
+    - wslu  # WSL utilities
+    - python3-pip
+    - build-essential
+    - curl
+    - wget
+    - unzip
+  wsl_specific_tools: true
+  windows_integration_tools:
+    - powershell  # PowerShell Core for cross-platform scripting
+    - code  # VS Code integration
+
+# Shell configuration optimized for WSL2
+shell_config:
+  enable_windows_path_integration: true
+  paths:
+    - "/mnt/c/Windows/System32"
+    - "/mnt/c/Program Files/Git/cmd"
+    - "/mnt/c/Users/$USER/AppData/Local/Programs/Microsoft VS Code/bin"
+  aliases:
+    - { alias: "cmd", command: "cmd.exe" }
+    - { alias: "powershell", command: "powershell.exe" }
+    - { alias: "code", command: "code.exe" }
+    - { alias: "explorer", command: "explorer.exe" }
+    - { alias: "clip", command: "clip.exe" }
+  environment:
+    - { var: "BROWSER", value: "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" }
+    - { var: "WSL_UTF8", value: "1" }
+
+# Tmux configuration for WSL2
+tmux_config:
+  enable_mouse: true
+  copy_command: "clip.exe"
+  paste_command: "powershell.exe Get-Clipboard"
+  wsl_specific_bindings: true
+
+# WSL2 performance and integration settings
+performance_config:
+  enable_fast_boot: true
+  optimize_memory_usage: true
+  configure_swap: true
+  enable_compression: true

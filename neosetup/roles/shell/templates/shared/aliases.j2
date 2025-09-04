@@ -1,0 +1,75 @@
+# ============================================================================
+# Aliases
+# ============================================================================
+# Navigation aliases
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias ~='cd ~'
+alias -- -='cd -'
+
+# List directory contents
+alias l='ls -lah'
+alias la='ls -lAh'
+alias ll='ls -lh'
+alias ls='ls --color=auto'
+alias lsa='ls -lah'
+
+# Safety aliases
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias mkdir='mkdir -pv'
+
+# Colorized output
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# System aliases
+alias df='df -h'
+alias du='du -h'
+alias free='free -m'
+alias top='htop 2>/dev/null || top'
+
+# Git aliases
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate'
+alias gd='git diff'
+alias gb='git branch'
+alias gco='git checkout'
+
+# Docker aliases
+alias d='docker'
+alias dc='docker-compose'
+alias dps='docker ps'
+alias dpa='docker ps -a'
+alias di='docker images'
+alias dex='docker exec -it'
+
+# Modern tool aliases (if installed)
+command -v eza &>/dev/null && alias ls='eza --icons'
+command -v eza &>/dev/null && alias ll='eza -l --icons'
+command -v eza &>/dev/null && alias la='eza -la --icons'
+command -v eza &>/dev/null && alias tree='eza --tree --icons'
+command -v bat &>/dev/null && alias cat='bat'
+command -v rg &>/dev/null && alias grep='rg'
+command -v fd &>/dev/null && alias find='fd'
+command -v btop &>/dev/null && alias top='btop'
+command -v delta &>/dev/null && alias diff='delta'
+
+# Custom aliases from operator
+{% for alias_item in shell_aliases | default([]) %}
+  alias {{ alias_item.alias }}="{{ alias_item.command }}"
+{% endfor %}
+
+# Matrix-themed aliases
+{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+  alias matrix='cmatrix -b'
+  alias neo='neofetch'
+  alias hack='echo "Accessing the Matrix..." && sleep 1 && cmatrix -b'
+{% endif %}

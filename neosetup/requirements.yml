@@ -1,0 +1,24 @@
+---
+# NeoSetup Runtime Dependencies - Ansible Galaxy Collections
+# Install with: ansible-galaxy install -r requirements.yml
+# Also install neosetup/requirements-runtime.txt for Python dependencies
+collections:
+  # Community general collection for package management and utilities
+  - name: community.general
+    version: ">=7.0.0"
+
+  # POSIX collection for file and user management
+  - name: ansible.posix
+    version: ">=1.5.0"
+
+  # Docker collection (if we use it)
+  - name: community.docker
+    version: ">=3.0.0"
+
+roles:
+# Example external roles we might use
+# - name: geerlingguy.docker
+#   version: "4.2.3"
+
+# - name: gantsign.oh_my_zsh
+#   version: "2.2.0"

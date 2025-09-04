@@ -1,0 +1,246 @@
+---
+# Docker Role - Install and configure Docker
+# The containers have you, Neo
+
+- name: "🔍 Check if Docker is already installed"
+  command: which docker
+  register: docker_check
+  failed_when: false
+  changed_when: false
+
+- name: "📋 Display Docker installation status"
+  debug:
+    msg: |
+      🐳 Docker Status: {{ 'Already installed' if docker_check.rc == 0 else 'Not found - will install' }}
+      💻 OS Family: {{ ansible_os_family }}
+      📦 Distribution: {{ ansible_distribution | default('Unknown') }}
+
+- name: "🐳 Install Docker on macOS"
+  block:
+    - name: "🍺 Check if Homebrew is available"
+      command: which brew
+      register: brew_check
+      failed_when: false
+      changed_when: false
+
+    - name: "🐳 Install Docker via Homebrew"
+      homebrew_cask:
+        name: docker
+        state: present
+      when: brew_check.rc == 0
+
+    - name: "📋 Manual installation notice"
+      debug:
+        msg: |
+          🐳 If Homebrew installation failed, please install Docker Desktop manually:
+          📥 Download from: https://docker.com/products/docker-desktop
+      when: brew_check.rc != 0
+
+  when:
+    - ansible_os_family == "Darwin"
+    - docker_check.rc != 0
+
+- name: "🐳 Install Docker on Kali Linux"
+  block:
+    - name: "📦 Install Docker from Kali repositories"
+      package:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+      become: yes
+
+  when:
+    - ansible_distribution == "Kali"
+    - docker_check.rc != 0
+
+- name: "🐳 Install Docker on Debian/Ubuntu"
+  block:
+    - name: "📦 Install Docker dependencies"
+      package:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+      become: yes
+
+    - name: "🔑 Create keyrings directory"
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: "🔑 Add Docker GPG key"
+      get_url:
+        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+        dest: /etc/apt/keyrings/docker.gpg
+        mode: '0644'
+      become: yes
+
+    - name: "📝 Add Docker repository"
+      apt_repository:
+        repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+      become: yes
+
+    - name: "🔄 Update package cache"
+      apt:
+        update_cache: yes
+      become: yes
+
+    - name: "🐳 Install Docker packages"
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+      become: yes
+
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution != "Kali"
+    - docker_check.rc != 0
+
+- name: "🐳 Install Docker on RHEL/CentOS/Fedora"
+  block:
+    - name: "📦 Install Docker dependencies"
+      package:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+      become: yes
+
+    - name: "📝 Add Docker repository"
+      yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable
+        baseurl: "https://download.docker.com/linux/{{ 'centos' if ansible_distribution == 'CentOS' else ansible_distribution | lower }}/$releasever/$basearch/stable"
+        gpgcheck: yes
+        gpgkey: "https://download.docker.com/linux/{{ 'centos' if ansible_distribution == 'CentOS' else ansible_distribution | lower }}/gpg"
+        enabled: yes
+      become: yes
+
+    - name: "🐳 Install Docker packages"
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+      become: yes
+
+  when:
+    - ansible_os_family == "RedHat"
+    - docker_check.rc != 0
+
+- name: "🐳 Install Docker on Arch Linux"
+  block:
+    - name: "🐳 Install Docker packages"
+      package:
+        name:
+          - docker
+          - docker-compose-plugin
+        state: present
+      become: yes
+
+  when:
+    - ansible_distribution == "Archlinux"
+    - docker_check.rc != 0
+
+- name: "🔍 Check if docker group exists"
+  command: getent group docker
+  register: docker_group_check
+  failed_when: false
+  changed_when: false
+
+- name: "👥 Create docker group if it doesn't exist"
+  group:
+    name: docker
+    state: present
+  become: yes
+  when:
+    - docker_group_check.rc != 0
+    - ansible_os_family != "Darwin"
+
+- name: "👥 Add user to docker group"
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: yes
+  become: yes
+  when:
+    - neosetup_add_user_to_docker | default(true)
+    - ansible_os_family != "Darwin"
+
+- name: "🚀 Start and enable Docker service (Kali)"
+  systemd:
+    name: docker.io
+    state: started
+    enabled: yes
+  become: yes
+  when:
+    - ansible_distribution == "Kali"
+  register: docker_service_result_kali
+
+- name: "🚀 Start and enable Docker service (Other Linux)"
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+  when:
+    - ansible_os_family != "Darwin"
+    - ansible_distribution != "Kali"
+  register: docker_service_result_other
+
+- name: "🔍 Verify Docker installation"
+  command: docker --version
+  register: docker_version
+  changed_when: false
+  failed_when: false
+
+- name: "🧪 Test Docker with hello-world (if service is running)"
+  command: docker run --rm hello-world
+  register: docker_test
+  failed_when: false
+  changed_when: false
+  when:
+    - docker_version is defined and docker_version.stdout is defined
+    - ansible_os_family != "Darwin"
+
+- name: "🔧 Configure Docker with modern features"
+  include_tasks: configure_docker.yml
+  when: docker_check.rc == 0 or docker_version.rc == 0
+
+- name: "✅ Docker installation complete"
+  debug:
+    msg: |
+      🐳 Docker Installation Summary:
+      ═══════════════════════════════
+      📦 Version: {{ docker_version.stdout | default('Check manually') }}
+      🔧 Service Status: {{ 'Started' if ansible_os_family != 'Darwin' else 'Manual start required (macOS)' }}
+      👥 User Groups: {{ 'Added to docker group' if ansible_os_family != 'Darwin' else 'Not applicable (macOS)' }}
+      🏗️ BuildKit: {{ 'Enabled' if docker_buildkit.enabled | default(true) else 'Disabled' }}
+      📦 Compose v2: {{ 'Installed' if docker_install_compose | default(true) else 'Not installed' }}
+      🔒 Security: {{ 'Enhanced' if docker_security is defined else 'Default' }}
+      🧪 Test Result: {{ 'Skipped on macOS' if ansible_os_family == 'Darwin' else 'Check with: docker run hello-world' }}
+
+      💡 Next steps:
+      {% if ansible_os_family == "Darwin" %}
+      - Start Docker Desktop application
+      {% else %}
+      - Log out and back in for group changes to take effect
+      {% endif %}
+      - Test with: docker run hello-world
+      - Use 'docker compose' (v2) instead of 'docker-compose'
+      - BuildKit is enabled for faster builds

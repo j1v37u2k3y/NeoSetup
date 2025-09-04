@@ -1,0 +1,54 @@
+# ============================================================================
+# STATUS BAR CONFIGURATION
+# ============================================================================
+
+# Enable status bar
+set -g status on
+
+# Status bar position
+set -g status-position {{ tmux_config.status_bar.position | default('bottom') }}
+
+# Status bar refresh interval
+set -g status-interval {{ tmux_config.status_bar.interval | default('5') }}
+
+# Status bar length
+set -g status-left-length {{ tmux_config.status_bar.left_length | default('100') }}
+set -g status-right-length {{ tmux_config.status_bar.right_length | default('100') }}
+
+# Operator-specific status bar content
+{% if neosetup_operator == 'jiveturkey' %}
+  # JiveTurkey power-user status
+  set -g status-left '#[fg=#000000,bg=#00ff00,bold] 🎭 #{session_name} #[fg=#00ff00,bg=#003300]#[fg=#00ff00,bg=#003300] 💻 #H #[fg=#003300,bg=#000000]'
+  set -g status-right '#[fg=#003300,bg=#000000]#[fg=#00ff00,bg=#003300] 🐇 %H:%M #[fg=#00ff00,bg=#003300]#[fg=#000000,bg=#00ff00,bold] %Y-%m-%d '
+
+{% elif neosetup_operator == 'matrix' %}
+  # Matrix operator status
+  set -g status-left '#[fg=#000000,bg=#00ff00,bold] ⚡ #{session_name} #[fg=#00ff00,bg=#000000]'
+  set -g status-right '#[fg=#00ff00,bg=#000000] %H:%M | %Y-%m-%d '
+
+{% else %}
+  # Base operator status
+  set -g status-left '#[fg=#ffffff,bg=#0087ff,bold] #{session_name} #[fg=#0087ff,bg=#444444]'
+  set -g status-right '#[fg=#888888,bg=#1c1c1c] %H:%M | %Y-%m-%d '
+{% endif %}
+
+# Window status format
+{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+  setw -g window-status-format ' #I:#W#{?window_flags,#{window_flags}, } '
+  setw -g window-status-current-format ' #I:#W#{?window_flags,#{window_flags}, } '
+{% else %}
+  setw -g window-status-format ' #I #W#{?window_flags,#{window_flags}, } '
+  setw -g window-status-current-format ' #I #W#{?window_flags,#{window_flags}, } '
+{% endif %}
+
+# Custom status bar modules
+{% if tmux_config.status_modules is defined %}
+  {% for module in tmux_config.status_modules %}
+    # {{ module.name }} module
+    {% if module.side == 'left' %}
+      set -ga status-left '{{ module.content }}'
+    {% else %}
+      set -ga status-right '{{ module.content }}'
+    {% endif %}
+  {% endfor %}
+{% endif %}

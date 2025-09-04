@@ -1,0 +1,195 @@
+---
+# Python Developer Operator - Python development environment with best practices
+# Extends base operator with Python-specific tools and configurations
+
+# Required operator metadata
+operator_name: "python_dev"
+operator_version: "1.0.0"
+operator_description: "Python development environment with modern tooling, package managers, and best practices"
+operator_author: "NeoSetup Team"
+operator_tags:
+  - "development"
+  - "python"
+  - "productivity"
+extends: "base"
+
+# Operator info for display
+operator_info:
+  name: "Python Developer"
+  description: "Python development environment with modern tooling, package managers, and best practices"
+  version: "1.0.0"
+  supported_platforms:
+    - darwin
+    - ubuntu
+    - debian
+    - redhat
+    - wsl
+  features:
+    - "🐍 Python version management with pyenv"
+    - "📦 Package management with pip, pipx, and Poetry"
+    - "🧪 Testing frameworks (pytest, tox)"
+    - "🔍 Code quality tools (black, flake8, mypy, isort)"
+    - "📝 Documentation tools (sphinx, mkdocs)"
+    - "🚀 Performance profiling and debugging tools"
+    - "🔧 IDE integration and plugins"
+    - "🐳 Docker integration for Python projects"
+
+# Python-specific configuration
+python_config:
+  install_pyenv: true
+  install_poetry: true
+  install_pipx: true
+  default_python_versions:
+    - "3.11"
+    - "3.12"
+  global_python_version: "3.12"
+  create_virtual_env: true
+
+# Tool configuration
+tools_config:
+  additional_tools:
+    # Package managers and environment tools
+    - pyenv
+    - poetry
+    - pipx
+    - virtualenv
+    - virtualenvwrapper
+    # Code quality and formatting
+    - black
+    - flake8
+    - mypy
+    - isort
+    - pylint
+    - bandit
+    # Testing frameworks
+    - pytest
+    - tox
+    - coverage
+    # Documentation tools
+    - sphinx
+    - mkdocs
+    # Development utilities
+    - ipython
+    - jupyter
+    - cookiecutter
+    # Performance and debugging
+    - py-spy
+    - memory-profiler
+  python_specific_tools: true
+
+# Shell configuration optimized for Python development
+shell_config:
+  enable_python_completions: true
+  paths:
+    - "$HOME/.pyenv/bin"
+    - "$HOME/.poetry/bin"
+    - "$HOME/.local/bin"
+  aliases:
+    - { alias: "py", command: "python" }
+    - { alias: "py3", command: "python3" }
+    - { alias: "pip", command: "python -m pip" }
+    - { alias: "venv", command: "python -m venv" }
+    - { alias: "activate", command: "source venv/bin/activate" }
+    - { alias: "deactivate", command: "deactivate" }
+    - { alias: "pytest", command: "python -m pytest" }
+    - { alias: "mypy", command: "python -m mypy" }
+    - { alias: "black", command: "python -m black" }
+    - { alias: "isort", command: "python -m isort" }
+    - { alias: "flake8", command: "python -m flake8" }
+    - { alias: "pyclean", command: "find . -type f -name '*.pyc' -delete && find . -type d -name '__pycache__' -delete" }
+    - { alias: "pyserver", command: "python -m http.server" }
+    - { alias: "pyjson", command: "python -m json.tool" }
+  environment:
+    - { var: "PYENV_ROOT", value: "$HOME/.pyenv" }
+    - { var: "POETRY_HOME", value: "$HOME/.poetry" }
+    - { var: "PYTHONDONTWRITEBYTECODE", value: "1" }
+    - { var: "PYTHONUNBUFFERED", value: "1" }
+    - { var: "PIP_REQUIRE_VIRTUALENV", value: "true" }
+
+# Python shell functions
+shell_functions:
+  - name: "mkproject"
+    description: "Create new Python project with virtual environment"
+    body: |
+      if [ -z "$1" ]; then
+        echo "Usage: mkproject <project_name>"
+        return 1
+      fi
+      mkdir -p "$1" && cd "$1"
+      python -m venv venv
+      source venv/bin/activate
+      echo "venv/" > .gitignore
+      echo "__pycache__/" >> .gitignore
+      echo "*.pyc" >> .gitignore
+      echo "*.pyo" >> .gitignore
+      echo "*.egg-info/" >> .gitignore
+      touch requirements.txt
+      touch README.md
+      echo "🐍 Python project '$1' created with virtual environment"
+
+  - name: "pyupgrade"
+    description: "Upgrade all pip packages in current environment"
+    body: |
+      pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
+
+  - name: "pyinfo"
+    description: "Display Python environment information"
+    body: |
+      echo "🐍 Python Environment Information"
+      echo "================================"
+      echo "Python Version: $(python --version 2>&1)"
+      echo "Python Path: $(which python)"
+      echo "Virtual Env: ${VIRTUAL_ENV:-'None'}"
+      if command -v pyenv &> /dev/null; then
+        echo "Pyenv Version: $(pyenv --version)"
+        echo "Pyenv Global: $(pyenv global)"
+      fi
+      if command -v poetry &> /dev/null; then
+        echo "Poetry Version: $(poetry --version)"
+      fi
+      echo "Pip Version: $(pip --version)"
+
+  - name: "pytest-cov"
+    description: "Run pytest with coverage reporting"
+    body: |
+      python -m pytest --cov=. --cov-report=html --cov-report=term-missing "$@"
+      echo "📊 Coverage report generated in htmlcov/index.html"
+
+  - name: "pylint-all"
+    description: "Run pylint on all Python files in current directory"
+    body: |
+      find . -name "*.py" | xargs python -m pylint
+
+  - name: "pyformat"
+    description: "Format Python code with black and isort"
+    body: |
+      python -m black . && python -m isort .
+
+# Tmux configuration for Python development
+tmux_config:
+  enable_mouse: true
+  copy_command: "pbcopy"  # macOS default, overridden per platform
+  paste_command: "pbpaste"
+  python_specific_bindings: true
+
+# Python development specific settings
+python_dev_config:
+  # IDE and editor configurations
+  setup_vscode_extensions: false  # User choice
+  setup_vim_plugins: false       # User choice
+
+  # Code quality settings
+  enable_pre_commit_hooks: true
+  setup_github_actions: false    # User choice
+
+  # Documentation settings
+  create_docs_template: false    # User choice
+  setup_readthedocs: false       # User choice
+
+  # Testing configuration
+  setup_pytest_config: true
+  setup_tox_config: false        # User choice
+
+  # Package management preferences
+  prefer_poetry: true
+  use_pipx_for_tools: true

@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  author: NeoSetup Team
+  description: Matrix-themed shell configuration with operator inheritance
+  company: NeoSetup
+
+  license: MIT
+
+  min_ansible_version: '2.9'
+
+  platforms:
+    - name: macOS
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - shell
+    - zsh
+    - bash
+    - oh-my-zsh
+    - powerlevel10k
+    - matrix
+    - development
+
+dependencies: [ ]

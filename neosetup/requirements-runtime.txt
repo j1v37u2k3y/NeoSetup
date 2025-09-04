@@ -1,0 +1,14 @@
+# NeoSetup Runtime Python Dependencies
+# Install with: pip install -r requirements-runtime.txt
+# Also install Ansible Galaxy collections with: ansible-galaxy install -r requirements.yml
+
+# Core Ansible
+ansible>=4.0
+ansible-core>=2.11.7
+
+# Python Dependencies
+PyYAML>=6.0
+Jinja2>=3.1.0
+
+# Build Dependencies (for cryptography on older systems)
+setuptools-rust>=1.5.0

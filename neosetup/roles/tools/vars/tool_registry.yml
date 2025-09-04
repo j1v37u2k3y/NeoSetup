@@ -1,0 +1,547 @@
+---
+# Unified Tool Registry
+# Central definition of all tools with platform-specific package names
+
+tool_registry:
+  # Modern CLI replacements
+  eza:
+    description: "Modern ls replacement"
+    category: modern_cli
+    packages:
+      darwin: eza
+      ubuntu: eza
+      debian: eza
+      redhat: eza
+
+  bat:
+    description: "Cat with syntax highlighting"
+    category: modern_cli
+    packages:
+      darwin: bat
+      ubuntu: bat
+      debian: bat
+      redhat: bat
+
+  ripgrep:
+    description: "Fast grep replacement"
+    category: modern_cli
+    packages:
+      darwin: ripgrep
+      ubuntu: ripgrep
+      debian: ripgrep
+      redhat: ripgrep
+
+  fd:
+    description: "Fast find replacement"
+    category: modern_cli
+    packages:
+      darwin: fd
+      ubuntu: fd-find
+      debian: fd-find
+      redhat: fd-find
+
+  fzf:
+    description: "Fuzzy finder"
+    category: modern_cli
+    packages:
+      darwin: fzf
+      ubuntu: fzf
+      debian: fzf
+      redhat: fzf
+
+  delta:
+    description: "Better git diff"
+    category: modern_cli
+    packages:
+      darwin: git-delta
+      ubuntu: git-delta
+      debian: git-delta
+      redhat: git-delta
+
+  btop:
+    description: "Modern top replacement"
+    category: modern_cli
+    packages:
+      darwin: btop
+      ubuntu: btop
+      debian: btop
+      redhat: btop
+
+  # Matrix-themed tools
+  cmatrix:
+    description: "Digital rain effect"
+    category: matrix
+    packages:
+      darwin: cmatrix
+      ubuntu: cmatrix
+      debian: cmatrix
+      redhat: cmatrix
+
+  neofetch:
+    description: "System info with ASCII art"
+    category: matrix
+    packages:
+      darwin: neofetch
+      ubuntu: neofetch
+      debian: neofetch
+      redhat: neofetch
+
+  lolcat:
+    description: "Rainbow text output"
+    category: matrix
+    packages:
+      darwin: lolcat
+      ubuntu: lolcat
+      debian: lolcat
+      redhat: lolcat
+
+  figlet:
+    description: "ASCII art text"
+    category: matrix
+    packages:
+      darwin: figlet
+      ubuntu: figlet
+      debian: figlet
+      redhat: figlet
+
+  cowsay:
+    description: "ASCII cow messages"
+    category: matrix
+    packages:
+      darwin: cowsay
+      ubuntu: cowsay
+      debian: cowsay
+      redhat: cowsay
+
+  fortune:
+    description: "Random quotes"
+    category: matrix
+    packages:
+      darwin: fortune
+      ubuntu: fortune-mod
+      debian: fortune-mod
+      redhat: fortune-mod
+
+  # Power-user tools
+  ncdu:
+    description: "NCurses disk usage"
+    category: power_user
+    packages:
+      darwin: ncdu
+      ubuntu: ncdu
+      debian: ncdu
+      redhat: ncdu
+
+  httpie:
+    description: "Modern HTTP client"
+    category: power_user
+    packages:
+      darwin: httpie
+      ubuntu: httpie
+      debian: httpie
+      redhat: httpie
+
+  tldr:
+    description: "Simplified man pages"
+    category: power_user
+    packages:
+      darwin: tldr
+      ubuntu: tldr
+      debian: tldr
+      redhat: tldr
+
+  yq:
+    description: "YAML processor"
+    category: power_user
+    packages:
+      darwin: yq
+      ubuntu: yq
+      debian: yq
+      redhat: yq
+
+  jq:
+    description: "JSON processor"
+    category: power_user
+    packages:
+      darwin: jq
+      ubuntu: jq
+      debian: jq
+      redhat: jq
+
+  # Security tools
+  nmap:
+    description: "Network scanner"
+    category: security
+    packages:
+      darwin: nmap
+      ubuntu: nmap
+      debian: nmap
+      redhat: nmap
+
+  netcat:
+    description: "Network utility"
+    category: security
+    packages:
+      darwin: netcat
+      ubuntu: netcat-openbsd
+      debian: netcat-openbsd
+      redhat: nmap-ncat
+
+  # File managers
+  ranger:
+    description: "Terminal file manager"
+    category: file_manager
+    packages:
+      darwin: ranger
+      ubuntu: ranger
+      debian: ranger
+      redhat: ranger
+
+  mc:
+    description: "Midnight Commander"
+    category: file_manager
+    packages:
+      darwin: midnight-commander
+      ubuntu: mc
+      debian: mc
+      redhat: mc
+
+  # Development tools
+  shellcheck:
+    description: "Shell script analyzer"
+    category: development
+    packages:
+      darwin: shellcheck
+      ubuntu: shellcheck
+      debian: shellcheck
+      redhat: ShellCheck
+
+  lazygit:
+    description: "Git TUI"
+    category: development
+    packages:
+      darwin: lazygit
+      ubuntu: lazygit
+      debian: lazygit
+      redhat: lazygit
+
+  gh:
+    description: "GitHub CLI"
+    category: development
+    packages:
+      darwin: gh
+      ubuntu: gh
+      debian: gh
+      redhat: gh
+    custom_install: github_cli
+
+  # System tools
+  htop:
+    description: "Interactive process viewer"
+    category: system
+    packages:
+      darwin: htop
+      ubuntu: htop
+      debian: htop
+      redhat: htop
+
+  tree:
+    description: "Directory tree viewer"
+    category: system
+    packages:
+      darwin: tree
+      ubuntu: tree
+      debian: tree
+      redhat: tree
+
+  # Development tools
+  yamllint:
+    description: "YAML linting and validation"
+    category: development
+    install_method: pip
+    packages:
+      pip: yamllint
+
+  act:
+    description: "Run GitHub Actions locally"
+    category: development
+    install_method: custom
+    custom_install: act_installer
+
+  pre-commit:
+    description: "Git pre-commit hooks framework"
+    category: development
+    install_method: pip
+    packages:
+      pip: pre-commit
+
+  # macOS-specific tools
+  duti:
+    description: "macOS file type associations"
+    category: macos
+    packages:
+      darwin: duti
+
+  mas:
+    description: "Mac App Store CLI"
+    category: macos
+    packages:
+      darwin: mas
+
+  mackup:
+    description: "Sync app settings"
+    category: macos
+    packages:
+      darwin: mackup
+
+  stats:
+    description: "macOS system stats in menu bar"
+    category: macos
+    install_method: cask
+    packages:
+      darwin: stats
+
+  rectangle:
+    description: "Window management for macOS"
+    category: macos
+    install_method: cask
+    packages:
+      darwin: rectangle
+
+  # WSL2-specific tools
+  wslu:
+    description: "WSL utilities for Windows integration"
+    category: wsl
+    packages:
+      ubuntu: wslu
+      debian: wslu
+      wsl: wslu
+
+  build-essential:
+    description: "Essential build tools for compilation"
+    category: wsl
+    packages:
+      ubuntu: build-essential
+      debian: build-essential
+      wsl: build-essential
+
+  python3-pip:
+    description: "Python package installer"
+    category: wsl
+    packages:
+      ubuntu: python3-pip
+      debian: python3-pip
+      wsl: python3-pip
+
+  powershell:
+    description: "PowerShell Core for cross-platform scripting"
+    category: wsl
+    custom_install: powershell_core
+    packages:
+      ubuntu: powershell
+      debian: powershell
+      wsl: powershell
+
+  # Python development tools
+  pyenv:
+    description: "Python version management"
+    category: python
+    custom_install: pyenv_installer
+    packages:
+      # Pyenv requires custom installation on all platforms
+
+  poetry:
+    description: "Python dependency management and packaging"
+    category: python
+    custom_install: poetry_installer
+    packages:
+      # Poetry requires custom installation on all platforms
+
+  pipx:
+    description: "Install and run Python applications in isolated environments"
+    category: python
+    packages:
+      darwin: pipx
+      ubuntu: pipx
+      debian: pipx
+      redhat: pipx
+
+  black:
+    description: "Python code formatter"
+    category: python
+    install_method: pip
+    packages:
+      pip: black
+
+  flake8:
+    description: "Python code linter"
+    category: python
+    install_method: pip
+    packages:
+      pip: flake8
+
+  mypy:
+    description: "Static type checker for Python"
+    category: python
+    install_method: pip
+    packages:
+      pip: mypy
+
+  isort:
+    description: "Python import sorter"
+    category: python
+    install_method: pip
+    packages:
+      pip: isort
+
+  pytest:
+    description: "Python testing framework"
+    category: python
+    install_method: pip
+    packages:
+      pip: pytest
+
+  ipython:
+    description: "Enhanced interactive Python shell"
+    category: python
+    install_method: pip
+    packages:
+      pip: ipython
+
+  jupyter:
+    description: "Interactive computing environment"
+    category: python
+    install_method: pip
+    packages:
+      pip: jupyter
+
+  cookiecutter:
+    description: "Project templating tool"
+    category: python
+    install_method: pipx
+    packages:
+      pipx: cookiecutter
+
+  # Cloud and DevOps tools
+  awscli:
+    description: "Amazon Web Services CLI"
+    category: cloud
+    packages:
+      darwin: awscli
+      ubuntu: awscli
+      debian: awscli
+      redhat: awscli
+
+  kubectl:
+    description: "Kubernetes command-line tool"
+    category: cloud
+    custom_install: kubectl_installer
+    packages:
+      # Kubectl requires custom installation for proper versioning
+
+  helm:
+    description: "Kubernetes package manager"
+    category: cloud
+    custom_install: helm_installer
+    packages:
+      # Helm requires custom installation
+
+  terraform:
+    description: "Infrastructure as Code tool"
+    category: cloud
+    packages:
+      darwin: terraform
+      ubuntu: terraform
+      debian: terraform
+      redhat: terraform
+
+  docker-compose:
+    description: "Multi-container Docker applications"
+    category: cloud
+    packages:
+      darwin: docker-compose
+      ubuntu: docker-compose
+      debian: docker-compose
+      redhat: docker-compose
+
+  azure-cli:
+    description: "Azure command-line interface"
+    category: cloud
+    custom_install: azure_cli_installer
+    packages:
+      # Azure CLI requires custom installation
+
+# Tool sets by operator
+operator_tool_sets:
+  base:
+    - htop
+    - tree
+    - jq
+    - curl
+    - wget
+    - yamllint
+    - act
+    - pre-commit
+
+  matrix:
+    - cmatrix
+    - neofetch
+    - lolcat
+    - figlet
+    - cowsay
+    - fortune
+
+  jiveturkey:
+    - ncdu
+    - httpie
+    - tldr
+    - yq
+    - nmap
+    - netcat
+    - ranger
+    - mc
+    - shellcheck
+    - lazygit
+    - gh
+
+  modern_cli:
+    - eza
+    - bat
+    - ripgrep
+    - fd
+    - fzf
+    - delta
+    - btop
+
+  macos_tools:
+    - duti
+    - mas
+    - mackup
+    - stats
+    - rectangle
+
+  windows_wsl:
+    - wslu
+    - build-essential
+    - python3-pip
+    - powershell
+
+  python_dev:
+    - pyenv
+    - poetry
+    - pipx
+    - black
+    - flake8
+    - mypy
+    - isort
+    - pytest
+    - ipython
+    - jupyter
+    - cookiecutter
+
+  cloud_tools:
+    - awscli
+    - kubectl
+    - helm
+    - terraform
+    - docker-compose

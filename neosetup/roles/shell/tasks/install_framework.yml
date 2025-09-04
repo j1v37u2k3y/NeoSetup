@@ -1,0 +1,7 @@
+---
+# Install shell frameworks (Oh My Zsh, Bash-it, Fish, etc.)
+# Now using unified framework installation
+
+- name: "⚡ Install shell framework (unified)"
+  include_tasks: "install_shell_framework.yml"
+  when: neosetup_install_frameworks | default(true)

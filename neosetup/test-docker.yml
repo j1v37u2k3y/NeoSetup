@@ -1,0 +1,57 @@
+---
+# Docker Test Playbook
+# Quick test to validate Docker setup
+
+- name: "🧪 Docker Installation Test"
+  hosts: all
+  gather_facts: yes
+  become: no
+
+  tasks:
+    - name: "🔍 Check Docker installation"
+      command: docker --version
+      register: docker_version
+      failed_when: false
+      changed_when: false
+
+    - name: "🔍 Check Docker Compose installation"
+      command: docker compose version
+      register: docker_compose_version
+      failed_when: false
+      changed_when: false
+
+    - name: "👥 Check user groups"
+      command: groups
+      register: user_groups
+      changed_when: false
+
+    - name: "🚀 Check Docker service status"
+      command: systemctl is-active docker
+      register: docker_service
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family != "Darwin"
+
+    - name: "🧪 Test Docker hello-world"
+      command: docker run --rm hello-world
+      register: docker_test
+      failed_when: false
+      changed_when: false
+
+    - name: "📊 Display test results"
+      debug:
+        msg: |
+          🐳 Docker Test Results:
+          ═══════════════════════
+          📦 Docker Version: {{ docker_version.stdout if docker_version.rc == 0 else 'Not installed' }}
+          🔧 Docker Compose: {{ docker_compose_version.stdout if docker_compose_version.rc == 0 else 'Not available' }}
+          👥 User Groups: {{ user_groups.stdout }}
+          🚀 Docker Service: {{ docker_service.stdout if docker_service is defined and docker_service.rc == 0 else 'N/A or not running' }}
+          🧪 Hello World Test: {{ 'PASSED' if docker_test.rc == 0 else 'FAILED - ' + (docker_test.stderr | default('Unknown error')) }}
+
+          {% if docker_test.rc != 0 %}
+          💡 If test failed, try:
+          - Log out and back in (group changes)
+          - sudo systemctl start docker
+          - Check Docker Desktop is running (macOS)
+          {% endif %}

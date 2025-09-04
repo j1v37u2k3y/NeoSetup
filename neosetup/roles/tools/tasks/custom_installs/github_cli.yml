@@ -1,0 +1,46 @@
+---
+# Custom installation for GitHub CLI on Linux
+
+- name: "🐙 Install GitHub CLI on Ubuntu/Debian"
+  when: platform_key in ['ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if gh is already installed"
+      command: which gh
+      register: gh_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "📥 Add GitHub CLI repository"
+      when: gh_check.rc != 0
+      shell: |
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+    - name: "📦 Update apt cache"
+      apt:
+        update_cache: yes
+      when: gh_check.rc != 0
+
+    - name: "📦 Install GitHub CLI"
+      package:
+        name: gh
+        state: present
+
+- name: "🐙 Install GitHub CLI on RedHat/CentOS"
+  when: platform_key == 'redhat'
+  become: yes
+  block:
+    - name: "📥 Add GitHub CLI repository"
+      yum_repository:
+        name: gh-cli
+        description: GitHub CLI
+        baseurl: https://cli.github.com/packages/rpm
+        gpgkey: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x23F3D4EA75716059
+        gpgcheck: yes
+        enabled: yes
+
+    - name: "📦 Install GitHub CLI"
+      package:
+        name: gh
+        state: present

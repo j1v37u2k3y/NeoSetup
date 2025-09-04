@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Matrix-themed greeting for NeoSetup shells
+# This file is sourced by both zshrc and bashrc to avoid duplication
+
+# ============================================================================
+# 🐇 Matrix Greeting - Follow the White Rabbit
+# ============================================================================
+
+# Only show in interactive shells
+if [[ $- == *i* ]]; then
+    # Matrix digital rain greeting (optional)
+    if command -v cmatrix &> /dev/null && [[ "${MATRIX_RAIN:-true}" == "true" ]]; then
+        # Show brief matrix animation on terminal start (1 second)
+        timeout 1 cmatrix -b -C green 2>/dev/null || true
+        clear
+    fi
+
+    # Matrix-themed welcome message
+    echo -e "\033[32m"
+    cat << 'EOF'
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║   ▄▄▌ ▐ ▄▌▄▄▄ .▄▄▌   ▄▄·       • ▌ ▄ ·. ▄▄▄ .                          ║
+║   ██· █▌▐█▀▄.▀·██•  ▐█ ▌▪▪     ·██ ▐███▪▀▄.▀·                          ║
+║   ██▪▐█▐▐▌▐▀▀▪▄██▪  ██ ▄▄ ▄█▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄                          ║
+║   ▐█▌██▐█▌▐█▄▄▌▐█▌▐▌▐███▌▐█▌.▐▌██ ██▌▐█▌▐█▄▄▌                          ║
+║    ▀▀▀▀ ▀▪ ▀▀▀ .▀▀▀ ·▀▀▀  ▀█▄▀▪▀▀  █▪▀▀▀ ▀▀▀                           ║
+║                                                                          ║
+║            Wake up, {{ ansible_user_id }}... The Matrix has you...                  ║
+║                  Follow the white rabbit 🐇                             ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+EOF
+    echo -e "\033[0m"
+
+    # System info in Matrix style
+    echo -e "\033[32m┌──[ System Matrix ]──────────────────────────────────────────┐\033[0m"
+    echo -e "\033[32m│\033[0m 🎭 Operator: \033[92m{{ neosetup_operator | default('jiveturkey') }}\033[0m"
+    echo -e "\033[32m│\033[0m 🐚 Shell: \033[92m$SHELL\033[0m"
+    echo -e "\033[32m│\033[0m 🧠 Kernel: \033[92m$(uname -r)\033[0m"
+    echo -e "\033[32m│\033[0m ⏱️ Uptime: \033[92m$(uptime | sed 's/.*up \([^,]*\),.*/\1/')\033[0m"
+
+    # Add additional info based on operator
+{% if neosetup_operator == 'jiveturkey' %}
+    echo -e "\033[32m│\033[0m 🐳 Docker: \033[92m$(docker --version 2>/dev/null | cut -d' ' -f3 | cut -d',' -f1 || echo 'Not installed')\033[0m"
+    echo -e "\033[32m│\033[0m 💾 Memory: \033[92m$(free -h 2>/dev/null | awk '/^Mem:/ {print $3"/"$2}' || echo 'N/A')\033[0m"
+{% endif %}
+
+    echo -e "\033[32m└──────────────────────────────────────────────────────────────┘\033[0m"
+    echo ""
+
+    # Random Matrix quote
+    MATRIX_QUOTES=(
+        "There is no spoon."
+        "Welcome to the desert of the real."
+        "Free your mind."
+        "The Matrix is everywhere."
+        "Follow the white rabbit."
+        "You take the red pill, you stay in Wonderland."
+        "Unfortunately, no one can be told what the Matrix is."
+        "I know kung fu."
+        "There's a difference between knowing the path and walking the path."
+    )
+
+    # Select random quote
+    RANDOM_INDEX=$((RANDOM % {{ '${#MATRIX_QUOTES[@]}' }}))
+    echo -e "\033[32m💊 {{ '${MATRIX_QUOTES[$RANDOM_INDEX]}' }}\033[0m"
+    echo ""
+fi
+
+# Export that greeting has been shown (to avoid duplication in subshells)
+export MATRIX_GREETING_SHOWN=1

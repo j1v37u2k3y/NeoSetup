@@ -1,0 +1,87 @@
+# ============================================================================
+# Functions
+# ============================================================================
+
+# Create directory and cd into it
+mkcd() {
+mkdir -p "$1" && cd "$1"
+}
+
+# Extract various archive types
+extract() {
+if [ -f "$1" ]; then
+case "$1" in
+*.tar.bz2)   tar xjf "$1"     ;;
+*.tar.gz)    tar xzf "$1"     ;;
+*.bz2)       bunzip2 "$1"     ;;
+*.rar)       unrar e "$1"     ;;
+*.gz)        gunzip "$1"      ;;
+*.tar)       tar xf "$1"      ;;
+*.tbz2)      tar xjf "$1"     ;;
+*.tgz)       tar xzf "$1"     ;;
+*.zip)       unzip "$1"       ;;
+*.Z)         uncompress "$1"  ;;
+*.7z)        7z x "$1"        ;;
+*)           echo "'$1' cannot be extracted" ;;
+esac
+else
+echo "'$1' is not a valid file"
+fi
+}
+
+# Find process by name
+psgrep() {
+ps aux | grep -v grep | grep -i "$1"
+}
+
+# Quick backup of file
+backup() {
+cp "$1" "$1.backup.$(date +%Y%m%d_%H%M%S)"
+}
+
+# Show PATH in readable format
+path() {
+echo "$PATH" | tr ':' '\n' | nl
+}
+
+# Weather from command line (only if no weather alias exists)
+if ! alias weather &>/dev/null; then
+weather() {
+curl "wttr.in/${1:-$(curl -s ipinfo.io/city)}"
+}
+fi
+
+# Matrix-themed functions
+{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+  # Enter the Matrix
+  enter_matrix() {
+  echo -e "\033[32m"
+  echo "Wake up, $USER..."
+  sleep 1
+  echo "The Matrix has you..."
+  sleep 1
+  echo "Follow the white rabbit."
+  echo -e "\033[0m"
+  sleep 1
+  cmatrix -b
+  }
+
+  # Red pill or blue pill
+  pill() {
+  echo -e "\033[31m🔴 Red Pill\033[0m: See how deep the rabbit hole goes (full system info)"
+  echo -e "\033[34m🔵 Blue Pill\033[0m: Return to blissful ignorance"
+  read -p "Choose (r/b): " choice
+  case "$choice" in
+  r|R) neofetch --config ~/.config/neofetch/matrix.conf 2>/dev/null || neofetch ;;
+  b|B) echo "You wake up in your bed and believe whatever you want to believe." ;;
+  *) echo "There is no spoon." ;;
+  esac
+  }
+{% endif %}
+
+# Custom functions from operator
+{% if shell_config.functions is defined %}
+  {% for func in shell_config.functions %}
+    {{ func.content }}
+  {% endfor %}
+{% endif %}

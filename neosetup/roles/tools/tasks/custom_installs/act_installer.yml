@@ -1,0 +1,28 @@
+---
+# Act (GitHub Actions local runner) installer
+- name: "📦 Install act (GitHub Actions local runner)"
+  block:
+    - name: "🔍 Check if act is already installed"
+      command: which act
+      register: act_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📥 Download and install act"
+      shell: |
+        curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
+        mkdir -p ~/.local/bin
+        mv ./bin/act ~/.local/bin/act 2>/dev/null || mv ./act ~/.local/bin/act 2>/dev/null || true
+      when: act_check.rc != 0
+      register: act_install
+      changed_when: act_install.rc == 0
+
+    - name: "✅ Verify act installation"
+      command: ~/.local/bin/act --version
+      register: act_version
+      changed_when: false
+
+    - name: "📝 Display act version"
+      debug:
+        msg: "Act installed: {{ act_version.stdout }}"
+      when: act_version.rc == 0

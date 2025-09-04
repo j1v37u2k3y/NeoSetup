@@ -1,0 +1,66 @@
+---
+# Install JiveTurkey power-user and security tools
+
+- name: "🔥 Install JiveTurkey power tools on macOS"
+  homebrew:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - ncdu         # Disk usage analyzer
+    - yq           # YAML processor
+    - httpie       # Modern HTTP client
+    - tldr         # Simplified man pages
+    - nmap         # Network scanner
+    - netcat       # Network utility
+    - ranger       # Terminal file manager
+    - midnight-commander  # MC file manager
+    - shellcheck   # Shell script analysis
+    - lazygit      # Git TUI
+    - gh           # GitHub CLI
+  when: ansible_os_family == "Darwin"
+
+- name: "🔥 Install JiveTurkey power tools on Ubuntu/Debian"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - ncdu
+    - yq
+    - httpie
+    - tldr
+    - nmap
+    - netcat-openbsd
+    - ranger
+    - mc
+    - shellcheck
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: "🔥 Install JiveTurkey power tools on RHEL/CentOS"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - ncdu
+    - nmap
+    - netcat
+    - ranger
+    - mc
+    - ShellCheck
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+
+# Install GitHub CLI on Linux
+- name: "🐙 Install GitHub CLI on Linux"
+  shell: |
+    if ! command -v gh &> /dev/null; then
+      curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+      sudo apt update
+      sudo apt install gh -y
+    fi
+  when:
+    - ansible_distribution in ['Ubuntu', 'Debian']
+  become: yes
+  changed_when: false

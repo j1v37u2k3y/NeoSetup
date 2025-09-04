@@ -1,0 +1,35 @@
+# ============================================================================
+# MATRIX THEME COLORS - Follow the White Rabbit 🐇
+# ============================================================================
+
+# Color palette
+%hidden MATRIX_BLACK="#000000"
+%hidden MATRIX_GREEN="#00ff00"
+%hidden MATRIX_DARK_GREEN="#003300"
+%hidden MATRIX_BRIGHT_GREEN="#33ff33"
+%hidden MATRIX_DIM_GREEN="#009900"
+
+# Status bar colors
+set -g status-style "bg=$MATRIX_BLACK,fg=$MATRIX_GREEN"
+set -g status-justify {{ tmux_config.status_bar.justify | default('left') }}
+
+# Window status colors
+set -g window-status-current-style "bg=$MATRIX_GREEN,fg=$MATRIX_BLACK,bold"
+set -g window-status-style "bg=$MATRIX_DARK_GREEN,fg=$MATRIX_GREEN"
+set -g window-status-activity-style "bg=$MATRIX_DIM_GREEN,fg=$MATRIX_BLACK"
+set -g window-status-bell-style "bg=$MATRIX_BRIGHT_GREEN,fg=$MATRIX_BLACK,blink"
+
+# Pane border colors
+set -g pane-border-style "fg=$MATRIX_DARK_GREEN"
+set -g pane-active-border-style "fg=$MATRIX_GREEN,bold"
+
+# Command line colors
+set -g message-style "bg=$MATRIX_GREEN,fg=$MATRIX_BLACK,bold"
+set -g message-command-style "bg=$MATRIX_DARK_GREEN,fg=$MATRIX_GREEN"
+
+# Mode colors (copy mode, etc.)
+set -g mode-style "bg=$MATRIX_GREEN,fg=$MATRIX_BLACK"
+
+# Clock color
+set -g clock-mode-colour "$MATRIX_GREEN"
+set -g clock-mode-style 24

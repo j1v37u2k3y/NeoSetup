@@ -1,0 +1,68 @@
+---
+# Zsh-specific configuration tasks
+
+- name: "🔤 Install Nerd Fonts for Powerlevel10k icons (macOS)"
+  homebrew_cask:
+    name:
+      - font-meslo-lg-nerd-font
+      - font-fira-code-nerd-font
+    state: present
+  when:
+    - ansible_os_family == "Darwin"
+    - shell_theme | default('powerlevel10k') == 'powerlevel10k'
+  ignore_errors: yes
+
+- name: "⚙️ Generate .zshrc from unified template"
+  template:
+    src: zshrc_unified.j2
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    backup: yes
+    mode: '0644'
+
+- name: "🔤 Install Nerd Fonts manually (Linux)"
+  block:
+    - name: "📁 Create fonts directory"
+      file:
+        path: "{{ ansible_env.HOME }}/.local/share/fonts"
+        state: directory
+        mode: '0755'
+
+    - name: "⬇️ Download Meslo LG Nerd Font"
+      get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Meslo.zip"
+        dest: "/tmp/Meslo.zip"
+        mode: '0644'
+
+    - name: "📦 Extract Meslo font"
+      unarchive:
+        src: "/tmp/Meslo.zip"
+        dest: "{{ ansible_env.HOME }}/.local/share/fonts"
+        remote_src: yes
+
+    - name: "🔄 Update font cache"
+      command: fc-cache -fv
+
+    - name: "🧹 Clean up font archive"
+      file:
+        path: "/tmp/Meslo.zip"
+        state: absent
+  when:
+    - ansible_os_family != "Darwin"
+    - shell_theme | default('powerlevel10k') == 'powerlevel10k'
+  ignore_errors: yes
+
+- name: "🎨 Configure Powerlevel10k theme"
+  template:
+    src: p10k.zsh.j2
+    dest: "{{ ansible_env.HOME }}/.p10k.zsh"
+    backup: yes
+    mode: '0644'
+  when: shell_theme | default('powerlevel10k') == 'powerlevel10k'
+
+- name: "🔧 Set Zsh as default shell in /etc/shells"
+  lineinfile:
+    path: /etc/shells
+    line: "{{ ansible_env.SHELL if neosetup_preferred_shell == neosetup_current_shell else '/bin/zsh' }}"
+    state: present
+  become: yes
+  when: neosetup_set_default_shell | default(false)

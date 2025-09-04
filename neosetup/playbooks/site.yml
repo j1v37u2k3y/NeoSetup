@@ -1,0 +1,66 @@
+---
+# NeoSetup Ansible Edition - Main Installation Playbook
+# The Matrix has you, Neo... let's set up your development environment
+
+- name: "\U0001F3AD Welcome to the Matrix - NeoSetup Ansible Edition"
+  hosts: all
+  gather_facts: yes
+  become: no
+  vars:
+    # Get the current operator or use default
+    current_operator: "{{ neosetup_operator | default(default_operator) }}"
+  pre_tasks:
+    - name: "\U0001F50D Display operator selection"
+      debug:
+        msg: |
+          🎭 Selected Operator: {{ current_operator }}
+          🚀 Loading operator configurations...
+    - name: "\U0001F4E6 Load base operator variables"
+      include_vars: "../operators/base/vars.yml"
+    - name: "\U0001F4E6 Load matrix operator variables (if applicable)"
+      include_vars: "../operators/matrix/vars.yml"
+      when: current_operator in ['matrix', 'jiveturkey']
+    - name: "\U0001F4E6 Load jiveturkey operator variables (if applicable)"
+      include_vars: "../operators/jiveturkey/vars.yml"
+      when: current_operator == 'jiveturkey'
+    - name: "✅ Display loaded operator information"
+      debug:
+        msg: |
+          🎭 Operator: {{ current_operator }}
+          📋 Description: {{ operators[current_operator].description |
+              default('No description') }}
+          👤 Author: {{ operators[current_operator].author |
+              default('Unknown') }}
+          🎨 Theme: {{ operators[current_operator].theme | default('default') }}
+          🔗 Extends: {{ operators[current_operator].extends | default('none') }}
+  roles:
+    - role: common
+      tags: [ 'common', 'always' ]
+    - role: shell
+      when: neosetup_configure_shell | default(true)
+      tags: [ 'shell' ]
+    - role: tmux
+      when: neosetup_configure_tmux | default(true)
+      tags: [ 'tmux' ]
+    - role: tools
+      when: neosetup_install_packages | default(true)
+      tags: [ 'tools', 'packages' ]
+    - role: docker
+      when: neosetup_install_docker | default(false)
+      tags: [ 'docker' ]
+  post_tasks:
+    - name: "\U0001F389 NeoSetup installation complete"
+      debug:
+        msg: |
+          ╔══════════════════════════════════════════╗
+          ║        Welcome to the Matrix, Neo        ║
+          ║     Your environment has been setup      ║
+          ║          with {{ current_operator }} operator          ║
+          ╚══════════════════════════════════════════╝
+
+          🚀 Next steps:
+          - Restart your shell or run: source ~/.zshrc
+          - Start tmux: tmux new-session
+          - Check installed tools: which eza bat btop ripgrep
+
+          The red pill was the right choice! 💊

@@ -1,0 +1,156 @@
+---
+# Base Operator Configuration
+# Sensible defaults that work everywhere
+
+# Operator metadata
+operator_name: "base"
+operator_version: "1.0.0"
+operator_description: "Essential development tools and minimal configuration"
+
+# Shell configuration
+shell_config:
+  # Shell selection (auto-detect or force)
+  preferred_shell: "auto"  # auto, zsh, bash
+
+  # Oh My Zsh configuration
+  install_oh_my_zsh: true
+  oh_my_zsh_theme: "robbyrussell"
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+
+  # Basic aliases
+  aliases:
+    # Navigation
+    "..": "cd .."
+    "...": "cd ../.."
+    "~": "cd ~"
+    # File operations
+    "ll": "ls -alF"
+    "la": "ls -A"
+    "l": "ls -CF"
+    # Git shortcuts
+    "gs": "git status"
+    "ga": "git add"
+    "gc": "git commit"
+    "gp": "git push"
+    "gl": "git pull"
+    # Docker shortcuts
+    "d": "docker"
+    "dc": "docker compose"
+    "dps": "docker ps"
+
+  # Environment variables
+  environment:
+    EDITOR: "vim"
+    PAGER: "less"
+
+# Tmux configuration
+tmux_config:
+  install_tmux: true
+  install_tpm: true  # Tmux Plugin Manager
+  prefix: "C-a"      # Screen-style prefix
+
+  # Basic settings
+  settings:
+    base_index: 1
+    pane_base_index: 1
+    history_limit: 10000
+    mouse: true
+
+  # Key bindings
+  key_bindings:
+    reload_config: "r"
+    split_horizontal: "|"
+    split_vertical: "-"
+
+  # Plugins
+  plugins:
+    - "tmux-plugins/tpm"
+    - "tmux-plugins/tmux-sensible"
+    - "tmux-plugins/tmux-resurrect"
+
+# Tools configuration
+tools_config:
+  # Essential tools to install
+  essential_tools:
+    - name: "fd"
+      description: "Better find"
+      package:
+        macos: "fd"
+        debian: "fd-find"
+        redhat: "fd-find"
+    - name: "ripgrep"
+      description: "Better grep"
+      package:
+        macos: "ripgrep"
+        debian: "ripgrep"
+        redhat: "ripgrep"
+    - name: "fzf"
+      description: "Fuzzy finder"
+      package:
+        macos: "fzf"
+        debian: "fzf"
+        redhat: "fzf"
+    - name: "tree"
+      description: "Directory tree"
+      package:
+        macos: "tree"
+        debian: "tree"
+        redhat: "tree"
+    - name: "htop"
+      description: "Process viewer"
+      package:
+        macos: "htop"
+        debian: "htop"
+        redhat: "htop"
+    - name: "jq"
+      description: "JSON processor"
+      package:
+        macos: "jq"
+        debian: "jq"
+        redhat: "jq"
+    - name: "curl"
+      description: "URL transfer tool"
+      package:
+        macos: "curl"
+        debian: "curl"
+        redhat: "curl"
+    - name: "wget"
+      description: "Web downloader"
+      package:
+        macos: "wget"
+        debian: "wget"
+        redhat: "wget"
+    - name: "unzip"
+      description: "Archive extractor"
+      package:
+        macos: "unzip"
+        debian: "unzip"
+        redhat: "unzip"
+    - name: "yamllint"
+      description: "YAML linting and validation"
+      install_method: "pip"
+      package: "yamllint"
+    - name: "act"
+      description: "Run GitHub Actions locally"
+      install_method: "custom"
+      custom_install:
+        script: |
+          curl -s \
+            https://raw.githubusercontent.com/nektos/act/master/install.sh \
+            | bash
+          mkdir -p ~/.local/bin
+          mv ./bin/act ~/.local/bin/act 2>/dev/null || true
+    - name: "pre-commit"
+      description: "Git pre-commit hooks framework"
+      install_method: "pip"
+      package: "pre-commit"
+
+# Docker configuration
+docker_config:
+  install_docker: true
+  install_docker_compose: true
+  add_user_to_docker_group: true

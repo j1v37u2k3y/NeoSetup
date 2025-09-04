@@ -1,0 +1,44 @@
+---
+# Install modern CLI tool replacements
+
+- name: "⚡ Install modern CLI tools on macOS"
+  homebrew:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - eza          # Better ls
+    - bat          # Better cat
+    - fd           # Better find
+    - ripgrep      # Better grep
+    - fzf          # Fuzzy finder
+    - btop         # Better htop
+    - delta        # Better git diff
+    - zoxide       # Better cd
+  when: ansible_os_family == "Darwin"
+
+- name: "⚡ Install modern CLI tools on Ubuntu/Debian"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - exa          # eza alternative
+    - bat
+    - fd-find      # fd alternative name
+    - ripgrep
+    - fzf
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: "⚡ Install modern CLI tools on RHEL/CentOS"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - exa
+    - bat
+    - fd-find
+    - ripgrep
+    - fzf
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes  # Some packages may not be available in default repos

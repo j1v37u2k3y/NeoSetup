@@ -1,0 +1,25 @@
+---
+# Install shell if not present
+
+- name: "🔍 Check if shell is installed: {{ neosetup_preferred_shell }}"
+  command: which {{ neosetup_preferred_shell }}
+  register: shell_check
+  failed_when: false
+  changed_when: false
+
+- name: "📦 Install shell on macOS: {{ neosetup_preferred_shell }}"
+  homebrew:
+    name: "{{ neosetup_preferred_shell }}"
+    state: present
+  when:
+    - ansible_os_family == "Darwin"
+    - shell_check.rc != 0
+
+- name: "📦 Install shell on Linux: {{ neosetup_preferred_shell }}"
+  package:
+    name: "{{ neosetup_preferred_shell }}"
+    state: present
+  become: yes
+  when:
+    - ansible_os_family != "Darwin"
+    - shell_check.rc != 0

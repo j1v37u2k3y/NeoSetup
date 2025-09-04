@@ -1,0 +1,129 @@
+---
+# Configure Docker daemon and advanced features
+
+- name: "⚙️ Create Docker configuration directory"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/docker
+    - "{{ ansible_env.HOME }}/.docker"
+  become: yes
+  when: ansible_os_family != "Darwin"
+
+- name: "📝 Configure Docker daemon.json"
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    backup: yes
+    mode: '0644'
+  become: yes
+  when: ansible_os_family != "Darwin"
+  notify: restart docker
+
+- name: "🔧 Enable BuildKit by default"
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.{{ item }}rc"
+    line: 'export DOCKER_BUILDKIT={{ "1" if docker_buildkit.enabled else "0" }}'
+    create: yes
+  loop:
+    - bash
+    - zsh
+  when: docker_buildkit.enabled | default(true)
+
+- name: "📦 Install Docker Compose v2"
+  block:
+    - name: "🔍 Check Docker Compose v2 installation"
+      command: docker compose version
+      register: compose_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📥 Install Docker Compose v2 plugin (Linux)"
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ ansible_architecture }}"
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
+        mode: '0755'
+      become: yes
+      when:
+        - ansible_os_family != "Darwin"
+        - compose_check.rc != 0
+        - docker_compose_v2.install_method == "plugin"
+
+    - name: "📥 Install Docker Compose v2 standalone (Linux)"
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+      become: yes
+      when:
+        - ansible_os_family != "Darwin"
+        - docker_compose_v2.install_method == "standalone"
+  when: docker_install_compose | default(true)
+
+- name: "🔧 Install Docker Buildx"
+  block:
+    - name: "🔍 Check Docker Buildx installation"
+      command: docker buildx version
+      register: buildx_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📥 Install Docker Buildx plugin (Linux)"
+      get_url:
+        url: "https://github.com/docker/buildx/releases/latest/download/buildx-{{ docker_buildx_version | default('latest') }}.linux-{{ ansible_architecture }}"
+        dest: /usr/local/lib/docker/cli-plugins/docker-buildx
+        mode: '0755'
+      become: yes
+      when:
+        - ansible_os_family != "Darwin"
+        - buildx_check.rc != 0
+
+    - name: "🏗️ Create and use Buildx builder"
+      shell: |
+        docker buildx create --name matrix-builder --use
+        docker buildx inspect --bootstrap
+      when: buildx_check.rc == 0 or ansible_os_family != "Darwin"
+      ignore_errors: yes
+  when: docker_install_buildx | default(true)
+
+- name: "🔒 Configure Docker security settings"
+  block:
+    - name: "📝 Set up user namespace remapping"
+      lineinfile:
+        path: /etc/subuid
+        line: "dockremap:100000:65536"
+        create: yes
+      become: yes
+      when: docker_security.userns_remap | default(false)
+
+    - name: "📝 Configure subgid for user namespace"
+      lineinfile:
+        path: /etc/subgid
+        line: "dockremap:100000:65536"
+        create: yes
+      become: yes
+      when: docker_security.userns_remap | default(false)
+  when:
+    - ansible_os_family != "Darwin"
+    - docker_security is defined
+
+- name: "🌐 Create custom Docker networks"
+  docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    ipam_config: "{{ item.ipam.config | default(omit) }}"
+  loop: "{{ docker_networks | default([]) }}"
+  when: docker_networks is defined
+  ignore_errors: yes
+
+- name: "🧹 Configure Docker pruning (cron job)"
+  cron:
+    name: "Docker system prune"
+    special_time: "{{ docker_prune.schedule }}"
+    job: "docker system prune -af {{ '--volumes' if docker_prune.prune_volumes else '' }}"
+    user: "{{ ansible_user_id }}"
+  when:
+    - docker_prune.enabled | default(false)
+    - ansible_os_family != "Darwin"

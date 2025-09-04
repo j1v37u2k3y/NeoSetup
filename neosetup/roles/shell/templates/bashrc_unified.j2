@@ -1,0 +1,106 @@
+{% set shell_type = 'bash' %}
+{% include 'shared/header.j2' %}
+
+{% include 'shared/matrix_greeting.j2' %}
+
+{% include 'shared/path.j2' %}
+
+# ============================================================================
+# Bash-it Configuration
+# ============================================================================
+{% if shell_config.bash_it_enabled | default(true) %}
+  export BASH_IT="$HOME/.bash_it"
+  export BASH_IT_THEME="{{ shell_config.bash_it_theme | default('bobby') }}"
+  export SCM_CHECK=true
+  export BASH_IT_AUTOMATIC_RELOAD_AFTER_CONFIG_CHANGE=1
+
+  # Load Bash-it
+  if [[ -f "$BASH_IT/bash_it.sh" ]]; then
+  source "$BASH_IT/bash_it.sh"
+  fi
+{% endif %}
+
+{% include 'shared/environment.j2' %}
+
+{% include 'shared/aliases.j2' %}
+
+{% include 'shared/functions.j2' %}
+
+# ============================================================================
+# Bash-specific Settings
+# ============================================================================
+# History control
+export HISTCONTROL=ignoreboth:erasedups
+export HISTIGNORE="ls:ll:cd:pwd:exit:clear:history"
+export HISTTIMEFORMAT="%Y-%m-%d %T "
+
+# Append to history file
+shopt -s histappend
+
+# Check window size after each command
+shopt -s checkwinsize
+
+# Extended globbing
+shopt -s extglob
+
+# Case-insensitive globbing
+shopt -s nocaseglob
+
+# Autocorrect typos in path names
+shopt -s cdspell
+
+# Enable programmable completion
+if ! shopt -oq posix; then
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+. /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+. /etc/bash_completion
+elif [ -f /opt/homebrew/etc/profile.d/bash_completion.sh ]; then
+. /opt/homebrew/etc/profile.d/bash_completion.sh
+fi
+fi
+
+# ============================================================================
+# Prompt Configuration (if not using Bash-it)
+# ============================================================================
+{% if not shell_config.bash_it_enabled | default(true) %}
+  # Custom prompt
+  if [[ "$TERM" == "xterm-256color" ]] || [[ "$TERM" == "screen-256color" ]]; then
+  # Matrix-themed prompt
+  PS1='\[\033[32m\]\u@\h\[\033[00m\]:\[\033[34m\]\w\[\033[00m\]\$ '
+  else
+  PS1='\u@\h:\w\$ '
+  fi
+{% endif %}
+
+# ============================================================================
+# Key Bindings
+# ============================================================================
+# History search with arrow keys
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
+
+# Ctrl+Left/Right to move by word
+bind '"\e[1;5C": forward-word'
+bind '"\e[1;5D": backward-word'
+
+# ============================================================================
+# Custom Configuration
+# ============================================================================
+{% if shell_config.custom_bash is defined %}
+  {{ shell_config.custom_bash }}
+{% endif %}
+
+# Source local configuration if it exists
+[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
+
+# ============================================================================
+# Matrix Effect on Start
+# ============================================================================
+{% if neosetup_operator in ['matrix', 'jiveturkey'] and shell_config.matrix_on_start | default(false) %}
+  # Show Matrix effect on terminal start (can be disabled in ~/.bashrc.local)
+  if [[ -z "$MATRIX_EFFECT_SHOWN" ]] && command -v cmatrix &>/dev/null; then
+  export MATRIX_EFFECT_SHOWN=1
+  timeout 3 cmatrix -b 2>/dev/null || true
+  fi
+{% endif %}

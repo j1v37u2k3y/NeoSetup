@@ -1,0 +1,84 @@
+# ============================================================================
+# KEY BINDINGS
+# ============================================================================
+
+# Reload configuration
+bind r source-file ~/.tmux.conf \; display-message "🔄 Config reloaded!"
+
+# Split panes with intuitive keys
+{% if tmux_config.key_bindings.split_horizontal is defined %}
+  bind {{ tmux_config.key_bindings.split_horizontal }} split-window -h -c "#{pane_current_path}"
+{% else %}
+  bind | split-window -h -c "#{pane_current_path}"
+  bind \\ split-window -h -c "#{pane_current_path}"
+{% endif %}
+
+{% if tmux_config.key_bindings.split_vertical is defined %}
+  bind {{ tmux_config.key_bindings.split_vertical }} split-window -v -c "#{pane_current_path}"
+{% else %}
+  bind - split-window -v -c "#{pane_current_path}"
+{% endif %}
+
+# New window in current path
+bind c new-window -c "#{pane_current_path}"
+
+# Pane navigation with vim-like keys
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# Smart pane switching with awareness of Vim splits
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+| grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+bind -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
+bind -n 'C-j' if-shell "$is_vim" 'send-keys C-j'  'select-pane -D'
+bind -n 'C-k' if-shell "$is_vim" 'send-keys C-k'  'select-pane -U'
+bind -n 'C-l' if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
+
+# Window navigation
+bind -n M-Left previous-window
+bind -n M-Right next-window
+bind -n M-h previous-window
+bind -n M-l next-window
+
+# Pane resizing (repeatable)
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# Pane management
+bind x kill-pane
+bind X kill-window
+bind q kill-session
+bind & kill-window # Override default confirm-before
+
+# Window management
+bind n new-window -c "#{pane_current_path}"
+bind N command-prompt -p "Name:" "new-window -n '%%' -c '#{pane_current_path}'"
+
+# Session management
+bind S new-session
+bind s choose-session
+bind R command-prompt -p "Rename session:" "rename-session '%%'"
+
+# Copy mode bindings
+bind Enter copy-mode
+bind -T copy-mode-vi v send-keys -X begin-selection
+bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'pbcopy'
+bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
+
+# Clear screen and history
+bind C-l send-keys 'C-l' \; clear-history
+
+# Synchronize panes
+bind S setw synchronize-panes
+
+# Toggle status bar
+bind T set-option status
+
+# Custom key bindings from operator
+{% for binding in tmux_config.custom_bindings | default([]) %}
+  bind {{ binding.key }} {{ binding.command }}
+{% endfor %}

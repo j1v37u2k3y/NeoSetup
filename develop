@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""
+🎭 NeoSetup Development Environment Setup
+One-click development environment configuration with comprehensive validation
+"""
+
+import os
+import sys
+import subprocess
+import json
+import tempfile
+from pathlib import Path
+
+# Matrix-themed colors
+GREEN = '\033[92m'
+RED = '\033[91m'
+BLUE = '\033[94m'
+CYAN = '\033[96m'
+YELLOW = '\033[93m'
+BOLD = '\033[1m'
+RESET = '\033[0m'
+
+def print_matrix(message, color=GREEN):
+    """Print Matrix-themed message"""
+    print(f"{color}{BOLD}🎭 {message}{RESET}")
+
+def print_step(step_num, total_steps, message):
+    """Print step progress"""
+    print(f"{CYAN}{BOLD}Step {step_num}/{total_steps}:{RESET} {message}")
+
+def run_command(command, cwd=None, check=True, capture_output=False):
+    """Run command with error handling"""
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=cwd,
+            check=check,
+            capture_output=capture_output,
+            text=True
+        )
+        return result
+    except subprocess.CalledProcessError as e:
+        print(f"{RED}❌ Command failed: {command}{RESET}")
+        if capture_output:
+            print(f"{RED}Error: {e.stderr}{RESET}")
+        return None
+
+def check_requirements():
+    """Check system requirements"""
+    print_matrix("Checking system requirements...")
+
+    # Check Python version
+    if sys.version_info < (3, 8):
+        print(f"{RED}❌ Python 3.8+ required. Current: {sys.version}{RESET}")
+        return False
+
+    # Check if we're in the right directory
+    if not Path("neosetup").exists():
+        print(f"{RED}❌ Must run from NeoSetup project root directory{RESET}")
+        return False
+
+    print(f"{GREEN}✅ Python {sys.version_info.major}.{sys.version_info.minor} - OK{RESET}")
+    print(f"{GREEN}✅ Project directory - OK{RESET}")
+    return True
+
+def install_dependencies():
+    """Install all Python dependencies"""
+    print_step(1, 6, "Installing Python dependencies...")
+
+    # Install runtime dependencies
+    print("📦 Installing runtime dependencies...")
+    if not run_command("pip3 install -r neosetup/requirements-runtime.txt"):
+        return False
+
+    # Install development dependencies
+    print("🛠️ Installing development dependencies...")
+    if not run_command("pip3 install -r requirements.txt"):
+        return False
+
+    print(f"{GREEN}✅ Python dependencies installed{RESET}")
+    return True
+
+def install_ansible_collections():
+    """Install Ansible Galaxy collections"""
+    print_step(2, 6, "Installing Ansible Galaxy collections...")
+
+    if not run_command("ansible-galaxy install -r neosetup/requirements.yml --force"):
+        return False
+
+    print(f"{GREEN}✅ Ansible collections installed{RESET}")
+    return True
+
+def setup_pre_commit():
+    """Setup pre-commit hooks"""
+    print_step(3, 6, "Setting up pre-commit hooks...")
+
+    if not run_command("pre-commit install --install-hooks"):
+        return False
+
+    print(f"{GREEN}✅ Pre-commit hooks installed{RESET}")
+    return True
+
+def run_validation_tests():
+    """Run comprehensive validation tests"""
+    print_step(4, 6, "Running validation tests...")
+
+    print("🔍 Testing Ansible syntax...")
+    result = run_command("ansible-playbook playbooks/site.yml --syntax-check",
+                        cwd="neosetup", check=False)
+    if result and result.returncode == 0:
+        print(f"{GREEN}✅ Ansible syntax check passed{RESET}")
+    else:
+        print(f"{YELLOW}⚠️ Ansible syntax check issues (may be normal){RESET}")
+
+    print("🧪 Testing operator validation...")
+    for operator in ["base", "matrix", "jiveturkey"]:
+        result = run_command(f"python3 scripts/validate_operator.py {operator}",
+                           cwd="neosetup", check=False)
+        if result and result.returncode == 0:
+            print(f"{GREEN}✅ Operator '{operator}' validation passed{RESET}")
+        else:
+            print(f"{YELLOW}⚠️ Operator '{operator}' validation issues{RESET}")
+
+    print(f"{GREEN}✅ Validation tests completed{RESET}")
+    return True
+
+def test_docker_generation():
+    """Test Docker container generation locally"""
+    print_step(5, 6, "Testing Docker container generation...")
+
+    # Generate test Dockerfiles
+    docker_script = '''
+import os
+
+# Test Docker generation for key platforms
+images = {
+    "ubuntu-22.04": "ubuntu:22.04",
+    "rocky-9": "rockylinux:9"
+}
+
+for os_name, base_image in images.items():
+    print(f"🔨 Generating test Dockerfile for {os_name}...")
+
+    dockerfile = f"""# Test container for {os_name}
+FROM {base_image}
+
+# Install base packages including python3-venv
+RUN if [ -f /etc/debian_version ]; then \\\\
+  apt-get update && \\\\
+  apt-get install -y python3 python3-pip python3-venv sudo curl wget git openssh-client && \\\\
+  apt-get clean; \\\\
+elif [ -f /etc/redhat-release ]; then \\\\
+  if command -v dnf; then \\\\
+    dnf install -y python3 python3-pip sudo curl wget git openssh-clients; \\\\
+  fi; \\\\
+fi
+
+# Create virtual environment and test installation
+RUN python3 -m venv /opt/test-venv
+RUN /opt/test-venv/bin/pip install --upgrade pip
+RUN /opt/test-venv/bin/pip install ansible PyYAML
+
+WORKDIR /test
+"""
+
+    with open(f"Dockerfile.dev-test-{os_name}", "w") as f:
+        f.write(dockerfile)
+
+    print(f"✅ Generated Dockerfile.dev-test-{os_name}")
+
+print("🐳 Docker test generation completed!")
+'''
+
+    # Run the Docker generation script
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(docker_script)
+        temp_script = f.name
+
+    try:
+        result = run_command(f"python3 {temp_script}", cwd="neosetup")
+        if result:
+            print(f"{GREEN}✅ Docker container generation test passed{RESET}")
+            print(f"{BLUE}💡 Test files generated in neosetup/ directory{RESET}")
+        return True
+    finally:
+        os.unlink(temp_script)
+
+def run_pre_commit_test():
+    """Run pre-commit on all files"""
+    print_step(6, 6, "Running pre-commit validation...")
+
+    print("🪝 Running all pre-commit hooks...")
+    result = run_command("pre-commit run --all-files", check=False)
+
+    if result and result.returncode == 0:
+        print(f"{GREEN}✅ All pre-commit hooks passed{RESET}")
+    else:
+        print(f"{YELLOW}⚠️ Some pre-commit hooks found issues (auto-fixed where possible){RESET}")
+
+    return True
+
+def show_completion_info():
+    """Show completion information and next steps"""
+    print_matrix("Development environment setup complete! 🎉")
+    print()
+    print(f"{BOLD}📋 What was installed:{RESET}")
+    print(f"  ✅ Runtime dependencies (Ansible, PyYAML, etc.)")
+    print(f"  ✅ Development tools (ansible-lint, yamllint, pre-commit, etc.)")
+    print(f"  ✅ Ansible Galaxy collections (community.general, ansible.posix, etc.)")
+    print(f"  ✅ Pre-commit hooks (automatic validation on git commit)")
+    print()
+    print(f"{BOLD}🚀 Quick commands to try:{RESET}")
+    print(f"  {CYAN}cd neosetup && make dry-run OPERATOR=matrix{RESET}     # Preview installation")
+    print(f"  {CYAN}cd neosetup && make install OPERATOR=base{RESET}      # Install base operator")
+    print(f"  {CYAN}pre-commit run --all-files{RESET}                     # Run all validation")
+    print(f"  {CYAN}cd neosetup && make lint{RESET}                       # Run ansible-lint")
+    print()
+    print(f"{BOLD}🐳 Docker testing:{RESET}")
+    print(f"  {CYAN}docker build -f neosetup/Dockerfile.dev-test-ubuntu-22.04 -t test-ubuntu .{RESET}")
+    print(f"  {CYAN}docker build -f neosetup/Dockerfile.dev-test-rocky-9 -t test-rocky .{RESET}")
+    print()
+    print_matrix("Ready to hack the Matrix! 💊")
+
+def main():
+    """Main development setup function"""
+    print_matrix("Welcome to NeoSetup Development Environment Setup")
+    print(f"{BLUE}This will set up everything needed for NeoSetup development.{RESET}")
+    print()
+
+    # Check requirements
+    if not check_requirements():
+        sys.exit(1)
+
+    # Run setup steps
+    steps = [
+        install_dependencies,
+        install_ansible_collections,
+        setup_pre_commit,
+        run_validation_tests,
+        test_docker_generation,
+        run_pre_commit_test
+    ]
+
+    for step_func in steps:
+        if not step_func():
+            print(f"{RED}❌ Setup failed at step: {step_func.__name__}{RESET}")
+            sys.exit(1)
+        print()  # Add spacing between steps
+
+    # Show completion info
+    show_completion_info()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+---
+# Install Bash-it framework
+
+- name: "🔍 Check if Bash-it is already installed"
+  stat:
+    path: "{{ ansible_env.HOME }}/.bash_it"
+  register: bash_it_stat
+
+- name: "📥 Clone Bash-it repository"
+  git:
+    repo: https://github.com/Bash-it/bash-it.git
+    dest: "{{ ansible_env.HOME }}/.bash_it"
+    depth: 1
+  when: not bash_it_stat.stat.exists
+
+- name: "⚙️ Install Bash-it"
+  shell: "{{ ansible_env.HOME }}/.bash_it/install.sh --silent --no-modify-config"
+  when: not bash_it_stat.stat.exists
+  changed_when: true

@@ -1,0 +1,76 @@
+---
+# Tmux role default variables
+
+# Installation settings
+neosetup_install_tpm: true
+neosetup_backup_configs: true
+
+# Default tmux configuration
+tmux_config:
+  # Theme selection (matrix, base, or custom)
+  theme: "matrix"
+
+  # Prefix key
+  prefix: "C-a"
+
+  # Terminal settings
+  terminal: "tmux-256color"
+
+  # Basic settings
+  settings:
+    mouse: true
+    base_index: 1
+    pane_base_index: 1
+    history_limit: 50000
+
+  # Timing settings
+  timing:
+    escape_time: 0
+    repeat_time: 600
+    display_time: 4000
+    display_panes_time: 2000
+
+  # Window settings
+  auto_rename: true
+  set_titles: true
+  renumber_windows: true
+  allow_rename: false
+  activity_monitoring: true
+  visual_activity: false
+
+  # Key bindings
+  key_bindings:
+    reload_config: "r"
+    split_horizontal: "|"
+    split_vertical: "-"
+
+  # Status bar configuration
+  status_bar:
+    position: "bottom"
+    justify: "left"
+    interval: 5
+    left_length: 100
+    right_length: 100
+
+  # Plugin configuration
+  plugins:
+    enabled: true
+    sensible: true
+    resurrect: true
+    continuum: false
+    yank: true
+    copycat: false
+    prefix_highlight: false
+
+  # Plugin settings
+  auto_restore: false
+  save_interval: 15
+
+  # Custom plugins list
+  custom_plugins: [ ]
+
+  # Custom key bindings
+  custom_bindings: [ ]
+
+  # Status bar modules
+  status_modules: [ ]

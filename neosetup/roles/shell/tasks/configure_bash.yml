@@ -1,0 +1,21 @@
+---
+# Bash-specific configuration tasks
+
+- name: "⚙️ Generate .bashrc from unified template"
+  template:
+    src: bashrc_unified.j2
+    dest: "{{ ansible_env.HOME }}/.bashrc"
+    backup: yes
+    mode: '0644'
+
+- name: "🔧 Enable Bash-it plugins"
+  shell: |
+    source {{ ansible_env.HOME }}/.bash_it/bash_it.sh
+    bash-it enable plugin {{ item }}
+  loop:
+    - git
+    - history
+    - ssh
+  when: bash_it_stat.stat.exists | default(false)
+  changed_when: false
+  ignore_errors: yes

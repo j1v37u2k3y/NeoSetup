@@ -1,0 +1,20 @@
+---
+# Common role defaults
+
+# NeoSetup operator (can be overridden)
+neosetup_operator: "{{ operator | default('base') }}"
+
+# Default installation settings
+neosetup_configure_shell: true
+neosetup_configure_tmux: true
+neosetup_install_packages: true
+neosetup_install_docker: false
+
+# Configuration directory
+neosetup_config_dir: "{{ ansible_env.HOME }}/.neosetup"
+
+# Logging verbosity
+neosetup_verbose: false
+
+# Color output
+neosetup_color_output: true

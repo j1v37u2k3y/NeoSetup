@@ -1,0 +1,131 @@
+# {{ ansible_managed }}
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║ NeoSetup Zsh Configuration - {{ neosetup_operator | default('jiveturkey') }} Operator                      ║
+# ║ Generated: {{ ansible_date_time.iso8601 }}                                          ║
+# ║ User: {{ ansible_user_id }}@{{ ansible_hostname }}                                      ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# ============================================================================
+# 🐇 Matrix Greeting - Follow the White Rabbit
+# ============================================================================
+# Source the Matrix greeting (shared between shells)
+if [[ -z "$MATRIX_GREETING_SHOWN" ]] && [[ -f ~/.matrix_greeting.sh ]]; then
+source ~/.matrix_greeting.sh
+fi
+
+# ============================================================================
+# PATH Configuration
+# ============================================================================
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
+
+# ============================================================================
+# Oh My Zsh Configuration
+# ============================================================================
+export ZSH="$HOME/.oh-my-zsh"
+
+# Theme configuration
+ZSH_THEME="{{ shell_config.oh_my_zsh_theme | default('powerlevel10k/powerlevel10k') }}"
+
+# Plugin configuration
+plugins=(
+{% for plugin in shell_config.oh_my_zsh_plugins | default([]) %}
+  {{ plugin }}
+{% endfor %}
+)
+
+# Oh My Zsh initialization
+source $ZSH/oh-my-zsh.sh
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+{% for var, value in shell_env_vars.items() %}
+  export {{ var }}="{{ value }}"
+{% endfor %}
+
+# ============================================================================
+# Aliases
+# ============================================================================
+{% for alias_item in shell_aliases | default([]) %}
+  alias {{ alias_item.alias }}="{{ alias_item.command }}"
+{% endfor %}
+
+# ============================================================================
+# Functions
+# ============================================================================
+{% for func in shell_functions | default([]) %}
+  {{ func.name }}() {
+  {{ func.body | indent(4, true) }}
+  }
+{% endfor %}
+
+# ============================================================================
+# Matrix Theme Customizations
+# ============================================================================
+{% if operators[neosetup_operator].theme == 'matrix' %}
+  # Matrix green prompt elements
+  export TERM_THEME="matrix"
+  export PRIMARY_COLOR="green"
+
+  # Custom Matrix greeting
+  if [[ $- == *i* ]]; then
+  echo "{{ matrix_greeting | default('Welcome to the Matrix, Neo...') }}"
+  fi
+{% endif %}
+
+# ============================================================================
+# Operator Specific Configuration
+# ============================================================================
+# Configuration loaded from operator: {{ neosetup_operator | default('jiveturkey') }}
+
+{% if neosetup_operator == 'jiveturkey' %}
+  # JiveTurkey power-user configurations
+  export HISTSIZE={{ shell_config.environment.HISTSIZE | default('50000') }}
+  export SAVEHIST={{ shell_config.environment.SAVEHIST | default('50000') }}
+
+  # Enhanced history
+  setopt HIST_EXPIRE_DUPS_FIRST
+  setopt HIST_IGNORE_DUPS
+  setopt HIST_IGNORE_ALL_DUPS
+  setopt HIST_IGNORE_SPACE
+  setopt HIST_FIND_NO_DUPS
+  setopt HIST_SAVE_NO_DUPS
+  setopt HIST_BEEP
+
+  # Enhanced completion
+  autoload -Uz compinit
+  compinit
+
+  # Case-insensitive completion
+  zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+
+  # Better directory navigation
+  setopt AUTO_CD
+  setopt AUTO_PUSHD
+  setopt PUSHD_IGNORE_DUPS
+{% endif %}
+
+# ============================================================================
+# Powerlevel10k Configuration
+# ============================================================================
+{% if shell_theme == 'powerlevel10k' %}
+  # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh
+  [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+  # Enable instant prompt
+  if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+  fi
+{% endif %}
+
+# ============================================================================
+# Local Configuration Override
+# ============================================================================
+# Source local configuration if it exists
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# ============================================================================
+# End of NeoSetup Configuration
+# ============================================================================

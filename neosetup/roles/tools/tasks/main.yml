@@ -1,0 +1,59 @@
+---
+# Tools Role - Install CLI utilities with operator inheritance
+# Now using unified tool registry system
+
+- name: "📋 Load operator metadata"
+  include_vars: "../../../group_vars/all/operators.yml"
+
+- name: "🔗 Load operator variables in inheritance order"
+  include_vars: "../../../operators/{{ item }}/vars.yml"
+  loop: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+  loop_control:
+    label: "Loading {{ item }} tools config"
+  when:
+    - operator_inheritance is defined
+    - available_operators is defined
+    - item in available_operators
+  ignore_errors: yes
+
+- name: "🔍 Detect package manager"
+  set_fact:
+    package_manager: "{{ 'homebrew' if ansible_os_family == 'Darwin' else 'package' }}"
+
+- name: "📋 Display tools installation info"
+  debug:
+    msg: |
+      🔧 Installing tools with {{ neosetup_operator }} operator
+      📦 Package Manager: {{ package_manager }}
+      🖥️  Platform: {{ ansible_os_family }}
+
+# Install Homebrew on macOS
+- name: "🍎 Setup Homebrew on macOS"
+  include_tasks: "install_homebrew.yml"
+  when:
+    - ansible_os_family == "Darwin"
+    - neosetup_install_packages | default(true)
+
+# Use unified tool installation
+- name: "📦 Install tools using unified registry"
+  include_tasks: "install_tools_unified.yml"
+  when: neosetup_install_packages | default(true)
+
+# Configure installed tools
+- name: "⚙️ Configure installed tools"
+  include_tasks: "configure_tools.yml"
+  when: neosetup_configure_tools | default(true)
+
+# Configure WSL2-specific settings
+- name: "🪟 Configure WSL2 integration"
+  include_tasks: "configure_wsl.yml"
+  when:
+    - platform_key == 'wsl'
+    - neosetup_operator == 'windows_wsl'
+
+- name: "✅ Tools installation complete"
+  debug:
+    msg: |
+      🎭 Tools installed with {{ neosetup_operator }} operator
+      🔧 Run 'which eza bat ripgrep fd' to verify modern tools
+      💡 Check ~/.config/ for tool configurations

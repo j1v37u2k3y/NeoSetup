@@ -1,0 +1,35 @@
+# ============================================================================
+# PATH Configuration
+# ============================================================================
+# User local binaries
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
+
+# Homebrew paths (macOS)
+if [[ -d "/opt/homebrew" ]]; then
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/opt/homebrew/sbin:$PATH"
+fi
+
+# System paths
+export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/local/sbin:$PATH"
+
+# Language-specific paths
+{% if shell_config.paths is defined %}
+  {% for path_entry in shell_config.paths %}
+    export PATH="{{ path_entry }}:$PATH"
+  {% endfor %}
+{% endif %}
+
+# Rust/Cargo
+[[ -d "$HOME/.cargo/bin" ]] && export PATH="$HOME/.cargo/bin:$PATH"
+
+# Go
+[[ -d "$HOME/go/bin" ]] && export PATH="$HOME/go/bin:$PATH"
+
+# Python
+[[ -d "$HOME/.pyenv/bin" ]] && export PATH="$HOME/.pyenv/bin:$PATH"
+
+# Node/npm
+[[ -d "$HOME/.npm-global/bin" ]] && export PATH="$HOME/.npm-global/bin:$PATH"

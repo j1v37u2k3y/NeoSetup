@@ -1,0 +1,78 @@
+---
+# Shell Role - Configure shell with operator inheritance
+# The red pill for your shell configuration
+
+- name: "📋 Load operator metadata"
+  include_vars: "../../../group_vars/all/operators.yml"
+
+- name: "🔍 Detect current shell"
+  set_fact:
+    neosetup_current_shell: "{{ ansible_env.SHELL | basename | default('bash') }}"
+    neosetup_preferred_shell: "zsh"
+
+- name: "📋 Display shell configuration info"
+  debug:
+    msg: |
+      🐚 Current Shell: {{ neosetup_current_shell }}
+      🎯 Target Shell: {{ neosetup_preferred_shell }}
+      🎭 Operator: {{ neosetup_operator | default('jiveturkey') }}
+
+# Ensure target shell is installed
+- name: "📦 Install target shell"
+  include_tasks: "install_shell.yml"
+  when: neosetup_preferred_shell != neosetup_current_shell
+
+# Install shell framework (Oh My Zsh, etc.)
+- name: "⚡ Install shell framework"
+  include_tasks: "install_framework.yml"
+  when: neosetup_install_frameworks | default(true)
+
+# Note: Operator variables are already loaded by the main playbook
+- name: "🔗 Display loaded operator"
+  debug:
+    msg: "Using {{ neosetup_operator | default('default') }} operator configuration"
+
+# Transform operator shell configuration into template format
+- name: "🔄 Transform operator shell configuration"
+  set_fact:
+    shell_aliases: "{{ shell_aliases | default([]) + [{'alias': item[0], 'command': item[1]}] }}"
+  loop: "{{ (shell_config.aliases | default({})).items() }}"
+  when: shell_config.aliases is defined
+
+- name: "🔄 Set shell environment variables from operator"
+  set_fact:
+    shell_env_vars: "{{ shell_env_vars | default({}) | combine(shell_config.environment | default({})) }}"
+  when: shell_config.environment is defined
+
+# Create backup of existing configuration
+- name: "💾 Backup existing shell configuration"
+  copy:
+    src: "{{ ansible_env.HOME }}/.{{ neosetup_preferred_shell }}rc"
+    dest: "{{ ansible_env.HOME }}/.{{ neosetup_preferred_shell }}rc.backup.{{ ansible_date_time.epoch }}"
+    backup: yes
+  when:
+    - neosetup_backup_configs | default(true)
+  ignore_errors: yes
+
+# Deploy Matrix greeting script (shared between shells)
+- name: "🐇 Deploy Matrix greeting script"
+  template:
+    src: "matrix_greeting.sh.j2"
+    dest: "{{ ansible_env.HOME }}/.matrix_greeting.sh"
+    mode: '0755'
+    backup: yes
+
+# Configure shell-specific settings (includes template generation)
+- name: "🔧 Configure shell-specific settings"
+  include_tasks: "configure_{{ neosetup_preferred_shell }}.yml"
+  when: neosetup_preferred_shell in ['zsh', 'bash']
+
+# Set as default shell if requested
+- name: "🎯 Set as default shell"
+  user:
+    name: "{{ ansible_user_id }}"
+    shell: "{{ ansible_env.SHELL if neosetup_preferred_shell == neosetup_current_shell else '/bin/' + neosetup_preferred_shell }}"
+  when:
+    - neosetup_set_default_shell | default(false)
+    - neosetup_preferred_shell != neosetup_current_shell
+  become: yes

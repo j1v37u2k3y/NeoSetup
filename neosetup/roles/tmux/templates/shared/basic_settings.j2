@@ -1,0 +1,50 @@
+# ============================================================================
+# BASIC SETTINGS
+# ============================================================================
+
+# Change prefix key (operator-specific)
+{% if tmux_config.prefix is defined %}
+  set -g prefix {{ tmux_config.prefix }}
+  unbind C-b
+  bind {{ tmux_config.prefix | replace('C-', '') }} send-prefix
+{% else %}
+  # Default prefix
+  set -g prefix C-a
+  unbind C-b
+  bind a send-prefix
+{% endif %}
+
+# Enable mouse support
+set -g mouse {{ 'on' if (tmux_config.settings.mouse | default(true)) else 'off' }}
+
+# Set base index for windows and panes
+set -g base-index {{ tmux_config.settings.base_index | default('1') }}
+set -g pane-base-index {{ tmux_config.settings.pane_base_index | default('1') }}
+
+# History limit
+set -g history-limit {{ tmux_config.settings.history_limit | default('50000') }}
+
+# Terminal settings
+set -g default-terminal "{{ tmux_config.terminal | default('tmux-256color') }}"
+set -ga terminal-overrides ",*256col*:Tc"
+set -ga terminal-overrides '*:Ss=\E[%p1%d q:Se=\E[ q'
+set-window-option -g xterm-keys on
+
+# Timing settings
+set -s escape-time {{ tmux_config.timing.escape_time | default('0') }}
+set -g repeat-time {{ tmux_config.timing.repeat_time | default('600') }}
+set -g display-time {{ tmux_config.timing.display_time | default('4000') }}
+set -g display-panes-time {{ tmux_config.timing.display_panes_time | default('2000') }}
+
+# Focus events for vim compatibility
+set -g focus-events on
+
+# Enable activity monitoring
+setw -g monitor-activity {{ 'on' if tmux_config.activity_monitoring | default(true) else 'off' }}
+set -g visual-activity {{ 'on' if tmux_config.visual_activity | default(false) else 'off' }}
+
+# Renumber windows when one is closed
+set -g renumber-windows {{ 'on' if tmux_config.renumber_windows | default(true) else 'off' }}
+
+# Don't rename windows automatically
+set-option -g allow-rename {{ 'on' if tmux_config.allow_rename | default(false) else 'off' }}

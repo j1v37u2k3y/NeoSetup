@@ -1,0 +1,95 @@
+---
+# Install Homebrew on macOS
+# This task ensures Homebrew is properly installed and configured
+
+- name: "🍎 Check if Homebrew is already installed"
+  stat:
+    path: "{{ homebrew_prefix }}/bin/brew"
+  register: homebrew_installed
+
+- name: "📋 Display Homebrew installation info"
+  debug:
+    msg: |
+      🍎 Homebrew Installation Status
+      📍 Expected location: {{ homebrew_prefix }}
+      ✅ Already installed: {{ homebrew_installed.stat.exists }}
+      🔧 Architecture: {{ ansible_architecture }}
+
+- name: "🍎 Install Homebrew"
+  when: not homebrew_installed.stat.exists
+  block:
+    - name: "📥 Download and install Homebrew"
+      shell: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      register: homebrew_install
+      failed_when: homebrew_install.rc != 0
+      changed_when: true
+
+    - name: "🔍 Verify Homebrew installation"
+      stat:
+        path: "{{ homebrew_prefix }}/bin/brew"
+      register: homebrew_verify
+
+    - name: "❌ Homebrew installation failed"
+      fail:
+        msg: |
+          🍎 Homebrew installation failed!
+          📍 Expected at: {{ homebrew_prefix }}/bin/brew
+          💡 Manual installation: https://brew.sh
+      when: not homebrew_verify.stat.exists
+
+- name: "🔧 Update Homebrew and taps"
+  homebrew:
+    update_homebrew: yes
+  register: homebrew_update
+  failed_when: false
+
+- name: "📋 Essential Homebrew taps"
+  homebrew_tap:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - homebrew/core
+    - homebrew/cask
+    - homebrew/cask-fonts
+  failed_when: false
+
+- name: "🍎 Configure Homebrew environment"
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.zprofile"
+    create: yes
+    marker: "# {mark} HOMEBREW ENVIRONMENT"
+    block: |
+      # Homebrew environment setup
+      if [[ -d "{{ homebrew_prefix }}" ]]; then
+        export HOMEBREW_PREFIX="{{ homebrew_prefix }}"
+        export HOMEBREW_CELLAR="{{ homebrew_prefix }}/Cellar"
+        export HOMEBREW_REPOSITORY="{{ homebrew_prefix }}"
+        export PATH="{{ homebrew_prefix }}/bin:{{ homebrew_prefix }}/sbin:$PATH"
+        export MANPATH="{{ homebrew_prefix }}/share/man:$MANPATH"
+        export INFOPATH="{{ homebrew_prefix }}/share/info:$INFOPATH"
+      fi
+
+- name: "🍎 Configure Homebrew for bash"
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bash_profile"
+    create: yes
+    marker: "# {mark} HOMEBREW ENVIRONMENT"
+    block: |
+      # Homebrew environment setup
+      if [[ -d "{{ homebrew_prefix }}" ]]; then
+        export HOMEBREW_PREFIX="{{ homebrew_prefix }}"
+        export HOMEBREW_CELLAR="{{ homebrew_prefix }}/Cellar"
+        export HOMEBREW_REPOSITORY="{{ homebrew_prefix }}"
+        export PATH="{{ homebrew_prefix }}/bin:{{ homebrew_prefix }}/sbin:$PATH"
+        export MANPATH="{{ homebrew_prefix }}/share/man:$MANPATH"
+        export INFOPATH="{{ homebrew_prefix }}/share/info:$INFOPATH"
+      fi
+
+- name: "✅ Homebrew setup complete"
+  debug:
+    msg: |
+      🍎 Homebrew is ready!
+      📍 Location: {{ homebrew_prefix }}
+      🔧 Run 'brew --version' to verify
+      💡 Essential taps: core, cask, cask-fonts

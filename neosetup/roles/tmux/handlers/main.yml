@@ -1,0 +1,13 @@
+---
+# Tmux role handlers
+
+- name: Reload tmux config
+  shell: |
+    if tmux info &> /dev/null; then
+      tmux source-file ~/.tmux.conf
+      tmux display-message "🔄 Configuration reloaded!"
+    else
+      echo "Tmux not running. Configuration will be loaded on next start."
+    fi
+  ignore_errors: yes
+  changed_when: false

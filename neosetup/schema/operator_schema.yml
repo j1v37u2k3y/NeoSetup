@@ -1,0 +1,290 @@
+---
+# NeoSetup Operator Validation Schema
+# Defines the structure and validation rules for operator configurations
+
+# Operator metadata schema
+operator_metadata:
+  required_fields:
+    - operator_name
+    - operator_version
+    - operator_description
+
+  optional_fields:
+    - operator_author
+    - operator_license
+    - operator_homepage
+    - operator_tags
+    - extends
+    - dependencies
+    - minimum_neosetup_version
+
+  field_types:
+    operator_name:
+      type: string
+      pattern: "^[a-z][a-z0-9_]*$"
+      max_length: 50
+      description: "Operator name (lowercase, alphanumeric + underscore)"
+
+    operator_version:
+      type: string
+      pattern: "^\\d+\\.\\d+\\.\\d+(-[a-z0-9]+)?$"
+      description: "Semantic version (e.g., 1.0.0 or 1.0.0-beta)"
+
+    operator_description:
+      type: string
+      max_length: 200
+      description: "Brief description of operator purpose"
+
+    operator_author:
+      type: string
+      max_length: 100
+      description: "Author name or organization"
+
+    extends:
+      type: string
+      enum: [ "base", "matrix", "developer", "devops", "security" ]
+      description: "Parent operator to inherit from"
+
+    dependencies:
+      type: array
+      items:
+        type: string
+      description: "List of required operators or tools"
+
+    operator_tags:
+      type: array
+      items:
+        type: string
+        enum: [ "development", "security", "devops", "minimal", "theme", "productivity" ]
+
+# Shell configuration schema
+shell_config:
+  optional_fields:
+    - preferred_shell
+    - framework
+    - oh_my_zsh_theme
+    - oh_my_zsh_plugins
+    - bash_it_theme
+    - bash_plugins
+    - fish_plugins
+    - paths
+    - aliases
+    - environment
+    - functions
+    - custom_configs
+
+  field_types:
+    preferred_shell:
+      type: string
+      enum: [ "zsh", "bash", "fish", "auto" ]
+      default: "zsh"
+
+    framework:
+      type: string
+      enum: [ "oh-my-zsh", "bash-it", "fish", "none" ]
+      default: "oh-my-zsh"
+
+    oh_my_zsh_theme:
+      type: string
+      default: "robbyrussell"
+
+    oh_my_zsh_plugins:
+      type: array
+      items:
+        type: string
+      max_items: 20
+
+    paths:
+      type: array
+      items:
+        type: string
+        pattern: "^[\\$\\w\\-\\.\\/]+$"
+
+    aliases:
+      type: object
+      max_properties: 100
+      patternProperties:
+        "^[a-zA-Z][a-zA-Z0-9_]*$":
+          type: string
+
+    environment:
+      type: object
+      max_properties: 50
+      patternProperties:
+        "^[A-Z][A-Z0-9_]*$":
+          type: string
+
+# Tmux configuration schema
+tmux_config:
+  optional_fields:
+    - theme
+    - prefix
+    - terminal
+    - settings
+    - timing
+    - key_bindings
+    - plugins
+    - status_bar
+    - custom_bindings
+    - status_modules
+
+  field_types:
+    theme:
+      type: string
+      enum: [ "matrix", "base", "custom" ]
+      default: "matrix"
+
+    prefix:
+      type: string
+      pattern: "^C-[a-z]$"
+      default: "C-a"
+
+    settings:
+      type: object
+      properties:
+        mouse:
+          type: boolean
+          default: true
+        base_index:
+          type: integer
+          minimum: 0
+          maximum: 10
+        history_limit:
+          type: integer
+          minimum: 1000
+          maximum: 1000000
+
+    plugins:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        sensible:
+          type: boolean
+        resurrect:
+          type: boolean
+        continuum:
+          type: boolean
+        yank:
+          type: boolean
+
+# Tools configuration schema
+tools_config:
+  optional_fields:
+    - essential_tools
+    - development_tools
+    - security_tools
+    - modern_cli_tools
+    - custom_tools
+    - additional_tools
+
+  field_types:
+    essential_tools:
+      type: array
+      items:
+        type: string
+      max_items: 50
+
+    custom_tools:
+      type: array
+      items:
+        type: object
+        required: [ name, description ]
+        properties:
+          name:
+            type: string
+          description:
+            type: string
+          package:
+            type: object
+            properties:
+              macos: { type: string }
+              debian: { type: string }
+              redhat: { type: string }
+              arch: { type: string }
+
+# Docker configuration schema
+docker_config:
+  optional_fields:
+    - install_compose
+    - compose_version
+    - install_buildx
+    - enable_buildkit
+    - config
+    - security
+    - networks
+    - registries
+
+  field_types:
+    install_compose:
+      type: boolean
+      default: true
+
+    compose_version:
+      type: string
+      enum: [ "v1", "v2" ]
+      default: "v2"
+
+    enable_buildkit:
+      type: boolean
+      default: true
+
+    networks:
+      type: array
+      items:
+        type: object
+        required: [ name ]
+        properties:
+          name:
+            type: string
+            pattern: "^[a-z][a-z0-9_]*$"
+          driver:
+            type: string
+            enum: [ "bridge", "host", "overlay", "macvlan" ]
+
+# Validation rules for operator inheritance
+inheritance_rules:
+  - name: "no_circular_dependencies"
+    description: "Operators cannot have circular inheritance"
+
+  - name: "valid_parent_exists"
+    description: "Parent operator must exist and be valid"
+
+  - name: "inheritance_depth_limit"
+    description: "Maximum inheritance depth is 5 levels"
+    max_depth: 5
+
+  - name: "required_fields_inherited"
+    description: "Child operators must maintain required fields"
+
+  - name: "version_compatibility"
+    description: "Operator versions must be compatible"
+
+# Validation severity levels
+validation_levels:
+  error:
+    - missing_required_fields
+    - invalid_field_types
+    - circular_dependencies
+    - invalid_parent_reference
+
+  warning:
+    - deprecated_fields
+    - large_plugin_lists
+    - missing_descriptions
+    - non_standard_names
+
+  info:
+    - optimization_suggestions
+    - best_practice_recommendations
+    - compatibility_notes
+
+# Common validation patterns
+validation_patterns:
+  operator_name: "^[a-z][a-z0-9_]*$"
+  version_string: "^\\d+\\.\\d+\\.\\d+(-[a-z0-9]+)?$"
+  shell_alias: "^[a-zA-Z][a-zA-Z0-9_]*$"
+  env_var_name: "^[A-Z][A-Z0-9_]*$"
+  tmux_prefix: "^C-[a-z]$"
+  network_name: "^[a-z][a-z0-9_]*$"

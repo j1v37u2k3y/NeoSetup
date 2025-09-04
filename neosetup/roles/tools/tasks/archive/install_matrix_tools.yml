@@ -1,0 +1,44 @@
+---
+# Install Matrix-themed tools for the cyberpunk aesthetic
+
+- name: "🎭 Install Matrix tools on macOS"
+  homebrew:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - cmatrix      # Digital rain
+    - figlet       # ASCII art text
+    - lolcat       # Rainbow text
+    - neofetch     # System info
+    - fortune      # Random quotes
+    - cowsay       # Talking cow
+  when: ansible_os_family == "Darwin"
+
+- name: "🎭 Install Matrix tools on Ubuntu/Debian"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - cmatrix
+    - figlet
+    - lolcat
+    - neofetch
+    - fortune-mod
+    - cowsay
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: "🎭 Install Matrix tools on RHEL/CentOS"
+  package:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  loop:
+    - cmatrix
+    - figlet
+    - lolcat
+    - neofetch
+    - fortune-mod
+    - cowsay
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes

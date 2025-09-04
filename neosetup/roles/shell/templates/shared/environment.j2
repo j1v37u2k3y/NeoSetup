@@ -1,0 +1,33 @@
+# ============================================================================
+# Environment Variables
+# ============================================================================
+# Default environment
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
+# Editor configuration
+export EDITOR="{{ shell_env_vars.EDITOR | default('vim') }}"
+export VISUAL="{{ shell_env_vars.VISUAL | default('$EDITOR') }}"
+
+# Pager configuration
+export PAGER="{{ shell_env_vars.PAGER | default('less') }}"
+export LESS="{{ shell_env_vars.LESS | default('-R') }}"
+
+# History configuration
+export HISTSIZE="{{ shell_env_vars.HISTSIZE | default('10000') }}"
+export SAVEHIST="{{ shell_env_vars.SAVEHIST | default('10000') }}"
+export HISTFILESIZE="{{ shell_env_vars.HISTFILESIZE | default('20000') }}"
+
+# Custom environment variables from operator
+{% for var, value in shell_env_vars.items() %}
+  {% if var not in ['EDITOR', 'VISUAL', 'PAGER', 'LESS', 'HISTSIZE', 'SAVEHIST', 'HISTFILESIZE'] %}
+    export {{ var }}="{{ value }}"
+  {% endif %}
+{% endfor %}
+
+# Development environment
+{% if shell_config.development_env is defined %}
+  {% for var, value in shell_config.development_env.items() %}
+    export {{ var }}="{{ value }}"
+  {% endfor %}
+{% endif %}

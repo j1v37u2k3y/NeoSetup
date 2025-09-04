@@ -1,0 +1,38 @@
+---
+# Common role for NeoSetup
+
+- name: "🔍 Gather facts if not already gathered"
+  setup:
+  when: ansible_facts.distribution is not defined
+  tags:
+    - always
+
+- name: "📋 Display system information"
+  debug:
+    msg: |
+      🖥️  Platform: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      🏗️  Architecture: {{ ansible_architecture }}
+      👤 User: {{ ansible_user_id }}
+      🏠 Home: {{ ansible_env.HOME }}
+      🐚 Shell: {{ ansible_env.SHELL | basename }}
+      🎯 Operator: {{ neosetup_operator | default('unknown') }}
+
+- name: "🏠 Ensure NeoSetup configuration directory exists"
+  file:
+    path: "{{ ansible_env.HOME }}/.neosetup"
+    state: directory
+    mode: '0755'
+
+- name: "📝 Create operator info file"
+  copy:
+    content: |
+      # NeoSetup Configuration
+      # Generated: {{ ansible_date_time.iso8601 }}
+
+      Operator: {{ neosetup_operator | default('unknown') }}
+      Platform: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Architecture: {{ ansible_architecture }}
+      User: {{ ansible_user_id }}
+      Home: {{ ansible_env.HOME }}
+    dest: "{{ ansible_env.HOME }}/.neosetup/operator.info"
+    mode: '0644'

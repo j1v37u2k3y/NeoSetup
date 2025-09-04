@@ -1,0 +1,240 @@
+# {{ ansible_managed }}
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║ NeoSetup Tmux Configuration - {{ neosetup_operator | default('jiveturkey') }} Operator                      ║
+# ║ Generated: {{ ansible_date_time.iso8601 }}                                          ║
+# ║ User: {{ ansible_user_id }}@{{ ansible_hostname }}                                      ║
+# ║ Theme: Matrix Digital Rain 🐇                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# ============================================================================
+# BASIC SETTINGS
+# ============================================================================
+
+# Change prefix key (operator-specific)
+{% if tmux_config.prefix is defined %}
+  set -g prefix {{ tmux_config.prefix }}
+  unbind C-b
+  bind {{ tmux_config.prefix | replace('C-', '') }} send-prefix
+{% else %}
+  set -g prefix C-b
+{% endif %}
+
+# Enable mouse support
+set -g mouse {{ 'on' if (tmux_config.settings.mouse | default(true)) else 'off' }}
+
+# Set base index for windows and panes
+set -g base-index {{ tmux_config.settings.base_index | default('1') }}
+set -g pane-base-index {{ tmux_config.settings.pane_base_index | default('1') }}
+
+# History limit
+set -g history-limit {{ tmux_config.settings.history_limit | default('10000') }}
+
+# Enable 256 color support
+set -g default-terminal "screen-256color"
+set -ga terminal-overrides ",xterm-256color:Tc"
+
+# Faster command sequences
+set -s escape-time 10
+
+# Focus events for vim
+set -g focus-events on
+
+# ============================================================================
+# KEY BINDINGS
+# ============================================================================
+
+# Reload configuration
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded!"
+
+# Split panes with | and -
+{% if tmux_config.key_bindings.split_horizontal is defined %}
+  bind {{ tmux_config.key_bindings.split_horizontal }} split-window -h
+{% else %}
+  bind | split-window -h
+{% endif %}
+
+{% if tmux_config.key_bindings.split_vertical is defined %}
+  bind {{ tmux_config.key_bindings.split_vertical }} split-window -v
+{% else %}
+  bind - split-window -v
+{% endif %}
+
+# Pane navigation with vim-like keys
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# Window navigation
+bind -n M-Left previous-window
+bind -n M-Right next-window
+
+# Pane resizing
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# ============================================================================
+# MATRIX THEME COLORS
+# ============================================================================
+{% if operators[neosetup_operator].theme == 'matrix' %}
+
+  # Status bar colors (Matrix green theme)
+  {% if tmux_config.status_bar is defined %}
+    set -g status-style "bg={{ tmux_config.status_bar.background | default('#000000') }},fg=
+    {{ tmux_config.status_bar.foreground | default('#00ff00') }}"
+  {% else %}
+    set -g status-style "bg=#000000,fg=#00ff00"
+  {% endif %}
+
+  # Window status colors
+  set -g window-status-current-style "bg=#00ff00,fg=#000000,bold"
+  set -g window-status-style "bg=#003300,fg=#00ff00"
+
+  # Pane border colors
+  set -g pane-border-style "fg=#003300"
+  set -g pane-active-border-style "fg=#00ff00"
+
+  # Command line colors
+  set -g message-style "bg=#00ff00,fg=#000000"
+  set -g message-command-style "bg=#003300,fg=#00ff00"
+
+{% endif %}
+
+# ============================================================================
+# STATUS BAR CONFIGURATION
+# ============================================================================
+
+# Enable status bar
+set -g status on
+
+# Status bar position
+set -g status-position bottom
+
+# Status bar refresh interval
+set -g status-interval 5
+
+# Left status
+{% if neosetup_operator == 'jiveturkey' %}
+  set -g status-left '#[fg=#000000,bg=#00ff00,bold] 🎭 #{session_name} #[fg=#00ff00,bg=#003300]#[fg=#00ff00,bg=#003300]
+  💻 #H '
+  set -g status-left-length 50
+{% else %}
+  set -g status-left '#[fg=#000000,bg=#00ff00,bold] 🎭 #{session_name} '
+  set -g status-left-length 30
+{% endif %}
+
+# Right status
+{% if neosetup_operator == 'jiveturkey' %}
+  set -g status-right '#[fg=#003300,bg=#001100]#[fg=#00ff00,bg=#003300] 🐳 #{?#{==:#{session_name},docker},ON,OFF}
+  #[fg=#003300,bg=#001100]#[fg=#00ff00,bg=#003300] 💻 {{ ansible_user_id }}@{{ ansible_hostname }}
+  #[fg=#00ff00,bg=#001100]#[fg=#000000,bg=#00ff00,bold] 🕐 %H:%M:%S '
+{% else %}
+  set -g status-right '#[fg=#003300,bg=#001100]#[fg=#00ff00,bg=#003300] %Y-%m-%d #[fg=#000000,bg=#00ff00,bold] %H:%M '
+{% endif %}
+
+# Window status format
+{% if neosetup_operator == 'jiveturkey' %}
+  setw -g window-status-format '#[fg=#001100,bg=#004400]#[fg=#00ff00,bg=#004400]
+  #I:#{=10:window_name}#{?#{!=:#{pane_current_path},#{session_path}}, (#{b:pane_current_path}),}
+  #[fg=#004400,bg=#001100]'
+  setw -g window-status-current-format '#[fg=#001100,bg=#00ff00]#[fg=#000000,bg=#00ff00,bold]
+  #I:#{window_name}#{?#{!=:#{pane_current_path},#{session_path}}, (#{b:pane_current_path}),}
+  #[fg=#00ff00,bg=#001100,nobold]'
+{% else %}
+  setw -g window-status-format ' #I:#W '
+  setw -g window-status-current-format ' #I:#W '
+{% endif %}
+
+# ============================================================================
+# OPERATOR SPECIFIC CONFIGURATIONS
+# ============================================================================
+
+{% if neosetup_operator == 'jiveturkey' %}
+  # 🚀 PRODUCTIVITY BINDINGS - Security & Development Focus
+  bind s split-window -v "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf
+  --reverse | xargs tmux switch-client -t"
+  bind w split-window -h "tmux list-windows -F '#I:#W' | fzf --preview 'tmux capture-pane -t {1} -p' | cut -d: -f1 |
+  xargs tmux select-window -t"
+  bind D split-window -v "find ~/IdeaProjects ~/go/src ~/Documents -maxdepth 2 -type d 2>/dev/null | fzf --reverse |
+  xargs -I {} tmux new-window -c '{}'"
+
+  # 🔒 SECURITY BINDINGS
+  bind S new-window -n 'Security' -c '~' 'bash -c "echo \"🔒 Security Tools Session\"; exec bash"'
+  bind A new-window -n 'Docker' -c '~' 'bash -c "docker ps --format \"table {{ '{{.Names}}' }}\t{{ '{{.Image}}' }}\t
+  {{ '{{.Status}}' }}\"; exec bash"'
+  bind N new-window -n 'Network' -c '~' 'bash -c "echo \"🌐 Network Monitoring\"; netstat -tuln; exec bash"'
+  bind T new-window -n 'Top' 'btop 2>/dev/null || htop 2>/dev/null || top'
+
+  # 📋 ENHANCED CLIPBOARD
+  bind P run-shell "tmux display-message -p '#{pane_current_path}' | pbcopy && tmux display-message 'Path copied to
+  clipboard'"
+  bind C run-shell "tmux capture-pane -p | tail -1 | pbcopy && tmux display-message 'Command copied to clipboard'"
+
+  # 🎯 DEVELOPMENT WORKFLOW
+  bind g split-window -h -p 30 -c '#{pane_current_path}' 'git status; git log --oneline -10; exec bash'
+  bind E command-prompt -p "Edit file:" "run-shell 'code \"#{pane_current_path}/%%\"'"
+  bind F split-window -v "find . -type f -name '*.py' -o -name '*.js' -o -name '*.go' -o -name '*.md' | fzf --preview
+  'bat --color=always {}' | xargs -I {} code '{}'"
+
+  # Session templates for different work modes
+  bind M-d new-session -d -s 'Development' -c '~/IdeaProjects' \; \
+  new-window -n 'Code' -c '~/IdeaProjects' \; \
+  new-window -n 'Git' -c '~/IdeaProjects' \; \
+  new-window -n 'Docker' \; \
+  select-window -t 'Code'
+
+  bind M-s new-session -d -s 'Security' -c '~' \; \
+  new-window -n 'Nmap' -c '~' \; \
+  new-window -n 'Docker' -c '~' \; \
+  new-window -n 'Logs' -c '~' \; \
+  select-window -t 'Nmap'
+{% endif %}
+
+# ============================================================================
+# PLUGINS CONFIGURATION
+# ============================================================================
+
+# Plugin Manager
+set -g @plugin 'tmux-plugins/tpm'
+
+# Base plugins for all operators
+{% for plugin in tmux_config.plugins | default([]) %}
+  set -g @plugin '{{ plugin }}'
+{% endfor %}
+
+{% if neosetup_operator == 'jiveturkey' %}
+  # Power user plugins
+  set -g @plugin 'tmux-plugins/tmux-yank'
+  set -g @plugin 'tmux-plugins/tmux-open'
+  set -g @plugin 'tmux-plugins/tmux-copycat'
+  set -g @plugin 'sainnhe/tmux-fzf'
+
+  # Advanced plugin configurations
+  set -g @resurrect-strategy-vim 'session'
+  set -g @resurrect-strategy-nvim 'session'
+  set -g @resurrect-capture-pane-contents 'on'
+  set -g @continuum-restore 'on'
+  set -g @continuum-save-interval '15'
+
+  # Better copy/paste
+  set -g @yank_selection 'clipboard'
+  set -g @yank_selection_mouse 'clipboard'
+  set -g @yank_action 'copy-pipe'
+{% endif %}
+
+# ============================================================================
+# INITIALIZE PLUGIN MANAGER (keep at bottom)
+# ============================================================================
+run '~/.tmux/plugins/tpm/tpm'
+
+# ============================================================================
+# LOCAL CONFIGURATION OVERRIDE
+# ============================================================================
+# Source local tmux config if it exists
+if-shell "test -f ~/.tmux.conf.local" "source ~/.tmux.conf.local"
+
+# ============================================================================
+# END OF NEOSETUP TMUX CONFIGURATION
+# ============================================================================

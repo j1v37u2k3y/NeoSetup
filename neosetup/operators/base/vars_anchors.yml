@@ -1,0 +1,135 @@
+---
+# Base Operator Configuration with YAML Anchors
+# These anchors can be referenced and extended by other operators
+
+# Shell Configuration Anchors
+shell_base: &shell_base
+  preferred_shell: "zsh"
+  install_frameworks: true
+  backup_configs: true
+
+shell_aliases_base: &shell_aliases_base
+  # Navigation
+  - { alias: "..", command: "cd .." }
+  - { alias: "...", command: "cd ../.." }
+  - { alias: "~", command: "cd ~" }
+  - { alias: "-", command: "cd -" }
+  # File operations
+  - { alias: "ll", command: "ls -alF" }
+  - { alias: "la", command: "ls -A" }
+  - { alias: "l", command: "ls -CF" }
+  # Git shortcuts
+  - { alias: "g", command: "git" }
+  - { alias: "gs", command: "git status" }
+  - { alias: "ga", command: "git add" }
+  - { alias: "gc", command: "git commit" }
+  - { alias: "gp", command: "git push" }
+  - { alias: "gl", command: "git pull" }
+  - { alias: "gd", command: "git diff" }
+  - { alias: "gb", command: "git branch" }
+  # Docker shortcuts
+  - { alias: "d", command: "docker" }
+  - { alias: "dc", command: "docker compose" }
+  - { alias: "dps", command: "docker ps" }
+  - { alias: "dpsa", command: "docker ps -a" }
+  - { alias: "di", command: "docker images" }
+
+shell_env_base: &shell_env_base
+  EDITOR: "vim"
+  VISUAL: "vim"
+  PAGER: "less"
+  LESS: "-R"
+  LANG: "en_US.UTF-8"
+  LC_ALL: "en_US.UTF-8"
+
+shell_paths_base: &shell_paths_base
+  - "$HOME/.local/bin"
+  - "$HOME/bin"
+  - "/usr/local/bin"
+
+# Tmux Configuration Anchors
+tmux_base: &tmux_base
+  theme: "base"
+  prefix: "C-a"
+  terminal: "tmux-256color"
+
+tmux_settings_base: &tmux_settings_base
+  mouse: true
+  base_index: 1
+  pane_base_index: 1
+  history_limit: 10000
+
+tmux_plugins_base: &tmux_plugins_base
+  enabled: true
+  sensible: true
+  resurrect: true
+  continuum: false
+  yank: true
+
+# Tools Configuration Anchors
+tools_essential: &tools_essential
+  - htop
+  - tree
+  - jq
+  - curl
+  - wget
+  - git
+  - vim
+
+tools_modern_cli: &tools_modern_cli
+  - eza
+  - bat
+  - ripgrep
+  - fd
+  - fzf
+  - delta
+
+# Docker Configuration Anchors
+docker_base: &docker_base
+  install_compose: true
+  compose_version: "v2"
+  install_buildx: true
+  enable_buildkit: true
+
+docker_security_base: &docker_security_base
+  userns_remap: false
+  icc: true
+
+# Export the base operator configuration
+operator_name: "base"
+operator_version: "1.0.0"
+operator_description: "Essential development tools and minimal configuration"
+
+# Shell configuration using anchors
+shell_config:
+  <<: *shell_base
+  framework: "oh-my-zsh"
+  oh_my_zsh_theme: "robbyrussell"
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - kubectl
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+  paths: *shell_paths_base
+
+shell_aliases: *shell_aliases_base
+shell_env_vars: *shell_env_base
+
+# Tmux configuration using anchors
+tmux_config:
+  <<: *tmux_base
+  settings: *tmux_settings_base
+  plugins: *tmux_plugins_base
+  status_bar:
+    position: "bottom"
+    justify: "left"
+    interval: 5
+
+# Tools configuration
+tools_to_install: *tools_essential
+
+# Docker configuration
+docker_config:
+  <<: *docker_base
+  security: *docker_security_base

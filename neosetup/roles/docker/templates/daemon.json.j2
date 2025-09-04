@@ -1,0 +1,29 @@
+{
+  "log-driver": "{{ docker_config.log_driver | default('json-file') }}",
+  "log-opts": {
+    "max-size": "{{ docker_config.log_opts.max_size | default('10m') }}",
+    "max-file": "{{ docker_config.log_opts.max_file | default('3') }}"
+  },
+  "storage-driver": "{{ docker_config.storage_driver | default('overlay2') }}",
+  "live-restore": {{ docker_config.live_restore | default(true) | lower }},
+  "experimental": {{ docker_config.experimental | default(true) | lower }},
+  "features": {
+    "buildkit": {{ docker_buildkit.enabled | default(true) | lower }}
+  },
+  "default-runtime": "{{ docker_runtime.default | default('runc') }}",
+  {% if docker_security.userns_remap | default(false) %}
+  "userns-remap": "default",
+  {% endif %}
+  {% if docker_security.icc is defined %}
+  "icc": {{ docker_security.icc | lower }},
+  {% endif %}
+  "userland-proxy": false,
+  "metrics-addr": "127.0.0.1:9323",
+  "experimental-metrics": true,
+  "dns": [
+    "8.8.8.8",
+    "8.8.4.4"
+  ],
+  "max-concurrent-downloads": 10,
+  "max-concurrent-uploads": 5
+}

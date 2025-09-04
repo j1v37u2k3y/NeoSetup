@@ -1,0 +1,102 @@
+# {{ ansible_managed }}
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║ NeoSetup Bash Configuration - {{ neosetup_operator | default('jiveturkey') }} Operator                      ║
+# ║ Generated: {{ ansible_date_time.iso8601 }}                                          ║
+# ║ User: {{ ansible_user_id }}@{{ ansible_hostname }}                                      ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# ============================================================================
+# 🐇 Matrix Greeting - Follow the White Rabbit
+# ============================================================================
+# Source the Matrix greeting (shared between shells)
+if [[ -z "$MATRIX_GREETING_SHOWN" ]] && [[ -f ~/.matrix_greeting.sh ]]; then
+source ~/.matrix_greeting.sh
+fi
+
+# ============================================================================
+# PATH Configuration
+# ============================================================================
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
+
+# ============================================================================
+# Bash-it Configuration
+# ============================================================================
+{% if bash_it_enabled | default(true) %}
+  export BASH_IT="$HOME/.bash_it"
+  export BASH_IT_THEME="{{ bash_it_theme | default('bobby') }}"
+  export SCM_CHECK=true
+
+  # Load Bash-it
+  source "$BASH_IT/bash_it.sh"
+{% endif %}
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+{% for var, value in shell_env_vars.items() %}
+  export {{ var }}="{{ value }}"
+{% endfor %}
+
+# ============================================================================
+# Aliases
+# ============================================================================
+{% for alias_item in shell_aliases | default([]) %}
+  alias {{ alias_item.alias }}="{{ alias_item.command }}"
+{% endfor %}
+
+# ============================================================================
+# Functions
+# ============================================================================
+{% for func in shell_functions | default([]) %}
+  {{ func.name }}() {
+  {{ func.body | indent(4, true) }}
+  }
+{% endfor %}
+
+# ============================================================================
+# History Configuration
+# ============================================================================
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+export HISTCONTROL=ignoredups:erasedups
+
+# Append to history file, don't overwrite
+shopt -s histappend
+
+# ============================================================================
+# Matrix Theme Customizations
+# ============================================================================
+{% if operators[neosetup_operator].theme == 'matrix' %}
+  # Matrix green theme
+  export TERM_THEME="matrix"
+  export PRIMARY_COLOR="green"
+
+  # Custom Matrix greeting
+  if [[ $- == *i* ]]; then
+  echo "{{ matrix_greeting | default('Welcome to the Matrix, Neo...') }}"
+  fi
+{% endif %}
+
+# ============================================================================
+# Bash-specific Settings
+# ============================================================================
+# Enable programmable completion features
+if ! shopt -oq posix; then
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+. /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+. /etc/bash_completion
+fi
+fi
+
+# ============================================================================
+# Local Configuration Override
+# ============================================================================
+# Source local configuration if it exists
+[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
+
+# ============================================================================
+# End of NeoSetup Configuration
+# ============================================================================

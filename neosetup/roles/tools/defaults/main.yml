@@ -1,0 +1,53 @@
+---
+# Tools role default variables
+
+# Installation flags
+neosetup_install_packages: true
+neosetup_install_modern_tools: true
+neosetup_install_matrix_tools: true
+neosetup_install_power_tools: true
+neosetup_configure_tools: true
+neosetup_configure_git_delta: true
+neosetup_set_env_vars: true
+
+# Essential tools (base)
+essential_tools:
+  - curl
+  - wget
+  - git
+  - vim
+  - tree
+  - htop
+  - jq
+
+# Modern CLI replacements
+modern_tools:
+  - eza
+  - bat
+  - fd
+  - ripgrep
+  - fzf
+  - btop
+  - delta
+
+# Matrix-themed tools
+matrix_tools:
+  - cmatrix
+  - figlet
+  - lolcat
+  - neofetch
+  - fortune
+  - cowsay
+
+# JiveTurkey power-user tools
+power_tools:
+  - ncdu
+  - yq
+  - httpie
+  - tldr
+  - nmap
+  - netcat
+  - ranger
+  - mc
+  - shellcheck
+  - gh

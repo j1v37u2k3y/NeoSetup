@@ -1,0 +1,87 @@
+---
+# Tmux Role - Configure terminal multiplexer with operator inheritance
+# Resistance is futile - you will be multiplexed
+
+- name: "🔍 Check if tmux is installed"
+  command: which tmux
+  register: tmux_check
+  failed_when: false
+  changed_when: false
+
+- name: "📦 Install tmux on macOS"
+  homebrew:
+    name: tmux
+    state: present
+  when:
+    - ansible_os_family == "Darwin"
+    - tmux_check.rc != 0
+
+- name: "📦 Install tmux on Linux"
+  package:
+    name: tmux
+    state: present
+  become: yes
+  when:
+    - ansible_os_family != "Darwin"
+    - tmux_check.rc != 0
+
+- name: "🔌 Install Tmux Plugin Manager (TPM)"
+  git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    depth: 1
+    force: yes
+  when: neosetup_install_tpm | default(true)
+
+- name: "📋 Load operator metadata"
+  include_vars: "../../../group_vars/all/operators.yml"
+
+- name: "🔗 Load operator variables in inheritance order"
+  include_vars: "../../../operators/{{ item }}/vars.yml"
+  loop: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+  loop_control:
+    label: "Loading {{ item }} tmux config"
+  when:
+    - operator_inheritance is defined
+    - available_operators is defined
+    - item in available_operators
+  ignore_errors: yes
+
+- name: "💾 Backup existing tmux configuration"
+  copy:
+    src: "{{ ansible_env.HOME }}/.tmux.conf"
+    dest: "{{ ansible_env.HOME }}/.tmux.conf.backup.{{ ansible_date_time.epoch }}"
+    backup: yes
+  when:
+    - neosetup_backup_configs | default(true)
+  ignore_errors: yes
+
+- name: "⚙️ Generate tmux configuration from unified template"
+  template:
+    src: tmux_unified.conf.j2
+    dest: "{{ ansible_env.HOME }}/.tmux.conf"
+    backup: yes
+    mode: '0644'
+  notify: Reload tmux config
+
+- name: "📝 Create tmux sessions directory"
+  file:
+    path: "{{ ansible_env.HOME }}/.tmux/sessions"
+    state: directory
+    mode: '0755'
+
+- name: "🚀 Install tmux plugins"
+  shell: |
+    {{ ansible_env.HOME }}/.tmux/plugins/tpm/bin/install_plugins
+  when:
+    - neosetup_install_tpm | default(true)
+  ignore_errors: yes
+  changed_when: false
+
+- name: "✅ Tmux configuration complete"
+  debug:
+    msg: |
+      🎭 Tmux configured with {{ neosetup_operator }} operator
+      📋 Start tmux: tmux new-session
+      🔧 Install plugins: prefix + I (usually Ctrl-b then I)
+      💡 List sessions: tmux list-sessions

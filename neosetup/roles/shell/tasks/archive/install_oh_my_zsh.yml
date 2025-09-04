@@ -1,0 +1,42 @@
+---
+# Install Oh My Zsh and related components
+
+- name: "🔍 Check if Oh My Zsh is already installed"
+  stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: oh_my_zsh_stat
+
+- name: "📥 Download and install Oh My Zsh"
+  shell: |
+    RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  when: not oh_my_zsh_stat.stat.exists
+  changed_when: true
+
+- name: "🔌 Install Zsh plugins"
+  git:
+    repo: "{{ item.url }}"
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+    depth: 1
+  loop:
+    - name: zsh-autosuggestions
+      url: https://github.com/zsh-users/zsh-autosuggestions.git
+    - name: zsh-syntax-highlighting
+      url: https://github.com/zsh-users/zsh-syntax-highlighting.git
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: "🎨 Install Powerlevel10k theme"
+  git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    depth: 1
+
+- name: "🔧 Configure Oh My Zsh plugins in variables"
+  set_fact:
+    oh_my_zsh_plugins:
+      - git
+      - zsh-autosuggestions
+      - zsh-syntax-highlighting
+      - docker
+      - kubectl
+      - history-substring-search

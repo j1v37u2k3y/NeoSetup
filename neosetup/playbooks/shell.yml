@@ -1,0 +1,44 @@
+---
+# Shell Configuration Playbook
+- name: "🐚 Configure Shell with Matrix Theme"
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    # Get the current operator or use default
+    current_operator: "{{ neosetup_operator | default(default_operator) }}"
+
+  pre_tasks:
+    - name: "🔍 Display operator selection"
+      debug:
+        msg: |
+          🎭 Selected Operator: {{ current_operator }}
+          🚀 Loading operator configurations...
+
+    - name: "📦 Load base operator variables"
+      include_vars: "../operators/base/vars.yml"
+
+    - name: "📦 Load matrix operator variables (if applicable)"
+      include_vars: "../operators/matrix/vars.yml"
+      when: current_operator in ['matrix', 'jiveturkey']
+
+    - name: "📦 Load jiveturkey operator variables (if applicable)"
+      include_vars: "../operators/jiveturkey/vars.yml"
+      when: current_operator == 'jiveturkey'
+
+    - name: "✅ Display loaded operator information"
+      debug:
+        msg: |
+          🎭 Operator: {{ current_operator }}
+          📋 Description: {{ operators[current_operator].description | default('No description') }}
+          👤 Author: {{ operators[current_operator].author | default('Unknown') }}
+          🎨 Theme: {{ operators[current_operator].theme | default('default') }}
+          🔗 Extends: {{ operators[current_operator].extends | default('none') }}
+
+  roles:
+    - role: common
+      tags: [ 'common' ]
+
+    - role: shell
+      tags: [ 'shell' ]

@@ -1,0 +1,32 @@
+---
+# Shell role default variables
+
+# Shell configuration
+neosetup_install_frameworks: true
+neosetup_backup_configs: true
+neosetup_set_default_shell: false
+
+# Default shell theme
+shell_theme: "powerlevel10k"
+
+# Default aliases (will be overridden by operators)
+shell_aliases:
+  - { alias: "ll", command: "ls -alF" }
+  - { alias: "la", command: "ls -A" }
+  - { alias: "l", command: "ls -CF" }
+  - { alias: "grep", command: "grep --color=auto" }
+
+# Default environment variables
+shell_env_vars:
+  EDITOR: "vim"
+  PAGER: "less"
+
+# Default shell functions (can be extended by operators)
+shell_functions: [ ]
+
+# Oh My Zsh configuration
+oh_my_zsh_theme: "powerlevel10k/powerlevel10k"
+oh_my_zsh_plugins:
+  - git
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting

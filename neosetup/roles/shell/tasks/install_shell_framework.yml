@@ -1,0 +1,131 @@
+---
+# Unified shell framework installation
+# Supports: oh-my-zsh, bash-it, fish-shell
+
+- name: "🔍 Detect shell framework to install"
+  set_fact:
+    shell_framework: "{{ shell_config.framework | default('oh-my-zsh' if neosetup_preferred_shell == 'zsh' else 'bash-it' if neosetup_preferred_shell == 'bash' else 'none') }}"
+
+- name: "📋 Display framework installation info"
+  debug:
+    msg: |
+      Shell: {{ neosetup_preferred_shell }}
+      Framework: {{ shell_framework }}
+      Home: {{ ansible_env.HOME }}
+
+# Oh My Zsh Installation
+- name: "🐚 Oh My Zsh Installation Block"
+  when: shell_framework == 'oh-my-zsh'
+  block:
+    - name: "🔍 Check if Oh My Zsh is already installed"
+      stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      register: oh_my_zsh_stat
+
+    - name: "📥 Download and install Oh My Zsh"
+      shell: |
+        RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+      when: not oh_my_zsh_stat.stat.exists
+      changed_when: true
+
+    - name: "🔌 Install Zsh plugins"
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+        depth: 1
+      loop: "{{ shell_config.zsh_plugins | default(default_zsh_plugins) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      vars:
+        default_zsh_plugins:
+          - name: zsh-autosuggestions
+            repo: https://github.com/zsh-users/zsh-autosuggestions.git
+          - name: zsh-syntax-highlighting
+            repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+
+    - name: "🎨 Install theme"
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ item.dest }}"
+        depth: 1
+      loop: "{{ shell_config.zsh_themes | default(default_zsh_themes) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      vars:
+        default_zsh_themes:
+          - name: powerlevel10k
+            repo: https://github.com/romkatv/powerlevel10k.git
+            dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+
+# Bash-it Installation
+- name: "🔨 Bash-it Installation Block"
+  when: shell_framework == 'bash-it'
+  block:
+    - name: "🔍 Check if Bash-it is already installed"
+      stat:
+        path: "{{ ansible_env.HOME }}/.bash_it"
+      register: bash_it_stat
+
+    - name: "📥 Clone Bash-it repository"
+      git:
+        repo: https://github.com/Bash-it/bash-it.git
+        dest: "{{ ansible_env.HOME }}/.bash_it"
+        depth: 1
+      when: not bash_it_stat.stat.exists
+
+    - name: "⚙️ Install Bash-it"
+      shell: "{{ ansible_env.HOME }}/.bash_it/install.sh --silent --no-modify-config"
+      when: not bash_it_stat.stat.exists
+      changed_when: true
+
+    - name: "🔌 Enable Bash-it plugins"
+      shell: |
+        source {{ ansible_env.HOME }}/.bash_it/bash_it.sh
+        bash-it enable plugin {{ item }}
+      loop: "{{ shell_config.bash_plugins | default(default_bash_plugins) }}"
+      vars:
+        default_bash_plugins:
+          - git
+          - docker
+          - ssh
+      ignore_errors: yes
+
+# Fish Shell Installation (future)
+- name: "🐟 Fish Shell Configuration Block"
+  when: shell_framework == 'fish'
+  block:
+    - name: "📦 Install Fisher plugin manager"
+      shell: |
+        curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+      args:
+        executable: /usr/bin/fish
+      changed_when: true
+      ignore_errors: yes
+
+    - name: "🔌 Install Fish plugins"
+      shell: |
+        fisher install {{ item }}
+      args:
+        executable: /usr/bin/fish
+      loop: "{{ shell_config.fish_plugins | default([]) }}"
+      ignore_errors: yes
+
+# Common post-installation tasks
+- name: "📝 Set framework configuration facts"
+  set_fact:
+    shell_framework_installed: true
+    shell_framework_type: "{{ shell_framework }}"
+    shell_framework_path: >-
+      {{
+        ansible_env.HOME + '/.oh-my-zsh' if shell_framework == 'oh-my-zsh' else
+        ansible_env.HOME + '/.bash_it' if shell_framework == 'bash-it' else
+        ansible_env.HOME + '/.config/fish' if shell_framework == 'fish' else
+        'none'
+      }}
+
+- name: "✅ Framework installation complete"
+  debug:
+    msg: |
+      Framework: {{ shell_framework }}
+      Path: {{ shell_framework_path }}
+      Status: Installed

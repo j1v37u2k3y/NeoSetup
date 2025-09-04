@@ -1,0 +1,61 @@
+---
+# Operator inheritance system
+# This defines how operators extend each other
+
+operator_inheritance:
+  base: [ ]
+  matrix: [ "base" ]
+  jiveturkey: [ "matrix", "base" ]
+  macos: [ "base" ]
+  windows_wsl: [ "base" ]
+  python_dev: [ "base" ]
+
+# Available operators
+available_operators:
+  - base
+  - matrix
+  - jiveturkey
+  - macos
+  - windows_wsl
+  - python_dev
+
+# Default operator if none specified
+default_operator: "jiveturkey"
+
+# Operator metadata
+operators:
+  base:
+    name: "Base NeoSetup"
+    description: "Essential development tools and minimal configuration"
+    author: "NeoSetup Team"
+    theme: "minimal"
+  matrix:
+    name: "Matrix"
+    description: "Matrix-themed cyberpunk aesthetic with green colors"
+    author: "NeoSetup Team"
+    theme: "matrix"
+    extends: "base"
+  jiveturkey:
+    name: "JiveTurkey"
+    description: "Power-user setup with security tools and productivity enhancements"
+    author: "JiveTurkey"
+    theme: "matrix"
+    extends: "matrix"
+  macos:
+    name: "macOS Power User"
+    description: "Optimized setup for macOS with Homebrew, productivity tools, and window management"
+    author: "NeoSetup Team"
+    theme: "minimal"
+    extends: "base"
+  windows_wsl:
+    name: "Windows WSL2 Power User"
+    description: "Optimized setup for Windows WSL2 with enhanced Linux integration and Windows interoperability"
+    author: "NeoSetup Team"
+    theme: "minimal"
+    extends: "base"
+  python_dev:
+    name: "Python Developer"
+    description: "Python development environment with modern tooling, package managers, and best practices"
+    author: "NeoSetup Team"
+    theme: "minimal"
+    extends: "base"

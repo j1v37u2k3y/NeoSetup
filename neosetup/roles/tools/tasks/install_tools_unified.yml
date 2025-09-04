@@ -1,0 +1,184 @@
+---
+# Unified tool installation using tool registry
+
+- name: "📋 Load tool registry"
+  include_vars: "../vars/tool_registry.yml"
+
+- name: "🔍 Detect WSL environment"
+  stat:
+    path: /proc/version
+  register: proc_version_exists
+
+- name: "🔍 Check for WSL in /proc/version"
+  command: grep -i microsoft /proc/version
+  register: wsl_check
+  failed_when: false
+  changed_when: false
+  when: proc_version_exists.stat.exists
+
+- name: "🔍 Detect platform"
+  set_fact:
+    platform_key: >-
+      {{
+        'wsl' if (proc_version_exists.stat.exists and wsl_check.rc == 0) else
+        'darwin' if ansible_os_family == 'Darwin' else
+        'ubuntu' if ansible_distribution == 'Ubuntu' else
+        'debian' if ansible_distribution == 'Debian' else
+        'redhat' if ansible_os_family == 'RedHat' else
+        'unknown'
+      }}
+
+- name: "📦 Determine tools to install"
+  set_fact:
+    tools_to_install: >-
+      {{
+        (operator_tool_sets.modern_cli | default([])) +
+        (operator_tool_sets[neosetup_operator] | default([])) +
+        (tools_config.additional_tools | default([]))
+      }}
+
+- name: "📝 Display installation plan"
+  debug:
+    msg: |
+      Platform: {{ platform_key }}
+      Operator: {{ neosetup_operator }}
+      Tools to install: {{ tools_to_install | unique | sort }}
+
+# macOS installation using Homebrew
+- name: "🍎 Install tools on macOS"
+  when: platform_key == 'darwin'
+  block:
+    - name: "📦 Install regular tools via Homebrew"
+      homebrew:
+        name: "{{ tool_registry[item].packages[platform_key] }}"
+        state: present
+      loop: "{{ tools_to_install | unique }}"
+      when:
+        - item in tool_registry
+        - platform_key in tool_registry[item].packages
+        - tool_registry[item].custom_install is not defined
+        - tool_registry[item].install_method | default('brew') != 'cask'
+      loop_control:
+        label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
+
+    - name: "🍎 Install cask applications via Homebrew"
+      homebrew_cask:
+        name: "{{ tool_registry[item].packages[platform_key] }}"
+        state: present
+      loop: "{{ tools_to_install | unique }}"
+      when:
+        - item in tool_registry
+        - platform_key in tool_registry[item].packages
+        - tool_registry[item].install_method | default('brew') == 'cask'
+      loop_control:
+        label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [cask]"
+
+# WSL2 installation using apt (most WSL2 instances are Ubuntu-based)
+- name: "🪟 Install tools on WSL2"
+  when: platform_key == 'wsl'
+  become: yes
+  block:
+    - name: "📦 Update package cache for WSL2"
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_pkg_mgr == "apt"
+
+    - name: "📦 Install WSL utilities"
+      package:
+        name:
+          - wslu
+          - python3-pip
+          - build-essential
+        state: present
+      ignore_errors: yes
+
+    - name: "📦 Install tools via package manager (WSL2)"
+      package:
+        name: "{{ tool_registry[item].packages.ubuntu | default(tool_registry[item].packages.debian) | default(tool_registry[item].packages[platform_key]) }}"
+        state: present
+      loop: "{{ tools_to_install | unique }}"
+      when:
+        - item in tool_registry
+        - (tool_registry[item].packages.ubuntu is defined) or (tool_registry[item].packages.debian is defined) or (platform_key in tool_registry[item].packages)
+        - tool_registry[item].custom_install is not defined
+      loop_control:
+        label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [WSL2]"
+      ignore_errors: yes
+
+# Linux installation using package manager
+- name: "🐧 Install tools on Linux"
+  when: platform_key in ['ubuntu', 'debian', 'redhat']
+  become: yes
+  block:
+    - name: "📦 Install tools via package manager"
+      package:
+        name: "{{ tool_registry[item].packages[platform_key] }}"
+        state: present
+      loop: "{{ tools_to_install | unique }}"
+      when:
+        - item in tool_registry
+        - platform_key in tool_registry[item].packages
+        - tool_registry[item].custom_install is not defined
+      loop_control:
+        label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
+      ignore_errors: yes
+
+# Pip installations
+- name: "🐍 Install tools via pip"
+  pip:
+    name: "{{ tool_registry[item].packages.pip }}"
+    state: present
+  loop: "{{ tools_to_install | unique }}"
+  when:
+    - item in tool_registry
+    - tool_registry[item].install_method | default('') == 'pip'
+    - tool_registry[item].packages.pip is defined
+  loop_control:
+    label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pip]"
+  ignore_errors: yes
+
+# Pipx installations
+- name: "📦 Install tools via pipx"
+  shell: |
+    pipx install {{ tool_registry[item].packages.pipx }}
+  loop: "{{ tools_to_install | unique }}"
+  when:
+    - item in tool_registry
+    - tool_registry[item].install_method | default('') == 'pipx'
+    - tool_registry[item].packages.pipx is defined
+  loop_control:
+    label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pipx]"
+  ignore_errors: yes
+
+# Custom installations
+- name: "🔧 Handle custom tool installations"
+  include_tasks: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
+  loop: "{{ tools_to_install | unique }}"
+  when:
+    - item in tool_registry
+    - tool_registry[item].custom_install is defined
+  loop_control:
+    label: "{{ item }} (custom install)"
+
+# Create tool aliases if needed
+- name: "🔗 Create tool aliases"
+  set_fact:
+    tool_aliases:
+      - { alias: "ls", command: "eza --icons" }
+      - { alias: "ll", command: "eza -l --icons" }
+      - { alias: "la", command: "eza -la --icons" }
+      - { alias: "tree", command: "eza --tree --icons" }
+      - { alias: "cat", command: "bat" }
+      - { alias: "find", command: "fd" }
+      - { alias: "grep", command: "rg" }
+      - { alias: "top", command: "btop" }
+      - { alias: "diff", command: "delta" }
+  when: "'modern_cli' in tools_to_install"
+
+- name: "✅ Tool installation complete"
+  debug:
+    msg: |
+      Installed {{ tools_to_install | unique | length }} tools
+      Platform: {{ platform_key }}
+      Operator: {{ neosetup_operator }}

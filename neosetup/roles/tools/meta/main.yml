@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  author: NeoSetup Team
+  description: CLI tools installation with operator inheritance and Matrix theme
+  company: NeoSetup
+
+  license: MIT
+
+  min_ansible_version: '2.9'
+
+  platforms:
+    - name: macOS
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - tools
+    - cli
+    - utilities
+    - modern
+    - matrix
+    - development
+    - security
+
+dependencies: [ ]

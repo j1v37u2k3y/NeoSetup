@@ -1,0 +1,15 @@
+---
+# Tools role variables
+
+# Homebrew configuration for macOS
+homebrew_prefix: >-
+  {{
+    '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local'
+  }}
+
+# Tool installation timeouts
+tool_install_timeout: 300
+
+# Default tool configurations
+default_aliases_enabled: true
+modern_cli_aliases_enabled: true

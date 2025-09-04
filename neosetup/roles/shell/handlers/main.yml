@@ -1,0 +1,6 @@
+---
+# Shell role handlers
+
+- name: Reload shell
+  debug:
+    msg: "Shell configuration updated. Please restart your terminal or run: source ~/.{{ neosetup_preferred_shell }}rc"

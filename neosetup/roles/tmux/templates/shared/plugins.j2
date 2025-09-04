@@ -1,0 +1,68 @@
+# ============================================================================
+# PLUGIN MANAGEMENT
+# ============================================================================
+
+# TPM (Tmux Plugin Manager) configuration
+{% if tmux_config.plugins.enabled | default(true) %}
+
+  # Plugin directory
+  set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.tmux/plugins/'
+
+  # List of plugins
+  set -g @plugin 'tmux-plugins/tpm'
+
+  # Essential plugins
+  {% if tmux_config.plugins.sensible | default(true) %}
+    set -g @plugin 'tmux-plugins/tmux-sensible'
+  {% endif %}
+
+  {% if tmux_config.plugins.resurrect | default(true) %}
+    set -g @plugin 'tmux-plugins/tmux-resurrect'
+    # Restore vim sessions
+    set -g @resurrect-strategy-vim 'session'
+    # Restore neovim sessions
+    set -g @resurrect-strategy-nvim 'session'
+    # Restore additional programs
+    set -g @resurrect-processes 'ssh mysql psql'
+  {% endif %}
+
+  {% if tmux_config.plugins.continuum | default(false) %}
+    set -g @plugin 'tmux-plugins/tmux-continuum'
+    # Enable automatic restore
+    set -g @continuum-restore '{{ "on" if tmux_config.auto_restore | default(false) else "off" }}'
+    # Save interval in minutes
+    set -g @continuum-save-interval '{{ tmux_config.save_interval | default("15") }}'
+  {% endif %}
+
+  {% if tmux_config.plugins.yank | default(true) %}
+    set -g @plugin 'tmux-plugins/tmux-yank'
+  {% endif %}
+
+  {% if tmux_config.plugins.copycat | default(false) %}
+    set -g @plugin 'tmux-plugins/tmux-copycat'
+  {% endif %}
+
+  {% if tmux_config.plugins.prefix_highlight | default(false) %}
+    set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
+    set -g @prefix_highlight_fg '{{ tmux_config.prefix_highlight.fg | default("#000000") }}'
+    set -g @prefix_highlight_bg '{{ tmux_config.prefix_highlight.bg | default("#00ff00") }}'
+  {% endif %}
+
+  # Custom plugins from operator
+  {% for plugin in tmux_config.custom_plugins | default([]) %}
+    set -g @plugin '{{ plugin }}'
+  {% endfor %}
+
+  # Plugin configurations
+  {% if tmux_config.plugin_configs is defined %}
+    {% for config in tmux_config.plugin_configs %}
+      set -g @{{ config.option }} '{{ config.value }}'
+    {% endfor %}
+  {% endif %}
+
+  # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+  run '~/.tmux/plugins/tpm/tpm'
+
+{% else %}
+  # Plugins disabled - minimal configuration
+{% endif %}

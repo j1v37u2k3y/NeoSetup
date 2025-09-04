@@ -1,0 +1,337 @@
+#!/usr/bin/env python3
+"""
+🐇 NeoSetup - Follow the White Rabbit
+Matrix-themed Ansible automation wrapper
+"""
+
+import os
+import sys
+import subprocess
+import argparse
+from pathlib import Path
+
+
+class MatrixSetup:
+  """Matrix-themed setup automation wrapper for Ansible"""
+
+  def __init__(self):
+    self.script_dir = Path(__file__).parent.resolve()
+    self.neosetup_dir = self.script_dir / "neosetup"
+    self.operators = ["base", "matrix", "jiveturkey"]
+
+  def banner(self):
+    """Display Matrix-themed banner"""
+    print("🟢 Welcome to the Matrix, Neo...")
+    print()
+    self._show_status()
+    print()
+    self._show_environment()
+    print()
+
+  def _show_status(self):
+    """Show current git status"""
+    print("📍 Current Status:")
+    try:
+      result = subprocess.run(
+        ["git", "log", "--oneline", "-1"],
+        capture_output=True, text=True, check=True
+      )
+      print(f"   {result.stdout.strip()}")
+    except:
+      print("   Not in a git repository")
+
+  def _show_environment(self):
+    """Show environment check"""
+    print("🔧 Environment Check:")
+
+    # Check Ansible
+    try:
+      result = subprocess.run(
+        ["ansible", "--version"],
+        capture_output=True, text=True, check=True
+      )
+      ansible_version = result.stdout.split('\n')[0]
+      print(f"   Ansible: {ansible_version}")
+    except:
+      print("   Ansible: Not installed (will install automatically)")
+
+    # Check Git
+    try:
+      result = subprocess.run(
+        ["git", "--version"],
+        capture_output=True, text=True, check=True
+      )
+      print(f"   Git: {result.stdout.strip()}")
+    except:
+      print("   Git: Not found")
+
+    # Platform
+    import platform
+    print(f"   Platform: {platform.system()}")
+
+  def _ensure_ansible(self):
+    """Install Ansible if not present"""
+    # Check if ansible is already available
+    try:
+      subprocess.run(["ansible", "--version"], capture_output=True, check=True)
+      return True  # Already installed
+    except (subprocess.CalledProcessError, FileNotFoundError):
+      pass
+
+    print("🔧 Installing Ansible...")
+    import platform
+
+    try:
+      if platform.system() == "Darwin":  # macOS
+        # Try Homebrew first
+        if subprocess.run(["which", "brew"], capture_output=True).returncode == 0:
+          print("   Using Homebrew to install Ansible...")
+          subprocess.run(["brew", "install", "ansible"], check=True)
+        else:
+          print("   Using pip3 to install Ansible...")
+          subprocess.run(["pip3", "install", "ansible"], check=True)
+      elif platform.system() == "Linux":
+        # Try pip3 (most universal)
+        print("   Using pip3 to install Ansible...")
+        subprocess.run(["pip3", "install", "ansible"], check=True)
+      else:
+        print(f"❌ Unsupported platform: {platform.system()}")
+        print("   Please install Ansible manually:")
+        print("   pip3 install ansible")
+        return False
+
+      print("✅ Ansible installed successfully!")
+      return True
+
+    except subprocess.CalledProcessError as e:
+      print(f"❌ Failed to install Ansible: {e}")
+      print("   Please install manually:")
+      print("   brew install ansible  # macOS with Homebrew")
+      print("   pip3 install ansible  # Universal")
+      return False
+    except FileNotFoundError:
+      print("❌ Package manager not found")
+      print("   Please install Ansible manually:")
+      print("   pip3 install ansible")
+      return False
+
+  def run_make(self, target, operator=None):
+    """Run make command in neosetup directory"""
+    os.chdir(self.neosetup_dir)
+    cmd = ["make", target]
+    if operator:
+      cmd.append(f"OPERATOR={operator}")
+
+    try:
+      subprocess.run(cmd, check=True)
+      return True
+    except subprocess.CalledProcessError:
+      print(f"❌ Failed to run: {' '.join(cmd)}")
+      return False
+    except FileNotFoundError:
+      print("❌ Make command not found. Please install make.")
+      return False
+
+  def install(self, operator="jiveturkey"):
+    """Full installation with operator"""
+    print(f"🔴 Taking the red pill... installing everything with {operator} operator")
+
+    # Install Ansible if not present
+    if not self._ensure_ansible():
+      return False
+
+    return self.run_make("install", operator)
+
+  def shell(self, operator="jiveturkey"):
+    """Configure shell only"""
+    print(f"🎨 Configuring shell with {operator} operator...")
+
+    # Install Ansible if not present
+    if not self._ensure_ansible():
+      return False
+
+    return self.run_make("shell", operator)
+
+  def tmux(self, operator="matrix"):
+    """Configure tmux only"""
+    print(f"🖥️ Setting up Matrix-themed tmux with {operator} operator...")
+    return self.run_make("tmux", operator)
+
+  def docker(self):
+    """Install Docker only"""
+    print("🐳 Installing Docker containers...")
+    return self.run_make("docker")
+
+  def tools(self, operator="jiveturkey"):
+    """Install CLI tools"""
+    print(f"🛠️ Installing hacker tools with {operator} operator...")
+    return self.run_make("tools", operator)
+
+  def status(self):
+    """Check current status"""
+    print("🔍 Checking Matrix status...")
+    return self.run_make("status")
+
+  def dry_run(self, operator="jiveturkey"):
+    """Dry run to see what would change"""
+    print(f"🔍 Dry run with {operator} operator - showing what would change...")
+    return self.run_make("dry-run", operator)
+
+  def commit(self):
+    """Smart commit workflow"""
+    print("💾 Smart commit workflow...")
+    try:
+      # Stage all changes
+      subprocess.run(["git", "add", "-A"], check=True)
+      print("Files staged. Enter commit message:")
+      commit_msg = input("> ")
+
+      # Create commit with attribution
+      full_msg = f"{commit_msg}\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+      subprocess.run(["git", "commit", "-m", full_msg], check=True)
+      print("✅ Commit created successfully")
+      return True
+    except subprocess.CalledProcessError as e:
+      print(f"❌ Commit failed: {e}")
+      return False
+
+  def interactive(self):
+    """Interactive mode - show options and let user choose"""
+    print("💊 Choose your pill, Neo:")
+    print("   1. Red pill  - Full installation (jiveturkey operator)")
+    print("   2. Blue pill - Minimal installation (base operator)")
+    print("   3. Matrix    - Enter the Matrix (matrix operator)")
+    print("   4. Custom    - Choose your own adventure")
+    print()
+
+    choice = input("Enter your choice (1-4): ").strip()
+
+    if choice == "1":
+      self.install("jiveturkey")
+    elif choice == "2":
+      self.install("base")
+    elif choice == "3":
+      self.install("matrix")
+    elif choice == "4":
+      print("\n🎯 What would you like to do?")
+      print("   1. Configure shell")
+      print("   2. Configure tmux")
+      print("   3. Install Docker")
+      print("   4. Install tools")
+      print("   5. Full installation")
+
+      action = input("Choose action (1-5): ").strip()
+
+      if action in ["1", "2", "4", "5"]:
+        print(f"\n🎭 Choose operator: {', '.join(self.operators)}")
+        operator = input("Operator: ").strip()
+        if operator not in self.operators:
+          print(f"❌ Unknown operator: {operator}")
+          return
+
+        if action == "1":
+          self.shell(operator)
+        elif action == "2":
+          self.tmux(operator)
+        elif action == "4":
+          self.tools(operator)
+        elif action == "5":
+          self.install(operator)
+      elif action == "3":
+        self.docker()
+      else:
+        print("❌ Invalid choice")
+    else:
+      print("❌ Invalid choice")
+
+
+def main():
+  """Main entry point"""
+  parser = argparse.ArgumentParser(
+    description="🐇 NeoSetup - Matrix-themed Ansible automation",
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog="""
+Examples:
+  ./setup                        # Interactive mode
+  ./setup install jiveturkey     # Full installation
+  ./setup shell matrix          # Configure shell with matrix operator
+  ./setup docker                # Install Docker only
+  ./setup dry-run              # See what would change
+
+Available operators: base, matrix, jiveturkey
+        """
+  )
+
+  subparsers = parser.add_subparsers(dest="command", help="Commands")
+
+  # Install command
+  install_parser = subparsers.add_parser("install", help="Full installation")
+  install_parser.add_argument("operator", nargs="?", default="jiveturkey",
+                              choices=["base", "matrix", "jiveturkey"])
+
+  # Shell command
+  shell_parser = subparsers.add_parser("shell", help="Configure shell")
+  shell_parser.add_argument("operator", nargs="?", default="jiveturkey",
+                            choices=["base", "matrix", "jiveturkey"])
+
+  # Tmux command
+  tmux_parser = subparsers.add_parser("tmux", help="Configure tmux")
+  tmux_parser.add_argument("operator", nargs="?", default="matrix",
+                           choices=["base", "matrix", "jiveturkey"])
+
+  # Docker command
+  docker_parser = subparsers.add_parser("docker", help="Install Docker")
+
+  # Tools command
+  tools_parser = subparsers.add_parser("tools", help="Install CLI tools")
+  tools_parser.add_argument("operator", nargs="?", default="jiveturkey",
+                            choices=["base", "matrix", "jiveturkey"])
+
+  # Status command
+  status_parser = subparsers.add_parser("status", help="Check status")
+
+  # Dry-run command
+  dryrun_parser = subparsers.add_parser("dry-run", help="Show what would change")
+  dryrun_parser.add_argument("operator", nargs="?", default="jiveturkey",
+                             choices=["base", "matrix", "jiveturkey"])
+
+  # Commit command
+  commit_parser = subparsers.add_parser("commit", help="Smart commit")
+
+  args = parser.parse_args()
+
+  # Initialize setup
+  setup = MatrixSetup()
+  setup.banner()
+
+  # Handle commands
+  if args.command == "install":
+    setup.install(args.operator)
+  elif args.command == "shell":
+    setup.shell(args.operator)
+  elif args.command == "tmux":
+    setup.tmux(args.operator)
+  elif args.command == "docker":
+    setup.docker()
+  elif args.command == "tools":
+    setup.tools(args.operator)
+  elif args.command == "status":
+    setup.status()
+  elif args.command == "dry-run":
+    setup.dry_run(args.operator)
+  elif args.command == "commit":
+    setup.commit()
+  else:
+    # Interactive mode
+    setup.interactive()
+
+
+if __name__ == "__main__":
+  try:
+    main()
+  except KeyboardInterrupt:
+    print("\n⚡ Exiting the Matrix...")
+    sys.exit(130)
+  except Exception as e:
+    print(f"💥 Fatal error: {e}")
+    sys.exit(1)

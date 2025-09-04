@@ -1,0 +1,158 @@
+---
+# Matrix Operator Configuration
+# Cyberpunk-themed configuration extending base
+
+# Operator metadata
+operator_name: "matrix"
+operator_version: "1.2.0"
+operator_description: "Matrix-themed cyberpunk aesthetic with green colors"
+extends: "base"
+
+# Shell configuration (extends base)
+shell_config:
+  # Matrix-specific shell settings
+  oh_my_zsh_theme: "powerlevel10k/powerlevel10k"
+
+  # Additional Matrix plugins
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - docker-compose-plugin
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    - colored-man-pages
+    - command-not-found
+
+  # Matrix-themed aliases (merged with base)
+  aliases:
+    # Matrix-themed navigation
+    "matrix": "cmatrix"
+    "rain": "cmatrix -b"
+    "neo": "neofetch"
+    # Fun commands
+    "hack": "echo '🎭 Hacking the Matrix...'"
+    "redpill": "echo '🔴💊 Welcome to the real world'"
+    "bluepill": "echo '🔵💊 Back to sleep...'"
+
+  # Matrix environment
+  environment:
+    EDITOR: "vim"
+    PAGER: "less"
+    # Matrix-themed prompts
+    MATRIX_MODE: "enabled"
+
+# Tmux configuration (extends base)
+tmux_config:
+  # Matrix-themed tmux
+  prefix: "C-x"  # X marks the Matrix
+
+  # Matrix status bar colors
+  status_bar:
+    background: "#000000"
+    foreground: "#00ff00"
+    active_bg: "#00ff00"
+    active_fg: "#000000"
+
+  # Additional Matrix plugins
+  plugins:
+    - "tmux-plugins/tpm"
+    - "tmux-plugins/tmux-sensible"
+    - "tmux-plugins/tmux-resurrect"
+    - "tmux-plugins/tmux-continuum"
+
+# Tools configuration (extends base)
+tools_config:
+  # Matrix-specific tools
+  matrix_tools:
+    - name: "cmatrix"
+      description: "Matrix digital rain"
+      package:
+        macos: "cmatrix"
+        debian: "cmatrix"
+        redhat: "cmatrix"
+    - name: "figlet"
+      description: "ASCII art text"
+      package:
+        macos: "figlet"
+        debian: "figlet"
+        redhat: "figlet"
+    - name: "lolcat"
+      description: "Rainbow text"
+      package:
+        macos: "lolcat"
+        debian: "lolcat"
+        redhat: "lolcat"
+    - name: "neofetch"
+      description: "System info"
+      package:
+        macos: "neofetch"
+        debian: "neofetch"
+        redhat: "neofetch"
+    - name: "fortune"
+      description: "Random quotes"
+      package:
+        macos: "fortune"
+        debian: "fortune-mod"
+        redhat: "fortune-mod"
+
+# Matrix theme settings
+matrix_theme:
+  primary_color: "#00ff00"
+  secondary_color: "#003300"
+  background_color: "#000000"
+  text_color: "#ffffff"
+
+# Matrix-specific shell functions
+shell_functions:
+  - name: "matrix_mode"
+    description: "Enable/disable Matrix visual effects"
+    body: |
+      if [[ "$1" == "on" ]]; then
+        export MATRIX_MODE=enabled
+        echo "🟢 Matrix mode enabled"
+        alias ls="ls --color=always"
+        alias grep="grep --color=always"
+      elif [[ "$1" == "off" ]]; then
+        export MATRIX_MODE=disabled
+        echo "🔴 Matrix mode disabled"
+        unalias ls grep 2>/dev/null
+      else
+        echo "Matrix mode: ${MATRIX_MODE:-disabled}"
+        echo "Usage: matrix_mode [on|off]"
+      fi
+
+  - name: "wake_up"
+    description: "Neo, wake up..."
+    body: |
+      echo "🔴💊 The Matrix has you..."
+      echo "Follow the white rabbit."
+      if command -v cmatrix &> /dev/null; then
+        cmatrix -s -C red
+      else
+        echo "Install cmatrix for the full experience!"
+      fi
+
+  - name: "enter_matrix"
+    description: "Enter the Matrix"
+    body: |
+      clear
+      echo "Welcome to the Matrix, Neo."
+      if command -v figlet &> /dev/null; then
+        figlet -f slant "MATRIX" | lolcat 2>/dev/null || cat
+      else
+        echo " __  __       _        _      "
+        echo "|  \\/  | __ _| |_ _ __(_)_  __"
+        echo "| |\\/| |/ _\` | __| '__| \\ \\/ /"
+        echo "| |  | | (_| | |_| |  | |>  < "
+        echo "|_|  |_|\\__,_|\\__|_|  |_/_/\\_\\"
+      fi
+      echo ""
+      echo "🟢 System: ONLINE"
+      echo "🟢 Neural link: ESTABLISHED"
+      echo "🟢 Reality: QUESTIONED"
+
+# Matrix startup configuration
+matrix_startup:
+  show_matrix_greeting: true
+  auto_matrix_mode: false
+  terminal_effects: true
