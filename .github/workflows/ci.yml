@@ -193,13 +193,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔍 Run CodeQL Analysis (Init)
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: python
         continue-on-error: true  # Allow failure if code scanning not enabled
 
       - name: 🔍 Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         continue-on-error: true  # Allow failure if code scanning not enabled
 
       - name: 🔍 Run Trivy vulnerability scanner
@@ -221,7 +221,7 @@ jobs:
         if: always()
 
       - name: 📤 Upload Trivy scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
