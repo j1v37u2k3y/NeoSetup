@@ -127,7 +127,7 @@ Uploading to registry...
 
 ### Registry Storage
 
-```
+```text
 registry/
 ├── packages/
 │   ├── awesome-dev/
@@ -148,7 +148,7 @@ registry/
 
 ### Local Operator Management
 
-```
+```text
 ~/.neosetup/
 ├── operators/           # Local operators
 │   ├── base/           # Built-in
@@ -264,4 +264,5 @@ class OperatorResolver:
 - **Copyright infringement**: DMCA process
 - **Terms of service**: Clear usage guidelines
 
-This operator registry would transform NeoSetup from a personal tool into a platform for the development community to share configurations and best practices.
+This operator registry would transform NeoSetup from a personal tool into a platform
+for the development community to share configurations and best practices.

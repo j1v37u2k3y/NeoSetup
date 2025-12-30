@@ -25,6 +25,8 @@ help:
 	@echo "  make dry-run                     - Show what would change"
 	@echo "  make deps                        - Install dependencies"
 	@echo "  make dev-setup                   - Setup development environment"
+	@echo "  make precommit                   - Run pre-commit in Docker"
+	@echo "  make precommit-staged            - Run pre-commit on staged files"
 	@echo "  make clean                       - Clean cache files"
 	@echo ""
 	@echo "Operators: base, matrix, jiveturkey"
@@ -117,6 +119,21 @@ lint:
 	@echo "🔍 Linting Ansible code..."
 	ansible-lint $(PLAYBOOK_DIR)/*.yml
 	yamllint .
+
+# Run pre-commit checks in Docker (consistent environment)
+precommit:
+	@echo "🐳 Running pre-commit in Docker..."
+	../scripts/run-precommit.sh run --all-files
+
+# Run pre-commit on staged files only
+precommit-staged:
+	@echo "🐳 Running pre-commit on staged files..."
+	../scripts/run-precommit.sh run
+
+# Build pre-commit Docker image
+precommit-build:
+	@echo "🐳 Building pre-commit Docker image..."
+	cd .. && docker build -f Dockerfile.precommit -t neosetup-precommit .
 
 # Clean cache and temp files
 clean:

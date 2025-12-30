@@ -102,4 +102,4 @@
 
 ---
 
-**🤖 This PR contributes to making NeoSetup the best Ansible automation system ever! 🚀**
+> This PR contributes to making NeoSetup the best Ansible automation system ever!

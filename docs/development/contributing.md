@@ -464,7 +464,8 @@ Active contributors may be invited to become maintainers with:
 
 Welcome to the resistance, and thank you for helping make NeoSetup even more awesome! 🤘
 
-*This is your last chance. After this, there is no turning back. You contribute to the Matrix - you help us show the world how deep the rabbit hole goes.*
+*This is your last chance. After this, there is no turning back. You contribute to the Matrix -
+you help us show the world how deep the rabbit hole goes.*
 
 **🔴 Take the red pill**: Start contributing today!  
 **🔵 Take the blue pill**: Stay a user forever  

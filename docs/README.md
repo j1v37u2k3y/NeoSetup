@@ -1,6 +1,7 @@
 # 🐇 NeoSetup Documentation
 
-Welcome to the complete documentation for NeoSetup - a Matrix-themed development environment automation system built with Ansible.
+Welcome to the complete documentation for NeoSetup - a Matrix-themed development environment
+automation system built with Ansible.
 
 ## 📚 Documentation Structure
 

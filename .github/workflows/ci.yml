@@ -21,7 +21,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: '3.11'
-  ANSIBLE_VERSION: '>=6.0,<8.0'
+  ANSIBLE_VERSION: '>=9.0,<11.0'  # Required for ansible-lint compatibility
   MATRIX_MODE: enabled
 
 jobs:
@@ -167,14 +167,14 @@ jobs:
       - name: 📝 Run markdownlint
         run: |
           echo "📝 Running Markdownlint with project configuration..."
-          markdownlint -c .markdownlint.yml **/*.md || true
+          markdownlint -c .markdownlint.yml "**/*.md"
 
       - name: 🔗 Check markdown links
         run: |
           echo "🔗 Checking markdown links..."
           find . -name "*.md" -not -path "./.git/*" | while read -r file; do
             echo "Checking links in: $file"
-            markdown-link-check "$file" --config .github/markdown-link-check.json || true
+            markdown-link-check "$file" --config .github/markdown-link-check.json
           done
 
   # ============================================================================

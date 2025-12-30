@@ -591,4 +591,5 @@ tmux -V
 
 ---
 
-**Remember**: When in doubt, take the blue pill and start with the `base` operator. You can always upgrade to `matrix` or `jiveturkey` later.
+**Remember**: When in doubt, take the blue pill and start with the `base` operator.
+You can always upgrade to `matrix` or `jiveturkey` later.

@@ -48,7 +48,7 @@ Ansible provides enterprise-grade features out of the box:
 
 ### Python Structure (Old)
 
-```
+```text
 NeoSetup.py              # Monolithic script
 ├── shell_setup()        # 500+ lines
 ├── docker_setup()       # 300+ lines
@@ -58,7 +58,7 @@ NeoSetup.py              # Monolithic script
 
 ### Ansible Structure (New)
 
-```
+```text
 neosetup/
 ├── roles/               # Modular, reusable components
 │   ├── shell/          # ~100 lines total
@@ -229,4 +229,4 @@ The Matrix theme lives on, stronger than ever, in its new Ansible form.
 
 ---
 
-*"The Matrix is everywhere. It is all around us. Even now, in this very code."*
+> "The Matrix is everywhere. It is all around us. Even now, in this very code."

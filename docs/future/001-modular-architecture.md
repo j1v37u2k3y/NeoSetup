@@ -35,7 +35,7 @@ The original `NeoSetup.py` was a 766-line monolithic script with several issues:
 
 **Chosen**: Modular package architecture
 
-```
+```text
 neosetup/
 ├── core.py              # Orchestrator (not god object)
 ├── modules/             # Individual setup modules

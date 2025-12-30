@@ -19,11 +19,11 @@ Initial idea was to have separate operators for each personality, but this led t
 
 ### Option 1: Flat Operators (No Inheritance)
 
-```
+```text
 operators/
 ├── base/
 ├── jiveturkey/      # Full config duplication
-├── matrix/          # Full config duplication  
+├── matrix/          # Full config duplication
 └── minimalist/      # Full config duplication
 ```
 
@@ -57,7 +57,7 @@ theme: "matrix"
 
 ### Inheritance Chain
 
-```
+```text
 base → jiveturkey (base + matrix theme + power-user features)
 base → matrix (base + pure matrix aesthetics)
 base → minimalist (base - extras)
