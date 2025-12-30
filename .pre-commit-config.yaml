@@ -28,12 +28,12 @@ repos:
       - id: yamllint
         args: [ -c=.yamllint.yml ]
 
-  # Ansible Validation
+  # Ansible Validation (uses Docker for consistent environment)
   - repo: local
     hooks:
       - id: ansible-lint
         name: ansible-lint
-        entry: bash -c 'cd neosetup && ansible-lint --profile=basic .'
+        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit ansible-lint --profile=basic neosetup/'
         language: system
         files: ^neosetup/.*\.(yaml|yml)$
         pass_filenames: false
@@ -60,31 +60,30 @@ repos:
       - id: flake8
         files: \.py$
 
+  # Python tools and operator validation (uses Docker for consistent environment)
   - repo: local
     hooks:
       - id: pylint
         name: pylint
-        entry: pylint
+        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit pylint "$@"' --
         language: system
         files: \.py$
 
       - id: bandit
         name: bandit security scan
-        entry: bandit
+        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit bandit -r "$@"' --
         language: system
         files: \.py$
-        args: [ '-r', '.' ]
 
       - id: safety
         name: safety dependency check
-        entry: bash
+        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit safety check || echo "⚠️ Security vulnerabilities found"'
         language: system
-        args: [ '-c', 'safety check || echo "⚠️ Security vulnerabilities found - should be addressed"' ]
         pass_filenames: false
 
       - id: operator-validation
         name: NeoSetup operator validation
-        entry: bash -c 'cd neosetup && python3 scripts/validate_operator.py --all'
+        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit bash -c "cd neosetup && python3 scripts/validate_operator.py --all"'
         language: system
         files: ^neosetup/operators/.*\.yml$
         pass_filenames: false
