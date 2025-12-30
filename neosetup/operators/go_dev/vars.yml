@@ -1,0 +1,275 @@
+---
+# Go Developer Operator - Go development environment with modern tooling
+# Extends base operator with Go-specific tools and configurations
+
+# Required operator metadata
+operator_name: "go_dev"
+operator_version: "1.0.0"
+operator_description: "Go development environment with modern tooling, testing frameworks, and best practices"
+operator_author: "NeoSetup Team"
+operator_tags:
+  - "development"
+  - "go"
+  - "golang"
+  - "backend"
+extends: "base"
+
+# Operator info for display
+operator_info:
+  name: "Go Developer"
+  description: "Go development environment with modern tooling, testing frameworks, and best practices"
+  version: "1.0.0"
+  supported_platforms:
+    - darwin
+    - ubuntu
+    - debian
+    - redhat
+    - wsl
+  features:
+    - "Go version management with goenv or official installer"
+    - "Essential Go tools (gopls, goimports, golangci-lint)"
+    - "Testing and benchmarking tools"
+    - "Code generation and scaffolding"
+    - "Protocol Buffers and gRPC support"
+    - "Container and Kubernetes development tools"
+    - "Performance profiling with pprof"
+    - "Database migration tools"
+
+# Go-specific configuration
+go_config:
+  install_go: true
+  go_version: "1.22"
+  install_goenv: false  # Use official installer by default
+  setup_gopath: true
+  enable_modules: true
+  install_tools: true
+
+# Tool configuration
+tools_config:
+  additional_tools:
+    # Language server and IDE support
+    - gopls
+    - goimports
+    - gofumpt
+    # Linting and code quality
+    - golangci-lint
+    - staticcheck
+    - gosec
+    # Testing tools
+    - gotestsum
+    - gotest
+    - mockgen
+    - gomock
+    # Code generation
+    - stringer
+    - go-enum
+    - wire
+    # Protocol Buffers and gRPC
+    - protoc
+    - protoc-gen-go
+    - protoc-gen-go-grpc
+    # Development utilities
+    - air  # Hot reload
+    - gore  # REPL
+    - delve  # Debugger
+    - cobra-cli  # CLI scaffolding
+    # Database tools
+    - migrate
+    - sqlc
+    - goose
+    # Build and release
+    - goreleaser
+    - ko
+    # Documentation
+    - godoc
+    - pkgsite
+  go_specific_tools: true
+
+# Shell configuration optimized for Go development
+shell_config:
+  enable_go_completions: true
+  paths:
+    - "$GOPATH/bin"
+    - "$GOROOT/bin"
+    - "$HOME/go/bin"
+    - "/usr/local/go/bin"
+  aliases:
+    # Go commands
+    - { alias: "gob", command: "go build" }
+    - { alias: "gor", command: "go run" }
+    - { alias: "got", command: "go test" }
+    - { alias: "gotv", command: "go test -v" }
+    - { alias: "gotc", command: "go test -cover" }
+    - { alias: "gotr", command: "go test -race" }
+    - { alias: "gotb", command: "go test -bench=." }
+    - { alias: "gof", command: "go fmt ./..." }
+    - { alias: "goi", command: "goimports -w ." }
+    - { alias: "gov", command: "go vet ./..." }
+    - { alias: "gom", command: "go mod" }
+    - { alias: "gomt", command: "go mod tidy" }
+    - { alias: "gomu", command: "go mod download" }
+    - { alias: "gomv", command: "go mod verify" }
+    - { alias: "gog", command: "go get" }
+    - { alias: "gogu", command: "go get -u" }
+    # Linting
+    - { alias: "golint", command: "golangci-lint run" }
+    - { alias: "golintfix", command: "golangci-lint run --fix" }
+    # Build variants
+    - { alias: "gobuild-linux", command: "GOOS=linux GOARCH=amd64 go build" }
+    - { alias: "gobuild-mac", command: "GOOS=darwin GOARCH=amd64 go build" }
+    - { alias: "gobuild-win", command: "GOOS=windows GOARCH=amd64 go build" }
+    - { alias: "gobuild-arm", command: "GOOS=linux GOARCH=arm64 go build" }
+    # Development
+    - { alias: "gowatch", command: "air" }
+    - { alias: "godebug", command: "dlv debug" }
+  environment:
+    - { var: "GOPATH", value: "$HOME/go" }
+    - { var: "GOROOT", value: "/usr/local/go" }
+    - { var: "GO111MODULE", value: "on" }
+    - { var: "GOPROXY", value: "https://proxy.golang.org,direct" }
+    - { var: "GOPRIVATE", value: "" }
+    - { var: "CGO_ENABLED", value: "1" }
+
+# Go shell functions
+shell_functions:
+  - name: "mkgo"
+    description: "Create new Go project with module initialization"
+    body: |
+      if [ -z "$1" ]; then
+        echo "Usage: mkgo <project_name> [module_path]"
+        return 1
+      fi
+      local project_name="$1"
+      local module_path="${2:-github.com/$(whoami)/$project_name}"
+      mkdir -p "$project_name" && cd "$project_name"
+      go mod init "$module_path"
+      mkdir -p cmd pkg internal
+      cat > main.go << 'GOEOF'
+      package main
+
+      import "fmt"
+
+      func main() {
+          fmt.Println("Hello, Go!")
+      }
+      GOEOF
+      cat > .gitignore << 'GITEOF'
+      # Binaries
+      *.exe
+      *.exe~
+      *.dll
+      *.so
+      *.dylib
+
+      # Test binary
+      *.test
+
+      # Output of go coverage tool
+      *.out
+
+      # Dependency directories
+      vendor/
+
+      # IDE
+      .idea/
+      .vscode/
+      *.swp
+      *.swo
+
+      # Binary output
+      /bin/
+      /dist/
+      GITEOF
+      echo "Go project '$project_name' created with module '$module_path'"
+
+  - name: "goinfo"
+    description: "Display Go environment information"
+    body: |
+      echo "Go Environment Information"
+      echo "=========================="
+      echo "Go Version: $(go version 2>/dev/null | cut -d' ' -f3 || echo 'Not installed')"
+      echo "GOPATH: ${GOPATH:-'Not set'}"
+      echo "GOROOT: ${GOROOT:-$(go env GOROOT 2>/dev/null || echo 'Not set')}"
+      echo "GOOS: $(go env GOOS 2>/dev/null || echo 'Unknown')"
+      echo "GOARCH: $(go env GOARCH 2>/dev/null || echo 'Unknown')"
+      echo "Go Proxy: $(go env GOPROXY 2>/dev/null || echo 'Not set')"
+      echo "Go Path: $(which go 2>/dev/null || echo 'Not found')"
+
+  - name: "gotest-watch"
+    description: "Watch and run Go tests on file changes"
+    body: |
+      local package="${1:-.}"
+      echo "Watching for changes in $package..."
+      while true; do
+        go test -v "$package"
+        echo "Waiting for changes... (Ctrl+C to stop)"
+        fswatch -1 -e ".*" -i "\\.go$" . 2>/dev/null || inotifywait -q -e modify -r --include '\.go$' . 2>/dev/null || sleep 5
+      done
+
+  - name: "gocover"
+    description: "Run tests with coverage and open HTML report"
+    body: |
+      local package="${1:-./...}"
+      go test -coverprofile=coverage.out "$package"
+      go tool cover -html=coverage.out -o coverage.html
+      echo "Coverage report generated: coverage.html"
+      if command -v open &> /dev/null; then
+        open coverage.html
+      elif command -v xdg-open &> /dev/null; then
+        xdg-open coverage.html
+      fi
+
+  - name: "gobench"
+    description: "Run benchmarks with memory allocation stats"
+    body: |
+      local package="${1:-./...}"
+      go test -bench=. -benchmem -benchtime=5s "$package"
+
+  - name: "goclean"
+    description: "Clean Go build cache and test cache"
+    body: |
+      echo "Cleaning Go caches..."
+      go clean -cache -testcache -modcache
+      echo "Go caches cleaned"
+
+  - name: "godeps"
+    description: "Show direct dependencies and their licenses"
+    body: |
+      echo "Direct dependencies:"
+      go list -m -f '{{.Path}} {{.Version}}' all | tail -n +2
+      echo ""
+      echo "Run 'go mod graph' for full dependency graph"
+
+# Tmux configuration for Go development
+tmux_config:
+  enable_mouse: true
+  copy_command: "pbcopy"
+  paste_command: "pbpaste"
+  go_specific_bindings: true
+
+# Go development specific settings
+go_dev_config:
+  # IDE configurations
+  setup_gopls: true
+  setup_vscode_go: false
+
+  # Linting configuration
+  enable_golangci_lint: true
+  golangci_lint_config: ".golangci.yml"
+
+  # Testing configuration
+  enable_race_detection: true
+  test_timeout: "30s"
+
+  # Build settings
+  enable_cgo: true
+  enable_vendoring: false
+
+  # Tools to install via go install
+  go_install_tools:
+    - golang.org/x/tools/gopls@latest
+    - golang.org/x/tools/cmd/goimports@latest
+    - github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - github.com/go-delve/delve/cmd/dlv@latest
+    - github.com/cosmtrek/air@latest
+    - github.com/spf13/cobra-cli@latest

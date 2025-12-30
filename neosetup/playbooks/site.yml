@@ -23,6 +23,21 @@
     - name: "\U0001F4E6 Load jiveturkey operator variables (if applicable)"
       include_vars: "../operators/jiveturkey/vars.yml"
       when: current_operator == 'jiveturkey'
+    - name: "\U0001F4E6 Load macos operator variables (if applicable)"
+      include_vars: "../operators/macos/vars.yml"
+      when: current_operator == 'macos'
+    - name: "\U0001F4E6 Load windows_wsl operator variables (if applicable)"
+      include_vars: "../operators/windows_wsl/vars.yml"
+      when: current_operator == 'windows_wsl'
+    - name: "\U0001F4E6 Load python_dev operator variables (if applicable)"
+      include_vars: "../operators/python_dev/vars.yml"
+      when: current_operator == 'python_dev'
+    - name: "\U0001F4E6 Load nodejs_dev operator variables (if applicable)"
+      include_vars: "../operators/nodejs_dev/vars.yml"
+      when: current_operator == 'nodejs_dev'
+    - name: "\U0001F4E6 Load go_dev operator variables (if applicable)"
+      include_vars: "../operators/go_dev/vars.yml"
+      when: current_operator == 'go_dev'
     - name: "✅ Display loaded operator information"
       debug:
         msg: |

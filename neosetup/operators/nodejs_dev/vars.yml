@@ -1,0 +1,251 @@
+---
+# Node.js Developer Operator - Node.js development environment with modern tooling
+# Extends base operator with Node.js-specific tools and configurations
+
+# Required operator metadata
+operator_name: "nodejs_dev"
+operator_version: "1.0.0"
+operator_description: "Node.js development environment with modern tooling, package managers, and best practices"
+operator_author: "NeoSetup Team"
+operator_tags:
+  - "development"
+  - "nodejs"
+  - "javascript"
+  - "typescript"
+extends: "base"
+
+# Operator info for display
+operator_info:
+  name: "Node.js Developer"
+  description: "Node.js development environment with modern tooling, package managers, and best practices"
+  version: "1.0.0"
+  supported_platforms:
+    - darwin
+    - ubuntu
+    - debian
+    - redhat
+    - wsl
+  features:
+    - "Node.js version management with nvm"
+    - "Package management with npm, yarn, and pnpm"
+    - "TypeScript development setup"
+    - "Testing frameworks (Jest, Vitest, Mocha)"
+    - "Code quality tools (ESLint, Prettier)"
+    - "Build tools (webpack, vite, esbuild)"
+    - "Full-stack development ready"
+    - "Monorepo support with Turborepo/Nx"
+
+# Node.js-specific configuration
+nodejs_config:
+  install_nvm: true
+  install_fnm: false  # Alternative to nvm - faster
+  default_node_versions:
+    - "20"  # LTS
+    - "22"  # Current
+  global_node_version: "20"
+  install_global_packages: true
+
+# Tool configuration
+tools_config:
+  additional_tools:
+    # Version managers
+    - nvm
+    # Package managers
+    - yarn
+    - pnpm
+    # Development utilities
+    - typescript
+    - ts-node
+    - tsx
+    - nodemon
+    - pm2
+    # Code quality
+    - eslint
+    - prettier
+    # Build tools
+    - vite
+    - esbuild
+    # Testing
+    - jest
+    - vitest
+    # Full-stack frameworks CLI
+    - "@nestjs/cli"
+    - "create-next-app"
+    - "create-vite"
+    # Monorepo tools
+    - turbo
+    - nx
+    # Utilities
+    - npkill
+    - npm-check-updates
+    - depcheck
+    - serve
+    - http-server
+  nodejs_specific_tools: true
+
+# Shell configuration optimized for Node.js development
+shell_config:
+  enable_node_completions: true
+  paths:
+    - "$HOME/.nvm/versions/node/$(nvm current)/bin"
+    - "$HOME/.yarn/bin"
+    - "$HOME/.config/yarn/global/node_modules/.bin"
+    - "$HOME/.local/share/pnpm"
+    - "./node_modules/.bin"
+  aliases:
+    # Package managers
+    - { alias: "ni", command: "npm install" }
+    - { alias: "nid", command: "npm install --save-dev" }
+    - { alias: "nig", command: "npm install -g" }
+    - { alias: "nr", command: "npm run" }
+    - { alias: "nrs", command: "npm run start" }
+    - { alias: "nrb", command: "npm run build" }
+    - { alias: "nrt", command: "npm run test" }
+    - { alias: "nrd", command: "npm run dev" }
+    - { alias: "nrl", command: "npm run lint" }
+    # Yarn aliases
+    - { alias: "y", command: "yarn" }
+    - { alias: "ya", command: "yarn add" }
+    - { alias: "yad", command: "yarn add --dev" }
+    - { alias: "yr", command: "yarn run" }
+    - { alias: "ys", command: "yarn start" }
+    - { alias: "yb", command: "yarn build" }
+    - { alias: "yt", command: "yarn test" }
+    - { alias: "yd", command: "yarn dev" }
+    # pnpm aliases
+    - { alias: "p", command: "pnpm" }
+    - { alias: "pa", command: "pnpm add" }
+    - { alias: "pad", command: "pnpm add -D" }
+    - { alias: "pr", command: "pnpm run" }
+    - { alias: "prs", command: "pnpm start" }
+    - { alias: "prb", command: "pnpm build" }
+    - { alias: "prt", command: "pnpm test" }
+    - { alias: "prd", command: "pnpm dev" }
+    # Node utilities
+    - { alias: "node-version", command: "node --version && npm --version" }
+    - { alias: "ncu", command: "npx npm-check-updates" }
+    - { alias: "ncui", command: "npx npm-check-updates -i" }
+    - { alias: "killnode", command: "pkill -f node" }
+    - { alias: "rmnode", command: "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml" }
+  environment:
+    - { var: "NVM_DIR", value: "$HOME/.nvm" }
+    - { var: "NODE_ENV", value: "development" }
+    - { var: "PNPM_HOME", value: "$HOME/.local/share/pnpm" }
+
+# Node.js shell functions
+shell_functions:
+  - name: "mknode"
+    description: "Create new Node.js project with optional TypeScript"
+    body: |
+      if [ -z "$1" ]; then
+        echo "Usage: mknode <project_name> [--typescript|-ts]"
+        return 1
+      fi
+      local project_name="$1"
+      local use_typescript=false
+      if [ "$2" = "--typescript" ] || [ "$2" = "-ts" ]; then
+        use_typescript=true
+      fi
+      mkdir -p "$project_name" && cd "$project_name"
+      npm init -y
+      echo "node_modules/" > .gitignore
+      echo "dist/" >> .gitignore
+      echo ".env" >> .gitignore
+      echo "*.log" >> .gitignore
+      if [ "$use_typescript" = true ]; then
+        npm install --save-dev typescript @types/node ts-node
+        echo '{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","strict":true,"esModuleInterop":true,"skipLibCheck":true,"outDir":"dist"},"include":["src/**/*"],"exclude":["node_modules"]}' > tsconfig.json
+        mkdir src && echo 'console.log("Hello, TypeScript!")' > src/index.ts
+        npm pkg set scripts.build="tsc"
+        npm pkg set scripts.start="node dist/index.js"
+        npm pkg set scripts.dev="ts-node src/index.ts"
+        echo "TypeScript Node.js project '$project_name' created"
+      else
+        mkdir src && echo 'console.log("Hello, Node.js!")' > src/index.js
+        npm pkg set scripts.start="node src/index.js"
+        npm pkg set type="module"
+        echo "Node.js project '$project_name' created"
+      fi
+
+  - name: "nodeinfo"
+    description: "Display Node.js environment information"
+    body: |
+      echo "Node.js Environment Information"
+      echo "================================"
+      echo "Node Version: $(node --version 2>/dev/null || echo 'Not installed')"
+      echo "npm Version: $(npm --version 2>/dev/null || echo 'Not installed')"
+      echo "Yarn Version: $(yarn --version 2>/dev/null || echo 'Not installed')"
+      echo "pnpm Version: $(pnpm --version 2>/dev/null || echo 'Not installed')"
+      if command -v nvm &> /dev/null; then
+        echo "NVM Version: $(nvm --version)"
+        echo "NVM Current: $(nvm current)"
+      fi
+      echo "Node Path: $(which node 2>/dev/null || echo 'Not found'kasync)"
+
+  - name: "node-clean"
+    description: "Clean node_modules and lock files recursively"
+    body: |
+      local count=0
+      echo "Finding and removing node_modules directories..."
+      while IFS= read -r dir; do
+        echo "Removing: $dir"
+        rm -rf "$dir"
+        ((count++))
+      done < <(find . -name "node_modules" -type d -prune)
+      echo "Removed $count node_modules directories"
+
+  - name: "node-outdated"
+    description: "Check for outdated packages in current project"
+    body: |
+      if [ -f "package.json" ]; then
+        if [ -f "pnpm-lock.yaml" ]; then
+          pnpm outdated
+        elif [ -f "yarn.lock" ]; then
+          yarn outdated
+        else
+          npm outdated
+        fi
+      else
+        echo "No package.json found in current directory"
+      fi
+
+  - name: "node-size"
+    description: "Show size of node_modules in current directory"
+    body: |
+      if [ -d "node_modules" ]; then
+        du -sh node_modules
+      else
+        echo "No node_modules directory found"
+      fi
+
+# Tmux configuration for Node.js development
+tmux_config:
+  enable_mouse: true
+  copy_command: "pbcopy"
+  paste_command: "pbpaste"
+  nodejs_specific_bindings: true
+
+# Node.js development specific settings
+nodejs_dev_config:
+  # IDE configurations
+  setup_vscode_extensions: false
+
+  # Code quality settings
+  enable_eslint_config: true
+  enable_prettier_config: true
+
+  # Testing configuration
+  setup_jest_config: false
+  setup_vitest_config: false
+
+  # Package manager preference
+  prefer_pnpm: true
+  use_corepack: false
+
+  # Global packages to install
+  global_packages:
+    - typescript
+    - ts-node
+    - nodemon
+    - npm-check-updates
+    - serve

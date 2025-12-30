@@ -65,4 +65,7 @@
     line: "{{ ansible_env.SHELL if neosetup_preferred_shell == neosetup_current_shell else '/bin/zsh' }}"
     state: present
   become: yes
-  when: neosetup_set_default_shell | default(false)
+  when:
+    - neosetup_set_default_shell is defined
+    - neosetup_set_default_shell | bool
+  ignore_errors: yes
