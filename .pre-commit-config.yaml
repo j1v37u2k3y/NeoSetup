@@ -33,7 +33,7 @@ repos:
     hooks:
       - id: ansible-lint
         name: ansible-lint
-        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit ansible-lint --profile=basic neosetup/'
+        entry: bash -c 'docker run --rm --entrypoint ansible-lint -v "$(pwd):/workspace" -w /workspace neosetup-precommit --profile=basic neosetup/'
         language: system
         files: ^neosetup/.*\.(yaml|yml)$
         pass_filenames: false
@@ -46,18 +46,19 @@ repos:
         args: [ '--baseline', '.secrets.baseline' ]
         exclude: 'package\.lock\.json|\.github/workflows/docker-tests\.yml'
 
-  # Python validation for scripts
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
+  # Python validation for scripts (uses Docker for consistent environment)
+  - repo: local
     hooks:
       - id: black
-        language_version: python3
+        name: black
+        entry: bash -c 'docker run --rm --entrypoint black -v "$(pwd):/workspace" -w /workspace neosetup-precommit --check --diff "$@"' --
+        language: system
         files: \.py$
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
       - id: flake8
+        name: flake8
+        entry: bash -c 'docker run --rm --entrypoint flake8 -v "$(pwd):/workspace" -w /workspace neosetup-precommit "$@"' --
+        language: system
         files: \.py$
 
   # Python tools and operator validation (uses Docker for consistent environment)
@@ -65,25 +66,25 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit pylint "$@"' --
+        entry: bash -c 'docker run --rm --entrypoint pylint -v "$(pwd):/workspace" -w /workspace neosetup-precommit "$@"' --
         language: system
         files: \.py$
 
       - id: bandit
         name: bandit security scan
-        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit bandit -r "$@"' --
+        entry: bash -c 'docker run --rm --entrypoint bandit -v "$(pwd):/workspace" -w /workspace neosetup-precommit -r "$@"' --
         language: system
         files: \.py$
 
       - id: safety
         name: safety dependency check
-        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit safety check || echo "⚠️ Security vulnerabilities found"'
+        entry: bash -c 'docker run --rm --entrypoint safety -v "$(pwd):/workspace" -w /workspace neosetup-precommit check || echo "⚠️ Security vulnerabilities found"'
         language: system
         pass_filenames: false
 
       - id: operator-validation
         name: NeoSetup operator validation
-        entry: bash -c 'docker run --rm -v "$(pwd):/workspace" -w /workspace neosetup-precommit bash -c "cd neosetup && python3 scripts/validate_operator.py --all"'
+        entry: bash -c 'docker run --rm --entrypoint bash -v "$(pwd):/workspace" -w /workspace neosetup-precommit -c "cd neosetup && python3 scripts/validate_operator.py --all"'
         language: system
         files: ^neosetup/operators/.*\.yml$
         pass_filenames: false
