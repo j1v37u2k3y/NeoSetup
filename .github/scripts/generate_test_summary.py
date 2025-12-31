@@ -26,27 +26,19 @@ def get_job_status_emoji(result):
 
 def generate_summary():
     """Generate comprehensive test summary"""
-    # Get GitHub Step Summary file path
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
 
     # Job results from environment variables
     jobs = {
-        "yaml-validation": os.environ.get("YAML_VALIDATION_RESULT", "unknown"),
-        "ansible-lint": os.environ.get("ANSIBLE_LINT_RESULT", "unknown"),
-        "python-quality": os.environ.get("PYTHON_QUALITY_RESULT", "unknown"),
-        "shell-scripts": os.environ.get("SHELL_SCRIPTS_RESULT", "unknown"),
-        "markdown-quality": os.environ.get("MARKDOWN_QUALITY_RESULT", "unknown"),
+        "pre-commit": os.environ.get("PRE_COMMIT_RESULT", "unknown"),
         "security-scan": os.environ.get("SECURITY_SCAN_RESULT", "unknown"),
-        "secret-scan": os.environ.get("SECRET_SCAN_RESULT", "unknown"),
-        "operator-validation": os.environ.get("OPERATOR_VALIDATION_RESULT", "unknown"),
         "ansible-syntax": os.environ.get("ANSIBLE_SYNTAX_RESULT", "unknown"),
         "docs-validation": os.environ.get("DOCS_VALIDATION_RESULT", "unknown"),
     }
 
-    # Critical jobs that must pass for success
-    critical_jobs = ["yaml-validation", "ansible-lint", "operator-validation", "ansible-syntax"]
+    # Critical jobs that must pass
+    critical_jobs = ["pre-commit", "ansible-syntax"]
 
-    # Open summary file with proper context manager
     if summary_path:
         try:
             with open(summary_path, "a", encoding="utf-8") as summary_file:
@@ -57,53 +49,50 @@ def generate_summary():
     else:
         _write_summary(jobs, critical_jobs, None)
 
-    # Set exit code based on critical job results
     critical_passed = all(jobs[job] == "success" for job in critical_jobs)
     return 0 if critical_passed else 1
 
 
 def _write_summary(jobs, critical_jobs, summary_file):
     """Write the actual summary content"""
-    # Header
     log_both("# 🚀 NeoSetup CI/CD Test Summary", summary_file)
     log_both("", summary_file)
-    log_both("## 📋 Test Results", summary_file)
+
+    # Pre-commit (covers all linting)
+    log_both("## 🔍 Pre-commit Checks", summary_file)
+    log_both("", summary_file)
+    log_both("Runs all 20 hooks: yamllint, ansible-lint, black, flake8, pylint,", summary_file)
+    log_both("bandit, safety, shellcheck, markdownlint, detect-secrets, and more.", summary_file)
+    log_both("", summary_file)
+    emoji, status = get_job_status_emoji(jobs["pre-commit"])
+    log_both(f"{emoji} pre-commit: {status}", summary_file)
     log_both("", summary_file)
 
-    # Core validation results
-    log_both("### 🔍 Core Validation", summary_file)
-    core_jobs = ["yaml-validation", "ansible-lint", "operator-validation", "ansible-syntax"]
-    for job in core_jobs:
-        emoji, status = get_job_status_emoji(jobs[job])
-        log_both(f"{emoji} {job}: {status}", summary_file)
-
+    # Ansible multi-version
+    log_both("## 🎭 Ansible Compatibility", summary_file)
+    log_both("", summary_file)
+    log_both("Tests syntax with Ansible 6.0 and 7.0.", summary_file)
+    log_both("", summary_file)
+    emoji, status = get_job_status_emoji(jobs["ansible-syntax"])
+    log_both(f"{emoji} ansible-syntax: {status}", summary_file)
     log_both("", summary_file)
 
-    # Quality checks
-    log_both("### 🛠️ Code Quality", summary_file)
-    quality_jobs = ["python-quality", "shell-scripts", "markdown-quality"]
-    for job in quality_jobs:
-        emoji, status = get_job_status_emoji(jobs[job])
-        log_both(f"{emoji} {job}: {status}", summary_file)
-
+    # Security
+    log_both("## 🛡️ Security Scanning", summary_file)
+    log_both("", summary_file)
+    log_both("CodeQL and Trivy vulnerability scanning.", summary_file)
+    log_both("", summary_file)
+    emoji, status = get_job_status_emoji(jobs["security-scan"])
+    log_both(f"{emoji} security-scan: {status}", summary_file)
     log_both("", summary_file)
 
-    # Security scans
-    log_both("### 🔒 Security Scanning", summary_file)
-    security_jobs = ["security-scan", "secret-scan"]
-    for job in security_jobs:
-        emoji, status = get_job_status_emoji(jobs[job])
-        log_both(f"{emoji} {job}: {status}", summary_file)
-
+    # Docs
+    log_both("## 📚 Documentation", summary_file)
     log_both("", summary_file)
-
-    # Additional validations
-    log_both("### 📚 Additional Validations", summary_file)
-    additional_jobs = ["docs-validation"]
-    for job in additional_jobs:
-        emoji, status = get_job_status_emoji(jobs[job])
-        log_both(f"{emoji} {job}: {status}", summary_file)
-
+    log_both("Validates documentation completeness and checks markdown links.", summary_file)
+    log_both("", summary_file)
+    emoji, status = get_job_status_emoji(jobs["docs-validation"])
+    log_both(f"{emoji} docs-validation: {status}", summary_file)
     log_both("", summary_file)
 
     # Overall status
@@ -112,8 +101,6 @@ def _write_summary(jobs, critical_jobs, summary_file):
     if critical_passed:
         log_both("## 🎉 Overall Status: SUCCESS", summary_file)
         log_both("", summary_file)
-        log_both("🎯 **Operator System**: Ready for deployment!", summary_file)
-        log_both("🟢 **Matrix Theme**: Fully operational!", summary_file)
         log_both("🚀 **All critical tests passed! NeoSetup is ready to rock!**", summary_file)
     else:
         failed_critical = [job for job in critical_jobs if jobs[job] != "success"]
