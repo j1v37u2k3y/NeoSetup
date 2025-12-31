@@ -28,3 +28,6 @@ MD036: false
 
 # Allow fenced code blocks without language specification
 MD040: false
+
+# Allow flexible table column style (different styles in different contexts)
+MD060: false

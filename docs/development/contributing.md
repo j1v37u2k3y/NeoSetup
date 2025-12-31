@@ -1,6 +1,7 @@
 # 🤝 Contributing to NeoSetup
 
-Welcome to the Matrix! We're excited to have you contribute to the most awesome Ansible-powered development environment automation.
+Welcome to the Matrix! We're excited to have you contribute to the most awesome
+Ansible-powered development environment automation.
 
 ## 🎯 Quick Start for Contributors
 
