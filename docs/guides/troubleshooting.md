@@ -499,19 +499,22 @@ python3 scripts/validate_operator.py --info
 **Solutions**:
 
 ```bash
-# Test locally with act
-act -j ci-test
+# Run pre-commit locally (Docker-based - matches CI)
+./scripts/run-precommit.sh run --all-files
+
+# Install git hooks (uses Docker)
+git config core.hooksPath .githooks
 
 # Check workflow files
-find .github/workflows -name "*.yml" -exec yamllint {} \;
-
-# Validate GitHub Actions syntax
-# Use GitHub's workflow checker online
+yamllint .github/workflows/*.yml
 
 # Check secrets and variables
 gh secret list
 gh variable list
 ```
+
+**Note**: CI runs 4 jobs: `pre-commit`, `security-scan`, `ansible-syntax`, `docs-validation`.
+The `pre-commit` job runs all 20 hooks - same as local Docker pre-commit.
 
 ## 🔄 Recovery and Reset
 

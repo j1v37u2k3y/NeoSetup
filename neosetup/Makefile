@@ -153,11 +153,19 @@ status:
 # Development commands
 dev-setup: deps
 	@echo "🛠️ Setting up development environment..."
-	pip3 install -r requirements-runtime.txt
-	pip3 install -r ../requirements.txt
+	@echo "📦 Creating virtual environment..."
+	python3 -m venv ../.venv
+	@echo "📦 Installing dependencies in .venv..."
+	../.venv/bin/pip install --upgrade pip
+	../.venv/bin/pip install -r requirements-runtime.txt
+	../.venv/bin/pip install -r ../requirements.txt
 	ansible-galaxy install -r requirements.yml
-	@echo "🪝 Installing pre-commit hooks..."
-	pre-commit install
+	@echo "🪝 Installing Docker-based pre-commit hooks..."
+	git config core.hooksPath ../.githooks
+	@echo ""
+	@echo "✅ Development environment ready!"
+	@echo "   Activate venv: source ../.venv/bin/activate"
+	@echo "   Run pre-commit: ./scripts/run-precommit.sh run --all-files"
 
 # Show operator information
 operator-info:

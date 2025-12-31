@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 NeoSetup is a Matrix-themed development environment automation system built entirely with Ansible. It uses an innovative
 operator-based configuration system to provide different levels of customization from minimal to power-user setups.
 
-**Current Status: Phase 8 Complete** - Production-ready system with comprehensive CI/CD pipeline, container testing
-infrastructure, operator validation, multi-OS testing, and complete documentation suite.
+**Current Status: Phase 9 Complete** - Production-ready system with Docker-based pre-commit, consolidated CI/CD (4 jobs),
+and complete local/CI parity for all 20 validation hooks.
 
 ## Current Architecture
 
@@ -16,11 +16,14 @@ infrastructure, operator validation, multi-OS testing, and complete documentatio
 
 ```text
 NeoSetup/
-├── .github/                  # GitHub workflows & templates (NEW!)
-│   ├── workflows/            # CI/CD pipelines (15+ jobs)
-│   ├── ISSUE_TEMPLATE/       # Bug reports, feature requests  
+├── .github/                  # GitHub workflows & templates
+│   ├── workflows/            # CI/CD pipelines (4 focused jobs)
+│   ├── ISSUE_TEMPLATE/       # Bug reports, feature requests
+│   ├── scripts/              # CI helper scripts
 │   ├── ansible-rules/        # Custom linting rules
 │   └── pull_request_template.md
+├── .githooks/                # Git hooks (Docker-based pre-commit)
+│   └── pre-commit            # Delegates to scripts/run-precommit.sh
 ├── .editorconfig            # Code formatting standards (NEW!)
 ├── .gitignore               # Git ignore patterns
 ├── neosetup/                # Ansible implementation
@@ -55,11 +58,13 @@ NeoSetup/
 │   ├── guides/             # User installation & config guides
 │   ├── architecture/       # System design documentation
 │   └── archive/           # Historical migration documents
-├── requirements.txt         # Python dependencies
+├── scripts/                 # Project-level scripts
+│   └── run-precommit.sh    # Docker-based pre-commit runner
+├── Dockerfile.precommit    # Pre-commit Docker image
+├── requirements.txt        # Python dependencies
 ├── setup                   # Setup script
-├── README.md              # Main project documentation  
-├── TODO.md                # Development roadmap (4 phases complete!)
-└── CLAUDE.md              # This file
+├── README.md               # Main project documentation
+└── CLAUDE.md               # This file
 
 ```
 
@@ -83,8 +88,9 @@ NeoSetup/
 
 ### Production-Ready Features
 
-- **CI/CD Pipeline**: 15+ parallel GitHub Actions jobs with multi-OS testing
-- **Security Scanning**: CodeQL, Trivy, Gitleaks, and Bandit integration
+- **CI/CD Pipeline**: 4 focused GitHub Actions jobs (pre-commit, security-scan, ansible-syntax, docs-validation)
+- **Docker Pre-commit**: All 20 linting hooks run in Docker for local/CI parity
+- **Security Scanning**: CodeQL, Trivy, Bandit, Safety, and detect-secrets integration
 - **Quality Assurance**: Custom ansible-lint rules and Matrix theme validation
 - **Multi-Platform Testing**: Docker containers for Ubuntu, Debian, CentOS, Fedora
 - **Performance Benchmarking**: <5 minute installation target with automated testing
@@ -115,13 +121,17 @@ make clean
 ### Testing & Validation Commands
 
 ```bash
+# Pre-commit (Docker-based - recommended)
+./scripts/run-precommit.sh run --all-files          # Run all 20 hooks in Docker
+git config core.hooksPath .githooks                 # Install git hook (uses Docker)
+
 # Operator validation
-python3 scripts/validate_operator.py --all           # Validate all operators
-python3 scripts/validate_operator.py base            # Validate specific operator
-python3 scripts/validate_operator.py --info          # Show detailed validation info
+cd neosetup
+python3 scripts/validate_operator.py --all          # Validate all operators
+python3 scripts/validate_operator.py base           # Validate specific operator
 
 # Comprehensive testing
-python3 tests/test_operator_validation.py            # Run validation test suite
+python3 tests/test_operator_validation.py           # Run validation test suite
 make lint                                           # Run ansible-lint
 make test                                           # Run all tests
 
@@ -129,9 +139,8 @@ make test                                           # Run all tests
 .github/scripts/test_container.py --os ubuntu --operator jiveturkey
 
 # Operator creation
-python3 scripts/create_operator.py --interactive     # Interactive operator creation
-python3 scripts/create_operator.py --list-templates  # List available templates
-python3 scripts/create_operator.py --list-parents    # List parent operators
+python3 scripts/create_operator.py --interactive    # Interactive operator creation
+python3 scripts/create_operator.py --list-templates # List available templates
 
 # Debugging & verbose output
 make install OPERATOR=jiveturkey VERBOSE=true
@@ -235,10 +244,18 @@ make install OPERATOR=base VERBOSE=true
 - Changed container tests from dry-run to actual execution with safe tags
 - Complete documentation refactoring with comprehensive guides
 
-### 🚀 Next Phase: Advanced Features (Phase 9)
+### ✅ Phase 9: Docker Pre-commit & CI Consolidation (COMPLETE)
 
-See `TODO.md` for Phase 9+ roadmap including multi-platform support, cloud integrations,
-and language-specific operators.
+- Docker-based pre-commit environment for local/CI parity
+- Consolidated CI from 10+ jobs to 4 focused jobs
+- All 20 pre-commit hooks run identically in Docker and CI
+- Simplified git hooks using .githooks directory
+- Roadmap items migrated to GitHub Issues
+
+### 🚀 Next Phase: Advanced Features (Phase 10)
+
+See [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues) for roadmap including multi-platform support,
+cloud integrations, and language-specific operators.
 
 ## Important Notes
 
@@ -265,8 +282,7 @@ and language-specific operators.
 
 ## Development Tracking
 
-- Use `TODO.md` for tracking major features and roadmap
-- GitHub Issues for specific bugs and enhancements
+- GitHub Issues for tracking features, bugs, and roadmap
 - Commit messages should be descriptive and follow conventional commits
 - Document significant changes in git commit messages
 - remember I only push code.

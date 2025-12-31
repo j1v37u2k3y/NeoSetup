@@ -186,20 +186,18 @@ For contributing to NeoSetup:
 git clone https://github.com/j1v37u2k3y/NeoSetup.git
 cd NeoSetup
 
-# Install development dependencies
-pip install -r requirements.txt
+# Install git hooks (uses Docker for pre-commit)
+git config core.hooksPath .githooks
 
-# Setup development environment
-cd neosetup
-make dev-setup
-
-# Run validation
-make lint
-make test
+# Run pre-commit checks (Docker-based)
+./scripts/run-precommit.sh run --all-files
 
 # Validate operators
+cd neosetup
 python3 scripts/validate_operator.py --all
 ```
+
+**Note**: Pre-commit runs in Docker to ensure local/CI parity. Docker must be installed.
 
 ### Testing Changes
 
