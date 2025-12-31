@@ -202,11 +202,16 @@ jobs:
           SECURITY_SCAN_RESULT: ${{ needs.security-scan.result }}
           ANSIBLE_SYNTAX_RESULT: ${{ needs.ansible-syntax.result }}
           DOCS_VALIDATION_RESULT: ${{ needs.docs-validation.result }}
+        run: python3 .github/scripts/generate_test_summary.py
+
+      - name: ❌ Fail if critical jobs failed
+        if: ${{ needs.pre-commit.result != 'success' || needs.ansible-syntax.result != 'success' }}
         run: |
-          python3 .github/scripts/generate_test_summary.py
+          echo "❌ Critical jobs failed!"
+          echo "  pre-commit: ${{ needs.pre-commit.result }}"
+          echo "  ansible-syntax: ${{ needs.ansible-syntax.result }}"
+          exit 1
 
       - name: 🎉 Success notification
-        if: ${{ needs.pre-commit.result == 'success'
-            && needs.ansible-syntax.result == 'success' }}
-        run: |
-          echo "🎉 All critical tests passed! NeoSetup is ready to rock! 🚀"
+        if: ${{ needs.pre-commit.result == 'success' && needs.ansible-syntax.result == 'success' }}
+        run: echo "🎉 All critical tests passed! NeoSetup is ready to rock! 🚀"
