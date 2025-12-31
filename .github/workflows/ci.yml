@@ -160,14 +160,21 @@ jobs:
       - name: 🔍 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Install markdown tools
-        run: |
-          npm install -g markdownlint-cli markdown-link-check
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 📝 Run markdownlint
+      - name: 📦 Install pre-commit
+        run: pip install pre-commit
+
+      - name: 📝 Run markdownlint via pre-commit
         run: |
-          echo "📝 Running Markdownlint with project configuration..."
-          markdownlint -c .markdownlint.yml "**/*.md"
+          echo "📝 Running Markdownlint via pre-commit (version-locked)..."
+          pre-commit run markdownlint --all-files
+
+      - name: 📦 Install link checker
+        run: npm install -g markdown-link-check
 
       - name: 🔗 Check markdown links
         run: |
