@@ -26,8 +26,8 @@ pip install -r requirements.txt
 cd neosetup
 make dev-setup
 
-# Install pre-commit hooks
-pre-commit install
+# Install pre-commit hooks (uses Docker for consistency)
+git config core.hooksPath .githooks
 
 # Run tests to ensure everything works
 make test

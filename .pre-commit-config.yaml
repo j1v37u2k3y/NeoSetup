@@ -1,7 +1,7 @@
 ---
 # Pre-commit hooks configuration for NeoSetup
-# All hooks run inside Docker via ./scripts/run-precommit.sh or git hook
-# Install git hook: ./scripts/install-git-hooks.sh
+# Run manually: ./scripts/run-precommit.sh run --all-files
+# Install git hook: git config core.hooksPath .githooks
 
 repos:
   # YAML Formatting and Validation
