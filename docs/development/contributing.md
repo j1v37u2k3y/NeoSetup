@@ -70,7 +70,6 @@ make lint
 
 - Check [existing issues](https://github.com/j1v37u2k3y/NeoSetup/issues) to avoid duplicates
 - Open an issue to discuss major changes
-- Look at the [roadmap](../TODO.md) for planned features
 
 ### 2. Development Workflow
 
