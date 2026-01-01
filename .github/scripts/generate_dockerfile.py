@@ -14,11 +14,15 @@ def generate_dockerfile(os_name: str, _ansible_version: str) -> str:
 
     # OS to Docker image mapping
     images = {
-        "ubuntu-20.04": "ubuntu:20.04",
         "ubuntu-22.04": "ubuntu:22.04",
-        "debian-11": "debian:11",
+        "ubuntu-24.04": "ubuntu:24.04",
+        "debian-12": "debian:12",
+        "kali-rolling": "kalilinux/kali-rolling",
+        "parrot-security": "parrotsec/core",  # Use core image (security is ~5GB)
+        "centos-stream-9": "quay.io/centos/centos:stream9",
         "rocky-9": "rockylinux:9",
-        "fedora-37": "fedora:37",
+        "almalinux-9": "almalinux:9",
+        "fedora-40": "fedora:40",
     }
 
     base_image = images.get(os_name, os_name)
@@ -30,19 +34,19 @@ FROM {base_image}
 # Install base packages including python3-venv
 RUN if [ -f /etc/debian_version ]; then \\
   apt-get update && \\
-  apt-get install -y python3 python3-pip python3-venv sudo curl wget git openssh-client && \\
-  apt-get clean; \\
+  apt-get install -y --no-install-recommends python3 python3-pip python3-venv sudo curl wget git openssh-client && \\
+  apt-get clean && \\
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*; \\
 elif [ -f /etc/redhat-release ]; then \\
   if command -v dnf; then \\
-    dnf install -y --allowerasing python3 python3-pip sudo curl wget git openssh-clients || \\
-    (dnf install -y --allowerasing python3 sudo curl wget git openssh-clients && \\
-     curl -sS https://bootstrap.pypa.io/get-pip.py | python3); \\
+    dnf install -y --allowerasing python3 python3-pip sudo curl wget git tar gzip openssh-clients && \\
+    dnf clean all && \\
+    rm -rf /var/cache/dnf/*; \\
   else \\
     yum install -y epel-release && \\
-    yum install -y python3 python3-pip sudo curl wget git openssh-clients \\
-      gcc python3-devel libffi-devel openssl-devel rust cargo || \\
-    (yum install -y python3 sudo curl wget git openssh-clients && \\
-     curl -sS https://bootstrap.pypa.io/get-pip.py | python3); \\
+    yum install -y python3 python3-pip sudo curl wget git tar gzip openssh-clients && \\
+    yum clean all && \\
+    rm -rf /var/cache/yum/*; \\
   fi; \\
 fi
 
@@ -55,15 +59,21 @@ COPY neosetup/requirements-runtime.txt /tmp/requirements-runtime.txt
 COPY neosetup/requirements.yml /tmp/requirements.yml
 
 # Create virtual environment and install from requirements
-RUN python3 -m venv /opt/ansible-venv
-RUN /opt/ansible-venv/bin/pip install --upgrade pip
-RUN /opt/ansible-venv/bin/pip install -r /tmp/requirements-runtime.txt
+RUN python3 -m venv /opt/ansible-venv && \\
+    /opt/ansible-venv/bin/pip install --no-cache-dir --upgrade pip && \\
+    /opt/ansible-venv/bin/pip install --no-cache-dir -r /tmp/requirements-runtime.txt && \\
+    rm -rf /root/.cache/pip
 
 # Install Ansible Galaxy collections and roles
-RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml
+RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml && \\
+    rm -f /tmp/requirements-runtime.txt /tmp/requirements.yml
 
-# Add venv to PATH for all users
-RUN echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bash.bashrc
+# Add venv to PATH for all users (bashrc location differs between distros)
+RUN if [ -f /etc/bash.bashrc ]; then \\
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bash.bashrc; \\
+    elif [ -f /etc/bashrc ]; then \\
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bashrc; \\
+    fi
 RUN echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/profile
 
 # Verify installation
