@@ -18,7 +18,7 @@
 
 - name: "🔍 Detect current shell"
   set_fact:
-    neosetup_current_shell: "{{ ansible_env.SHELL | basename | default('bash') }}"
+    neosetup_current_shell: "{{ (ansible_env.SHELL | default('/bin/bash')) | basename }}"
     neosetup_preferred_shell: "zsh"
 
 - name: "📋 Display shell configuration info"
@@ -82,7 +82,7 @@
 - name: "🎯 Set as default shell"
   user:
     name: "{{ ansible_user_id }}"
-    shell: "{{ ansible_env.SHELL if neosetup_preferred_shell == neosetup_current_shell else '/bin/' + neosetup_preferred_shell }}"
+    shell: "{{ (ansible_env.SHELL | default('/bin/bash')) if neosetup_preferred_shell == neosetup_current_shell else '/bin/' + neosetup_preferred_shell }}"
   when:
     - neosetup_set_default_shell | default(false)
     - neosetup_preferred_shell != neosetup_current_shell
