@@ -150,6 +150,17 @@ jobs:
               --os "${{ matrix.os.name }}" \
               --pkg-mgr "${{ matrix.os.pkg_mgr }}"
 
+      - name: 🔍 Validate installed binaries
+        run: |
+          docker run --rm \
+            -v $(pwd):/neosetup \
+            -w /neosetup \
+            neosetup-test-${{ matrix.os.name }} \
+            python3 .github/scripts/test_binary_validation.py \
+              --os "${{ matrix.os.name }}" \
+              --operator "${{ matrix.operator }}" \
+              --verbose
+
   # ============================================================================
   # PERFORMANCE TESTING ACROSS OS
   # ============================================================================
