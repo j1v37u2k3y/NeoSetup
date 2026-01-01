@@ -18,7 +18,7 @@ def generate_dockerfile(os_name: str, _ansible_version: str) -> str:
         "ubuntu-24.04": "ubuntu:24.04",
         "debian-12": "debian:12",
         "kali-rolling": "kalilinux/kali-rolling",
-        "parrot-security": "parrotsec/security",
+        "parrot-security": "parrotsec/core",  # Use core image (security is ~5GB)
         "centos-stream-9": "quay.io/centos/centos:stream9",
         "rocky-9": "rockylinux:9",
         "almalinux-9": "almalinux:9",
