@@ -36,14 +36,14 @@ RUN if [ -f /etc/debian_version ]; then \\
   apt-get clean; \\
 elif [ -f /etc/redhat-release ]; then \\
   if command -v dnf; then \\
-    dnf install -y --allowerasing python3 python3-pip sudo curl wget git openssh-clients || \\
-    (dnf install -y --allowerasing python3 sudo curl wget git openssh-clients && \\
+    dnf install -y --allowerasing python3 python3-pip sudo curl wget git tar gzip openssh-clients || \\
+    (dnf install -y --allowerasing python3 sudo curl wget git tar gzip openssh-clients && \\
      curl -sS https://bootstrap.pypa.io/get-pip.py | python3); \\
   else \\
     yum install -y epel-release && \\
-    yum install -y python3 python3-pip sudo curl wget git openssh-clients \\
+    yum install -y python3 python3-pip sudo curl wget git tar gzip openssh-clients \\
       gcc python3-devel libffi-devel openssl-devel rust cargo || \\
-    (yum install -y python3 sudo curl wget git openssh-clients && \\
+    (yum install -y python3 sudo curl wget git tar gzip openssh-clients && \\
      curl -sS https://bootstrap.pypa.io/get-pip.py | python3); \\
   fi; \\
 fi
@@ -64,8 +64,12 @@ RUN /opt/ansible-venv/bin/pip install -r /tmp/requirements-runtime.txt
 # Install Ansible Galaxy collections and roles
 RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml
 
-# Add venv to PATH for all users
-RUN echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bash.bashrc
+# Add venv to PATH for all users (bashrc location differs between distros)
+RUN if [ -f /etc/bash.bashrc ]; then \\
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bash.bashrc; \\
+    elif [ -f /etc/bashrc ]; then \\
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bashrc; \\
+    fi
 RUN echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/profile
 
 # Verify installation
