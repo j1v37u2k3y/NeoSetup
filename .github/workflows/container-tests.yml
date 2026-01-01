@@ -5,9 +5,7 @@ on:
     workflows: ["🚀 NeoSetup CI/CD Pipeline"]
     types:
       - completed
-    branches:
-      - main
-      - develop
+    # No branch filter - run container tests for any successful CI/CD completion
   schedule:
     # Run nightly
     - cron: '0 3 * * *'
@@ -33,13 +31,10 @@ jobs:
   build-test-containers:
     name: 🔨 Build Test Containers
     runs-on: ubuntu-latest
+    # Run on successful CI/CD (any branch), manual dispatch, or schedule
     if: |
       (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       (github.event.workflow_run.head_branch == 'main' ||
-        github.event.workflow_run.head_branch == 'develop' ||
-        startsWith(github.event.workflow_run.head_branch, 'feature/') ||
-        startsWith(github.event.workflow_run.head_branch, 'Feature/'))) ||
+       github.event.workflow_run.conclusion == 'success') ||
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule'
     strategy:
