@@ -46,9 +46,13 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          # Debian-based
           - { name: 'ubuntu-22.04', dockerfile: 'Dockerfile.ubuntu-22.04' }
           - { name: 'ubuntu-24.04', dockerfile: 'Dockerfile.ubuntu-24.04' }
           - { name: 'debian-12', dockerfile: 'Dockerfile.debian-12' }
+          - { name: 'kali-rolling', dockerfile: 'Dockerfile.kali-rolling' }
+          - { name: 'parrot-security', dockerfile: 'Dockerfile.parrot-security' }
+          # RHEL-based
           - { name: 'centos-stream-9', dockerfile: 'Dockerfile.centos-stream-9' }
           - { name: 'rocky-9', dockerfile: 'Dockerfile.rocky-9' }
           - { name: 'almalinux-9', dockerfile: 'Dockerfile.almalinux-9' }
@@ -94,9 +98,13 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          # Debian-based
           - { name: 'ubuntu-22.04', pkg_mgr: 'apt' }
           - { name: 'ubuntu-24.04', pkg_mgr: 'apt' }
           - { name: 'debian-12', pkg_mgr: 'apt' }
+          - { name: 'kali-rolling', pkg_mgr: 'apt' }
+          - { name: 'parrot-security', pkg_mgr: 'apt' }
+          # RHEL-based
           - { name: 'centos-stream-9', pkg_mgr: 'dnf' }
           - { name: 'rocky-9', pkg_mgr: 'dnf' }
           - { name: 'almalinux-9', pkg_mgr: 'dnf' }
@@ -153,9 +161,13 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          # Debian-based
           - { name: 'ubuntu-22.04' }
           - { name: 'ubuntu-24.04' }
           - { name: 'debian-12' }
+          - { name: 'kali-rolling' }
+          - { name: 'parrot-security' }
+          # RHEL-based
           - { name: 'centos-stream-9' }
           - { name: 'rocky-9' }
           - { name: 'almalinux-9' }
@@ -279,6 +291,8 @@ jobs:
           echo "| Ubuntu 22.04 | apt |" >> $GITHUB_STEP_SUMMARY
           echo "| Ubuntu 24.04 | apt |" >> $GITHUB_STEP_SUMMARY
           echo "| Debian 12 | apt |" >> $GITHUB_STEP_SUMMARY
+          echo "| Kali Linux | apt |" >> $GITHUB_STEP_SUMMARY
+          echo "| Parrot Security | apt |" >> $GITHUB_STEP_SUMMARY
           echo "| CentOS Stream 9 | dnf |" >> $GITHUB_STEP_SUMMARY
           echo "| Rocky Linux 9 | dnf |" >> $GITHUB_STEP_SUMMARY
           echo "| AlmaLinux 9 | dnf |" >> $GITHUB_STEP_SUMMARY
@@ -286,4 +300,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🎯 **Operators Tested**: base, matrix, jiveturkey" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 **Total Test Combinations**: 21 (7 distros × 3 operators)" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Total Test Combinations**: 27 (9 distros × 3 operators)" >> $GITHUB_STEP_SUMMARY

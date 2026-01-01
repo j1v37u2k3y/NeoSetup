@@ -17,6 +17,8 @@ def generate_dockerfile(os_name: str, _ansible_version: str) -> str:
         "ubuntu-22.04": "ubuntu:22.04",
         "ubuntu-24.04": "ubuntu:24.04",
         "debian-12": "debian:12",
+        "kali-rolling": "kalilinux/kali-rolling",
+        "parrot-security": "parrotsec/security",
         "centos-stream-9": "quay.io/centos/centos:stream9",
         "rocky-9": "rockylinux:9",
         "almalinux-9": "almalinux:9",
