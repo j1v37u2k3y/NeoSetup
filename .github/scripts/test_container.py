@@ -61,8 +61,8 @@ class ContainerTester:
         """Verify the test environment is properly set up"""
         print(f"🟢 Starting NeoSetup test on {self.os_name} with operator {self.operator}")
 
-        # Check virtual environment
-        if not self.run_command("which ansible-playbook", "Verify ansible-playbook is available"):
+        # Check virtual environment (use 'command -v' instead of 'which' for RHEL compatibility)
+        if not self.run_command("command -v ansible-playbook", "Verify ansible-playbook is available"):
             return False
 
         if not self.run_command("ansible --version", "Check Ansible version"):

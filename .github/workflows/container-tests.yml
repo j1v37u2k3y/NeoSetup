@@ -61,6 +61,13 @@ jobs:
       - name: 🔍 Checkout code
         uses: actions/checkout@v4
 
+      - name: 🧹 Free disk space
+        run: |
+          # Remove unnecessary large packages to free disk space for container builds
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get clean
+          df -h
+
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
