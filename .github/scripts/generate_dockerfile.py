@@ -14,11 +14,13 @@ def generate_dockerfile(os_name: str, _ansible_version: str) -> str:
 
     # OS to Docker image mapping
     images = {
-        "ubuntu-20.04": "ubuntu:20.04",
         "ubuntu-22.04": "ubuntu:22.04",
-        "debian-11": "debian:11",
+        "ubuntu-24.04": "ubuntu:24.04",
+        "debian-12": "debian:12",
+        "centos-stream-9": "quay.io/centos/centos:stream9",
         "rocky-9": "rockylinux:9",
-        "fedora-37": "fedora:37",
+        "almalinux-9": "almalinux:9",
+        "fedora-40": "fedora:40",
     }
 
     base_image = images.get(os_name, os_name)

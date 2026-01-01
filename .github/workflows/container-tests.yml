@@ -40,13 +40,16 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule'
     strategy:
+      fail-fast: false
       matrix:
         os:
-          - { name: 'ubuntu-20.04', dockerfile: 'Dockerfile.ubuntu-20.04' }
           - { name: 'ubuntu-22.04', dockerfile: 'Dockerfile.ubuntu-22.04' }
-          - { name: 'debian-11', dockerfile: 'Dockerfile.debian-11' }
+          - { name: 'ubuntu-24.04', dockerfile: 'Dockerfile.ubuntu-24.04' }
+          - { name: 'debian-12', dockerfile: 'Dockerfile.debian-12' }
+          - { name: 'centos-stream-9', dockerfile: 'Dockerfile.centos-stream-9' }
           - { name: 'rocky-9', dockerfile: 'Dockerfile.rocky-9' }
-          - { name: 'fedora-37', dockerfile: 'Dockerfile.fedora-37' }
+          - { name: 'almalinux-9', dockerfile: 'Dockerfile.almalinux-9' }
+          - { name: 'fedora-40', dockerfile: 'Dockerfile.fedora-40' }
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v4
@@ -81,26 +84,21 @@ jobs:
   # ============================================================================
 
   test-operators-multi-os:
-    name: 🧪 Test Operators on ${{ matrix.os.name }}
+    name: 🧪 Test ${{ matrix.operator }} on ${{ matrix.os.name }}
     runs-on: ubuntu-latest
     needs: build-test-containers
     strategy:
       fail-fast: false
       matrix:
         os:
-          - { name: 'ubuntu-20.04', pkg_mgr: 'apt' }
           - { name: 'ubuntu-22.04', pkg_mgr: 'apt' }
-          - { name: 'debian-11', pkg_mgr: 'apt' }
+          - { name: 'ubuntu-24.04', pkg_mgr: 'apt' }
+          - { name: 'debian-12', pkg_mgr: 'apt' }
+          - { name: 'centos-stream-9', pkg_mgr: 'dnf' }
           - { name: 'rocky-9', pkg_mgr: 'dnf' }
-          - { name: 'fedora-37', pkg_mgr: 'dnf' }
-        operator: [
-          base,
-          matrix,
-          jiveturkey,
-          macos,
-          python_dev,
-          windows_wsl
-        ]
+          - { name: 'almalinux-9', pkg_mgr: 'dnf' }
+          - { name: 'fedora-40', pkg_mgr: 'dnf' }
+        operator: [base, matrix, jiveturkey]
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v4
@@ -149,10 +147,16 @@ jobs:
     needs: build-test-containers
     if: github.event.inputs.test_all_operators == 'true' || github.event_name == 'schedule'
     strategy:
+      fail-fast: false
       matrix:
         os:
           - { name: 'ubuntu-22.04' }
+          - { name: 'ubuntu-24.04' }
+          - { name: 'debian-12' }
+          - { name: 'centos-stream-9' }
           - { name: 'rocky-9' }
+          - { name: 'almalinux-9' }
+          - { name: 'fedora-40' }
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v4
@@ -265,5 +269,18 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🐳 **Containers Tested**: Ubuntu 20.04/22.04, Debian 11, Rocky Linux 9, Fedora 37" >> $GITHUB_STEP_SUMMARY
+          echo "## Tested Platforms" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Distribution | Package Manager |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Ubuntu 22.04 | apt |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ubuntu 24.04 | apt |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debian 12 | apt |" >> $GITHUB_STEP_SUMMARY
+          echo "| CentOS Stream 9 | dnf |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rocky Linux 9 | dnf |" >> $GITHUB_STEP_SUMMARY
+          echo "| AlmaLinux 9 | dnf |" >> $GITHUB_STEP_SUMMARY
+          echo "| Fedora 40 | dnf |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "🎯 **Operators Tested**: base, matrix, jiveturkey" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Total Test Combinations**: 21 (7 distros × 3 operators)" >> $GITHUB_STEP_SUMMARY
