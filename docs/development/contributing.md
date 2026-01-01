@@ -1,6 +1,7 @@
 # 🤝 Contributing to NeoSetup
 
-Welcome to the Matrix! We're excited to have you contribute to the most awesome Ansible-powered development environment automation.
+Welcome to the Matrix! We're excited to have you contribute to the most awesome
+Ansible-powered development environment automation.
 
 ## 🎯 Quick Start for Contributors
 
@@ -25,8 +26,8 @@ pip install -r requirements.txt
 cd neosetup
 make dev-setup
 
-# Install pre-commit hooks
-pre-commit install
+# Install pre-commit hooks (uses Docker for consistency)
+git config core.hooksPath .githooks
 
 # Run tests to ensure everything works
 make test
@@ -69,7 +70,6 @@ make lint
 
 - Check [existing issues](https://github.com/j1v37u2k3y/NeoSetup/issues) to avoid duplicates
 - Open an issue to discuss major changes
-- Look at the [roadmap](../TODO.md) for planned features
 
 ### 2. Development Workflow
 
@@ -464,7 +464,8 @@ Active contributors may be invited to become maintainers with:
 
 Welcome to the resistance, and thank you for helping make NeoSetup even more awesome! 🤘
 
-*This is your last chance. After this, there is no turning back. You contribute to the Matrix - you help us show the world how deep the rabbit hole goes.*
+*This is your last chance. After this, there is no turning back. You contribute to the Matrix -
+you help us show the world how deep the rabbit hole goes.*
 
 **🔴 Take the red pill**: Start contributing today!  
 **🔵 Take the blue pill**: Stay a user forever  

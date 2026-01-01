@@ -1,0 +1,5 @@
+#!/bin/bash
+# Pre-commit hook that runs pre-commit checks in Docker
+# Install: git config core.hooksPath .githooks
+
+exec "$(git rev-parse --show-toplevel)/scripts/run-precommit.sh" run --hook-stage pre-commit

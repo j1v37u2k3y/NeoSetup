@@ -20,7 +20,7 @@ inheritance, allowing you to create specialized configurations that build upon e
 
 ### Operator Hierarchy
 
-```
+```text
 base → matrix → jiveturkey
  ↓
 minimal
@@ -35,7 +35,7 @@ minimal
 
 Every operator must be located in `neosetup/operators/<operator_name>/` with at minimum:
 
-```
+```text
 operators/
 └── my_operator/
     ├── vars.yml      # Main configuration (required)
@@ -229,28 +229,28 @@ python3 scripts/validate_operator.py my_operator --info
 
 1. **Missing Required Fields**
 
-   ```
+   ```text
    Error: Required field 'operator_name' is missing
    Fix: Add operator_name: "my_operator" to vars.yml
    ```
 
 2. **Invalid Field Types**
 
-   ```
+   ```text
    Error: Field 'operator_name' must be a string, got int
    Fix: Use quotes around string values
    ```
 
 3. **Pattern Validation**
 
-   ```
+   ```text
    Error: Field 'operator_name' doesn't match required pattern
    Fix: Use lowercase letters, numbers, and underscores only
    ```
 
 4. **Invalid Parent Reference**
 
-   ```
+   ```text
    Error: Parent operator 'nonexistent' not found
    Fix: Use an existing parent or create the parent operator
    ```

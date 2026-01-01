@@ -1,6 +1,6 @@
 ---
 # Markdownlint configuration for NeoSetup
-# Stricter rules for better code quality
+# Balanced rules for code quality while supporting GitHub templates
 
 # Default state for all rules
 default: true
@@ -16,3 +16,18 @@ MD033: false
 
 # First line in file should be a heading (disable for flexibility)
 MD041: false
+
+# Allow multiple top-level headings (GitHub issue templates have YAML frontmatter + H1)
+MD025: false
+
+# Allow ordered list item prefix flexibility (continuing numbered lists)
+MD029: false
+
+# Allow emphasis used instead of heading (Matrix-themed documentation style)
+MD036: false
+
+# Allow fenced code blocks without language specification
+MD040: false
+
+# Allow flexible table column style (different styles in different contexts)
+MD060: false

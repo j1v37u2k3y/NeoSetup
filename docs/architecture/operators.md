@@ -12,7 +12,7 @@ development environment personality. Think of it as a "configuration profile" or
 
 ## Operator Hierarchy
 
-```
+```text
 base
  ├── Minimal configuration
  ├── Essential tools only
@@ -77,7 +77,7 @@ Operators can:
 
 Each operator consists of:
 
-```
+```text
 operators/
 └── myoperator/
     └── vars.yml          # Configuration variables
@@ -353,4 +353,4 @@ Encourage community contributions:
 
 ---
 
-*"The operator is the one who can see the code behind the Matrix."*
+> "The operator is the one who can see the code behind the Matrix."

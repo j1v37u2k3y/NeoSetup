@@ -52,7 +52,7 @@ assignees: [ 'jiveturkey' ]
 <details>
 <summary>Click to expand logs</summary>
 
-```
+```text
 # Paste your logs here
 ```
 
@@ -70,7 +70,7 @@ python3 scripts/validate_operator.py --all
 <details>
 <summary>Validation Results</summary>
 
-```
+```text
 # Paste validation results here
 ```
 

@@ -52,7 +52,7 @@ That's it! The setup script guides you through everything.
 
 - **Issues**: [Report bugs or request features](https://github.com/j1v37u2k3y/NeoSetup/issues)
 - **Contributing**: See [Contributing Guide](./docs/development/contributing.md)
-- **Matrix Status**: Check [TODO.md](./TODO.md) for roadmap
+- **Roadmap**: Check [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues) for planned features
 
 ---
 
