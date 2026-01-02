@@ -15,7 +15,6 @@ import yaml
 # Some packages install binaries with different names
 BINARY_NAME_MAP = {
     "ripgrep": "rg",
-    "fd": "fdfind",  # fd-find package on Debian/Ubuntu
     "httpie": "http",
     "netcat": "nc",
     "mc": "mc",  # midnight-commander on macOS installs as mc
@@ -25,6 +24,13 @@ BINARY_NAME_MAP = {
     "python3-pip": "pip3",
     "awscli": "aws",
     "azure-cli": "az",
+}
+
+# Platform-specific binary name overrides
+PLATFORM_BINARY_MAP = {
+    "debian": {"fd": "fdfind"},
+    "ubuntu": {"fd": "fdfind"},
+    # macOS and RHEL use 'fd' directly
 }
 
 # Tools that require special handling or should be skipped in container tests
@@ -59,8 +65,13 @@ def load_tool_registry(registry_path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def get_binary_name(tool_name: str) -> str:
-    """Get the actual binary name for a tool."""
+def get_binary_name(tool_name: str, platform: str = "") -> str:
+    """Get the actual binary name for a tool, considering platform-specific overrides."""
+    # Check platform-specific overrides first
+    if platform in PLATFORM_BINARY_MAP:
+        if tool_name in PLATFORM_BINARY_MAP[platform]:
+            return PLATFORM_BINARY_MAP[platform][tool_name]
+    # Fall back to general mapping
     return BINARY_NAME_MAP.get(tool_name, tool_name)
 
 
@@ -146,7 +157,7 @@ def validate_single_tool(tool: str, platform: str, tool_registry: dict, verbose:
             print(f"⏭️  {tool}: Skipped ({skip_reason})")
         return "skip"
 
-    binary = get_binary_name(tool)
+    binary = get_binary_name(tool, platform)
     found, path = check_binary(binary)
 
     if found:
