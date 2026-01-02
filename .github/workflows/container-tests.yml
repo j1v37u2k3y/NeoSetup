@@ -156,10 +156,13 @@ jobs:
             -v $(pwd):/neosetup \
             -w /neosetup \
             neosetup-test-${{ matrix.os.name }} \
-            python3 .github/scripts/test_binary_validation.py \
-              --os "${{ matrix.os.name }}" \
-              --operator "${{ matrix.operator }}" \
-              --verbose
+            bash -c "
+              source /opt/ansible-venv/bin/activate
+              python3 .github/scripts/test_binary_validation.py \
+                --os '${{ matrix.os.name }}' \
+                --operator '${{ matrix.operator }}' \
+                --verbose
+            "
 
   # ============================================================================
   # PERFORMANCE TESTING ACROSS OS
