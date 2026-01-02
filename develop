@@ -4,11 +4,8 @@
 One-click development environment configuration with comprehensive validation
 """
 
-import os
 import sys
 import subprocess
-import json
-import tempfile
 from pathlib import Path
 
 # Matrix-themed colors
@@ -125,66 +122,37 @@ def run_validation_tests():
     print(f"{GREEN}✅ Validation tests completed{RESET}")
     return True
 
-def test_docker_generation():
-    """Test Docker container generation locally"""
-    print_step(5, 6, "Testing Docker container generation...")
+def test_docker_files():
+    """Test Docker container files with syntax validation"""
+    print_step(5, 6, "Testing Docker container files...")
 
-    # Generate test Dockerfiles
-    docker_script = '''
-import os
+    # Scan docker/ directory for Dockerfiles
+    docker_dir = Path("docker")
+    if not docker_dir.exists():
+        print(f"{YELLOW}⚠️ docker/ directory not found. Run from project root.{RESET}")
+        return False
 
-# Test Docker generation for key platforms
-images = {
-    "ubuntu-22.04": "ubuntu:22.04",
-    "rocky-9": "rockylinux:9"
-}
+    dockerfiles = list(docker_dir.glob("Dockerfile.*"))
+    if not dockerfiles:
+        print(f"{YELLOW}⚠️ No Dockerfiles found in docker/ directory{RESET}")
+        return False
 
-for os_name, base_image in images.items():
-    print(f"🔨 Generating test Dockerfile for {os_name}...")
+    # Validate each Dockerfile with docker build --check (dry-run)
+    passed = 0
+    for dockerfile in sorted(dockerfiles):
+        result = run_command(
+            f"docker build --check -f {dockerfile} .",
+            check=False,
+            capture_output=True
+        )
+        if result and result.returncode == 0:
+            print(f"  ✅ {dockerfile.name}")
+            passed += 1
+        else:
+            print(f"  ❌ {dockerfile.name} - syntax error")
 
-    dockerfile = f"""# Test container for {os_name}
-FROM {base_image}
-
-# Install base packages including python3-venv
-RUN if [ -f /etc/debian_version ]; then \\\\
-  apt-get update && \\\\
-  apt-get install -y python3 python3-pip python3-venv sudo curl wget git openssh-client && \\\\
-  apt-get clean; \\\\
-elif [ -f /etc/redhat-release ]; then \\\\
-  if command -v dnf; then \\\\
-    dnf install -y python3 python3-pip sudo curl wget git openssh-clients; \\\\
-  fi; \\\\
-fi
-
-# Create virtual environment and test installation
-RUN python3 -m venv /opt/test-venv
-RUN /opt/test-venv/bin/pip install --upgrade pip
-RUN /opt/test-venv/bin/pip install ansible PyYAML
-
-WORKDIR /test
-"""
-
-    with open(f"Dockerfile.dev-test-{os_name}", "w") as f:
-        f.write(dockerfile)
-
-    print(f"✅ Generated Dockerfile.dev-test-{os_name}")
-
-print("🐳 Docker test generation completed!")
-'''
-
-    # Run the Docker generation script
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-        f.write(docker_script)
-        temp_script = f.name
-
-    try:
-        result = run_command(f"python3 {temp_script}", cwd="neosetup")
-        if result:
-            print(f"{GREEN}✅ Docker container generation test passed{RESET}")
-            print(f"{BLUE}💡 Test files generated in neosetup/ directory{RESET}")
-        return True
-    finally:
-        os.unlink(temp_script)
+    print(f"{GREEN}✅ Validated {passed}/{len(dockerfiles)} Docker container files{RESET}")
+    return passed == len(dockerfiles)
 
 def run_pre_commit_test():
     """Run pre-commit on all files"""
@@ -217,8 +185,8 @@ def show_completion_info():
     print(f"  {CYAN}cd neosetup && make lint{RESET}                       # Run ansible-lint")
     print()
     print(f"{BOLD}🐳 Docker testing:{RESET}")
-    print(f"  {CYAN}docker build -f neosetup/Dockerfile.dev-test-ubuntu-22.04 -t test-ubuntu .{RESET}")
-    print(f"  {CYAN}docker build -f neosetup/Dockerfile.dev-test-rocky-9 -t test-rocky .{RESET}")
+    print(f"  {CYAN}docker build -f docker/Dockerfile.ubuntu-22.04 -t test-ubuntu .{RESET}")
+    print(f"  {CYAN}docker build -f docker/Dockerfile.rocky-9 -t test-rocky .{RESET}")
     print()
     print_matrix("Ready to hack the Matrix! 💊")
 
@@ -238,7 +206,7 @@ def main():
         install_ansible_collections,
         setup_pre_commit,
         run_validation_tests,
-        test_docker_generation,
+        test_docker_files,
         run_pre_commit_test
     ]
 
