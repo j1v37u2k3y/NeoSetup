@@ -11,26 +11,28 @@
     },
     {
       "pattern": "^https://127.0.0.1"
+    },
+    {
+      "pattern": "^#"
+    },
+    {
+      "pattern": "YOUR_USERNAME"
+    },
+    {
+      "pattern": "example\\.com"
     }
   ],
   "httpHeaders": [
     {
-      "urls": [
-        "https://github.com/"
-      ],
+      "urls": ["https://github.com/", "https://raw.githubusercontent.com/"],
       "headers": {
-        "User-Agent": "Mozilla/5.0 (compatible; NeoSetup-LinkChecker/1.0)"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       }
     }
   ],
-  "timeout": "10s",
+  "timeout": "20s",
   "retryOn429": true,
-  "retryCount": 2,
-  "fallbackRetryDelay": "30s",
-  "aliveStatusCodes": [
-    200,
-    206,
-    302,
-    304
-  ]
+  "retryCount": 3,
+  "fallbackRetryDelay": "60s",
+  "aliveStatusCodes": [200, 206, 301, 302, 304, 403]
 }

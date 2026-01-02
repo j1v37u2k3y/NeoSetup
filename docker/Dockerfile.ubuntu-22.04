@@ -1,0 +1,56 @@
+# Test container for ubuntu-22.04
+FROM ubuntu:22.04
+
+# Install base packages including python3-venv
+RUN if [ -f /etc/debian_version ]; then \
+  apt-get update && \
+  apt-get install -y --no-install-recommends python3 python3-pip python3-venv sudo curl wget git openssh-client && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*; \
+elif [ -f /etc/redhat-release ]; then \
+  if command -v dnf; then \
+    dnf install -y --allowerasing python3 python3-pip sudo curl wget git tar gzip openssh-clients && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf/*; \
+  else \
+    yum install -y epel-release && \
+    yum install -y python3 python3-pip sudo curl wget git tar gzip openssh-clients && \
+    yum clean all && \
+    rm -rf /var/cache/yum/*; \
+  fi; \
+fi
+
+# Create test user
+RUN useradd -m -s /bin/bash testuser && \
+    echo 'testuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Copy requirements files
+COPY neosetup/requirements-runtime.txt /tmp/requirements-runtime.txt
+COPY neosetup/requirements.yml /tmp/requirements.yml
+
+# Create virtual environment and install from requirements
+RUN python3 -m venv /opt/ansible-venv && \
+    /opt/ansible-venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/ansible-venv/bin/pip install --no-cache-dir -r /tmp/requirements-runtime.txt && \
+    rm -rf /root/.cache/pip
+
+# Install Ansible Galaxy collections and roles
+RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml && \
+    rm -f /tmp/requirements-runtime.txt /tmp/requirements.yml
+
+# Add venv to PATH for all users (bashrc location differs between distros)
+RUN if [ -f /etc/bash.bashrc ]; then \
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bash.bashrc; \
+    elif [ -f /etc/bashrc ]; then \
+      echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/bashrc; \
+    fi
+RUN echo 'export PATH="/opt/ansible-venv/bin:$PATH"' >> /etc/profile
+
+# Verify installation
+RUN /opt/ansible-venv/bin/ansible --version && \
+    /opt/ansible-venv/bin/python3 -c "import yaml; print('PyYAML available')"
+
+# Set working directory
+WORKDIR /neosetup
+
+USER testuser

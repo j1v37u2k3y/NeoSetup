@@ -1,0 +1,39 @@
+# NeoSetup Pre-commit Docker Environment
+# Ensures consistent linting and validation across all environments
+#
+# Build: docker build -f Dockerfile.precommit -t neosetup-precommit .
+# Run:   docker run --rm -v $(pwd):/workspace neosetup-precommit
+
+FROM python:3.14-slim
+
+LABEL maintainer="NeoSetup Team"
+LABEL description="Pre-commit environment for NeoSetup validation"
+
+# Install system dependencies (git required for pre-commit, others for hooks)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    shellcheck \
+    nodejs \
+    npm \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Install Python dependencies from requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Ansible collections (required for ansible-lint)
+RUN ansible-galaxy collection install community.general
+
+# Copy pre-commit config and cache all hook dependencies
+COPY .pre-commit-config.yaml .
+RUN git init && \
+    git config user.email "docker@neosetup.local" && \
+    git config user.name "Docker" && \
+    pre-commit install-hooks && \
+    rm -rf .git
+
+ENTRYPOINT ["pre-commit"]
+CMD ["run", "--all-files"]

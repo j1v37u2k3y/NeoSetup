@@ -25,6 +25,8 @@ help:
 	@echo "  make dry-run                     - Show what would change"
 	@echo "  make deps                        - Install dependencies"
 	@echo "  make dev-setup                   - Setup development environment"
+	@echo "  make precommit                   - Run pre-commit in Docker"
+	@echo "  make precommit-staged            - Run pre-commit on staged files"
 	@echo "  make clean                       - Clean cache files"
 	@echo ""
 	@echo "Operators: base, matrix, jiveturkey"
@@ -41,14 +43,14 @@ shell: deps
 	@echo "🐚 Configuring shell with $(OPERATOR) operator..."
 	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
-		--tags "shell" $(ANSIBLE_FLAGS)
+		--tags "shell" --become --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Configure tmux only
 tmux: deps
 	@echo "🖥️ Configuring tmux with $(OPERATOR) operator..."
 	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
-		--tags "tmux" $(ANSIBLE_FLAGS)
+		--tags "tmux" --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Install tools only
 tools: deps
@@ -118,6 +120,21 @@ lint:
 	ansible-lint $(PLAYBOOK_DIR)/*.yml
 	yamllint .
 
+# Run pre-commit checks in Docker (consistent environment)
+precommit:
+	@echo "🐳 Running pre-commit in Docker..."
+	../scripts/run-precommit.sh run --all-files
+
+# Run pre-commit on staged files only
+precommit-staged:
+	@echo "🐳 Running pre-commit on staged files..."
+	../scripts/run-precommit.sh run
+
+# Build pre-commit Docker image
+precommit-build:
+	@echo "🐳 Building pre-commit Docker image..."
+	cd .. && docker build -f Dockerfile.precommit -t neosetup-precommit .
+
 # Clean cache and temp files
 clean:
 	@echo "🧹 Cleaning cache files..."
@@ -136,11 +153,19 @@ status:
 # Development commands
 dev-setup: deps
 	@echo "🛠️ Setting up development environment..."
-	pip3 install -r requirements-runtime.txt
-	pip3 install -r ../requirements.txt
+	@echo "📦 Creating virtual environment..."
+	python3 -m venv ../.venv
+	@echo "📦 Installing dependencies in .venv..."
+	../.venv/bin/pip install --upgrade pip
+	../.venv/bin/pip install -r requirements-runtime.txt
+	../.venv/bin/pip install -r ../requirements.txt
 	ansible-galaxy install -r requirements.yml
-	@echo "🪝 Installing pre-commit hooks..."
-	pre-commit install
+	@echo "🪝 Installing Docker-based pre-commit hooks..."
+	git config core.hooksPath ../.githooks
+	@echo ""
+	@echo "✅ Development environment ready!"
+	@echo "   Activate venv: source ../.venv/bin/activate"
+	@echo "   Run pre-commit: ./scripts/run-precommit.sh run --all-files"
 
 # Show operator information
 operator-info:

@@ -53,7 +53,9 @@ class PackageTester:
 
     def install_test_packages(self) -> bool:
         """Install common test packages"""
-        packages = ["curl", "wget", "git", "vim", "htop", "tree"]
+        # Use only packages available in base repos across all distros
+        # htop/tree require EPEL on RHEL-based systems
+        packages = ["curl", "wget", "git", "vim", "make"]
 
         if self.pkg_mgr == "apt":
             cmd = f"apt-get install -y {' '.join(packages)}"

@@ -235,6 +235,25 @@ tool_registry:
       redhat: gh
     custom_install: github_cli
 
+  # Network utilities
+  curl:
+    description: "Command-line URL transfer tool"
+    category: network
+    packages:
+      darwin: curl
+      ubuntu: curl
+      debian: curl
+      redhat: curl
+
+  wget:
+    description: "Non-interactive network downloader"
+    category: network
+    packages:
+      darwin: wget
+      ubuntu: wget
+      debian: wget
+      redhat: wget
+
   # System tools
   htop:
     description: "Interactive process viewer"

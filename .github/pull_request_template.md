@@ -38,11 +38,9 @@
 
 <!-- Mark completed items with an "x" -->
 
+- [ ] 🐳 Pre-commit passes (`./scripts/run-precommit.sh run --all-files`)
 - [ ] 🧪 All existing tests pass
 - [ ] ✅ Operator validation passes (`python3 scripts/validate_operator.py --all`)
-- [ ] 🎭 Ansible-lint passes
-- [ ] 🐍 Python code follows style guidelines
-- [ ] 🧪 New tests added for new functionality
 - [ ] 🔄 Dry-run test completed (`make dry-run OPERATOR=<operator>`)
 - [ ] 🐳 Multi-OS compatibility considered/tested
 - [ ] 📚 Documentation updated
@@ -102,4 +100,4 @@
 
 ---
 
-**🤖 This PR contributes to making NeoSetup the best Ansible automation system ever! 🚀**
+> This PR contributes to making NeoSetup the best Ansible automation system ever!

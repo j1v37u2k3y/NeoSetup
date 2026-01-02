@@ -62,7 +62,10 @@
 - name: "🔧 Set Zsh as default shell in /etc/shells"
   lineinfile:
     path: /etc/shells
-    line: "{{ ansible_env.SHELL if neosetup_preferred_shell == neosetup_current_shell else '/bin/zsh' }}"
+    line: "{{ (ansible_env.SHELL | default('/bin/zsh')) if neosetup_preferred_shell == neosetup_current_shell else '/bin/zsh' }}"
     state: present
   become: yes
-  when: neosetup_set_default_shell | default(false)
+  when:
+    - neosetup_set_default_shell is defined
+    - neosetup_set_default_shell | bool
+  ignore_errors: yes

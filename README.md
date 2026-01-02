@@ -8,9 +8,31 @@
 ![Terminal](https://img.shields.io/badge/Terminal-Hacker-000000?style=for-the-badge&logo=gnu-bash&logoColor=00ff00)
 
 [![CI/CD Pipeline](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/ci.yml)
-[![Docker Multi-OS Tests](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml/badge.svg)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml)
+[![Container Tests](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml/badge.svg)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml)
 
 **Matrix-themed development environment automation that transforms your terminal into a cyberpunk powerhouse.**
+
+<details>
+<summary>🐳 <b>Container Test Matrix</b> (27 test combinations)</summary>
+<br>
+
+**Operators Tested**
+
+| Operator | Description | Status |
+|----------|-------------|--------|
+| ![base](https://img.shields.io/badge/base-essential_tools-blue) | Minimal essentials | [![base](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=tests)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+| ![matrix](https://img.shields.io/badge/matrix-cyberpunk-00ff00) | Matrix-themed | [![matrix](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=tests)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+| ![jiveturkey](https://img.shields.io/badge/jiveturkey-power_user-red) | Full power-user | [![jiveturkey](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=tests)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+
+**Distributions Tested**
+
+| Family | Distribution | Status |
+|--------|--------------|--------|
+| ![Debian](https://img.shields.io/badge/Debian-based-A81D33?logo=debian) | Ubuntu 22.04, Ubuntu 24.04, Debian 12 | [![debian](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=passing)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+| ![Security](https://img.shields.io/badge/Security-distros-557C94?logo=kalilinux) | Kali Rolling, Parrot Security | [![security](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=passing)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+| ![RHEL](https://img.shields.io/badge/RHEL-based-EE0000?logo=redhat) | CentOS Stream 9, Rocky 9, AlmaLinux 9, Fedora 40 | [![rhel](https://img.shields.io/github/actions/workflow/status/j1v37u2k3y/NeoSetup/container-tests.yml?label=passing)](https://github.com/j1v37u2k3y/NeoSetup/actions/workflows/container-tests.yml) |
+
+</details>
 
 ## 🚀 Quick Start
 
@@ -52,7 +74,7 @@ That's it! The setup script guides you through everything.
 
 - **Issues**: [Report bugs or request features](https://github.com/j1v37u2k3y/NeoSetup/issues)
 - **Contributing**: See [Contributing Guide](./docs/development/contributing.md)
-- **Matrix Status**: Check [TODO.md](./TODO.md) for roadmap
+- **Roadmap**: Check [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues) for planned features
 
 ---
 

@@ -1,30 +1,34 @@
 ---
 # Common role for NeoSetup
 
-- name: "🔍 Gather facts if not already gathered"
-  setup:
-  when: ansible_facts.distribution is not defined
+- name: "🔍 Gather facts"
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+      - distribution
+      - env
+      - date_time
   tags:
     - always
 
 - name: "📋 Display system information"
-  debug:
+  ansible.builtin.debug:
     msg: |
       🖥️  Platform: {{ ansible_distribution }} {{ ansible_distribution_version }}
       🏗️  Architecture: {{ ansible_architecture }}
       👤 User: {{ ansible_user_id }}
       🏠 Home: {{ ansible_env.HOME }}
-      🐚 Shell: {{ ansible_env.SHELL | basename }}
+      🐚 Shell: {{ ansible_env.SHELL | default('/bin/bash') | basename }}
       🎯 Operator: {{ neosetup_operator | default('unknown') }}
 
 - name: "🏠 Ensure NeoSetup configuration directory exists"
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.neosetup"
     state: directory
     mode: '0755'
 
 - name: "📝 Create operator info file"
-  copy:
+  ansible.builtin.copy:
     content: |
       # NeoSetup Configuration
       # Generated: {{ ansible_date_time.iso8601 }}
