@@ -3,54 +3,240 @@
 # This file is sourced by both zshrc and bashrc to avoid duplication
 
 # ============================================================================
-# 🐇 Matrix Greeting - Follow the White Rabbit
+# Matrix Greeting - Follow the White Rabbit
 # ============================================================================
 
-# Only show in interactive shells
-if [[ $- == *i* ]]; then
-    # Matrix digital rain greeting (optional)
-    if command -v cmatrix &> /dev/null && [[ "${MATRIX_RAIN:-true}" == "true" ]]; then
-        # Show brief matrix animation on terminal start (1 second)
+# Only show in interactive shells and if not already shown
+if [[ $- == *i* ]] && [[ -z "$MATRIX_GREETING_SHOWN" ]]; then
+
+# ============================================================================
+# Terminal Capability Detection
+# ============================================================================
+
+_matrix_detect_capabilities() {
+    # Check color support
+    if [[ -n "$COLORTERM" ]] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == "xterm"* ]]; then
+        MATRIX_COLOR_SUPPORT=true
+    else
+        MATRIX_COLOR_SUPPORT=false
+    fi
+
+    # Check Unicode support
+    if [[ "$LANG" == *"UTF-8"* ]] || [[ "$LC_ALL" == *"UTF-8"* ]]; then
+        MATRIX_UNICODE_SUPPORT=true
+    else
+        MATRIX_UNICODE_SUPPORT=false
+    fi
+
+    # Get terminal width
+    MATRIX_TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
+
+    # Check for animation tools
+    MATRIX_HAS_CMATRIX=$(command -v cmatrix &>/dev/null && echo true || echo false)
+    MATRIX_HAS_LOLCAT=$(command -v lolcat &>/dev/null && echo true || echo false)
+    MATRIX_HAS_FIGLET=$(command -v figlet &>/dev/null && echo true || echo false)
+}
+
+# ============================================================================
+# Color Definitions
+# ============================================================================
+
+_matrix_setup_colors() {
+    if [[ "$MATRIX_COLOR_SUPPORT" == "true" ]]; then
+        # Matrix green shades
+        C_RESET='\033[0m'
+        C_BLACK='\033[30m'
+        C_GREEN='\033[32m'
+        C_BRIGHT_GREEN='\033[92m'
+        C_DIM_GREEN='\033[2;32m'
+        C_BOLD_GREEN='\033[1;32m'
+        C_BG_GREEN='\033[42m'
+        C_BG_BLACK='\033[40m'
+        # Gradient greens (using 256 color mode)
+        C_G1='\033[38;5;22m'   # Darkest
+        C_G2='\033[38;5;28m'
+        C_G3='\033[38;5;34m'
+        C_G4='\033[38;5;40m'
+        C_G5='\033[38;5;46m'   # Brightest
+        C_G6='\033[38;5;82m'   # Lime
+        C_G7='\033[38;5;118m'  # Light lime
+        # Other colors
+        C_RED='\033[31m'
+        C_BLUE='\033[34m'
+        C_CYAN='\033[36m'
+        C_WHITE='\033[97m'
+        C_BOLD='\033[1m'
+        C_DIM='\033[2m'
+    else
+        C_RESET='' C_BLACK='' C_GREEN='' C_BRIGHT_GREEN='' C_DIM_GREEN=''
+        C_BOLD_GREEN='' C_BG_GREEN='' C_BG_BLACK=''
+        C_G1='' C_G2='' C_G3='' C_G4='' C_G5='' C_G6='' C_G7=''
+        C_RED='' C_BLUE='' C_CYAN='' C_WHITE='' C_BOLD='' C_DIM=''
+    fi
+}
+
+# ============================================================================
+# Animation Functions
+# ============================================================================
+
+# Animated typing effect - zsh/bash compatible
+_matrix_type() {
+    local text="$1"
+    local delay="${2:-0.03}"
+    local color="${3:-$C_GREEN}"
+    local i=0
+
+    printf "%b" "$color"
+{% raw %}
+    while [ $i -lt ${#text} ]; do
+        printf "%s" "${text:$i:1}"
+        sleep "$delay" 2>/dev/null || true
+        i=$((i + 1))
+    done
+{% endraw %}
+    printf "%b\n" "$C_RESET"
+}
+
+# Fade in effect (gradient)
+_matrix_fade_in() {
+    local text="$1"
+    local colors=("$C_G1" "$C_G2" "$C_G3" "$C_G4" "$C_G5")
+
+    for color in "${colors[@]}"; do
+        printf "\r%b%s%b" "$color" "$text" "$C_RESET"
+        sleep 0.05 2>/dev/null || true
+    done
+    echo ""
+}
+
+# Print centered text
+_matrix_center() {
+    local text="$1"
+    local width="${2:-$MATRIX_TERM_WIDTH}"
+{% raw %}
+    local text_len=${#text}
+{% endraw %}
+    local padding=$(( (width - text_len) / 2 ))
+    printf "%${padding}s%s\n" "" "$text"
+}
+
+# Print with gradient (line by line)
+_matrix_gradient_print() {
+    local line="$1"
+    local gradient=("$C_G1" "$C_G2" "$C_G3" "$C_G4" "$C_G5" "$C_G6" "$C_G7")
+{% raw %}
+    local len=${#line}
+    local step=$((len / 7 + 1))
+
+    for ((i=0; i<len; i++)); do
+        local color_idx=$((i / step))
+        [[ $color_idx -gt 6 ]] && color_idx=6
+        printf "%b%s" "${gradient[$color_idx]}" "${line:$i:1}"
+    done
+{% endraw %}
+    printf "%b\n" "$C_RESET"
+}
+
+# ============================================================================
+# Operator-Specific ASCII Art
+# ============================================================================
+
+_matrix_art_base() {
+    printf "%b\n" "${C_GREEN}"
+    cat << 'ASCIIART'
+    _   _             _____      _
+   | \ | | ___  ___  / ____|    | |
+   |  \| |/ _ \/ _ \| (___   ___| |_ _   _ _ __
+   | . ` |  __/ (_) |\___ \ / _ \ __| | | | '_ \
+   | |\  |\___|\___/ ____) |  __/ |_| |_| | |_) |
+   |_| \_|         |_____/ \___|\__|\__,_| .__/
+                                          |_|
+ASCIIART
+    printf "%b\n" "${C_RESET}"
+}
+
+_matrix_art_matrix() {
+    printf "%b\n" "${C_BOLD_GREEN}"
+    cat << 'ASCIIART'
+ ███▄    █ ▓█████  ▒█████      ██████ ▓█████▄▄▄█████▓ █    ██  ██▓███
+ ██ ▀█   █ ▓█   ▀ ▒██▒  ██▒  ▒██    ▒ ▓█   ▀▓  ██▒ ▓▒ ██  ▓██▒▓██░  ██▒
+▓██  ▀█ ██▒▒███   ▒██░  ██▒  ░ ▓██▄   ▒███  ▒ ▓██░ ▒░▓██  ▒██░▓██░ ██▓▒
+▓██▒  ▐▌██▒▒▓█  ▄ ▒██   ██░    ▒   ██▒▒▓█  ▄░ ▓██▓ ░ ▓▓█  ░██░▒██▄█▓▒ ▒
+▒██░   ▓██░░▒████▒░ ████▓▒░  ▒██████▒▒░▒████▒ ▒██▒ ░ ▒▒█████▓ ▒██▒ ░  ░
+░ ▒░   ▒ ▒ ░░ ▒░ ░░ ▒░▒░▒░   ▒ ▒▓▒ ▒ ░░░ ▒░ ░ ▒ ░░   ░▒▓▒ ▒ ▒ ▒▓▒░ ░  ░
+░ ░░   ░ ▒░ ░ ░  ░   ░ ▒ ▒░   ░ ░▒  ░ ░ ░ ░  ░   ░    ░░▒░ ░ ░ ░▒ ░
+   ░   ░ ░    ░    ░ ░ ░ ▒    ░  ░  ░     ░    ░       ░░░ ░ ░ ░░
+         ░    ░  ░     ░ ░          ░     ░  ░           ░
+ASCIIART
+    printf "%b\n" "${C_RESET}"
+}
+
+_matrix_art_jiveturkey() {
+    # Gradient effect for jiveturkey - zsh/bash compatible
+    printf "%b%s%b\n" "$C_G2" "     ██╗██╗██╗   ██╗███████╗████████╗██╗   ██╗██████╗ ██╗  ██╗███████╗██╗   ██╗" "$C_RESET"
+    printf "%b%s%b\n" "$C_G3" "     ██║██║██║   ██║██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║ ██╔╝██╔════╝╚██╗ ██╔╝" "$C_RESET"
+    printf "%b%s%b\n" "$C_G4" "     ██║██║██║   ██║█████╗     ██║   ██║   ██║██████╔╝█████╔╝ █████╗   ╚████╔╝ " "$C_RESET"
+    printf "%b%s%b\n" "$C_G5" "██   ██║██║╚██╗ ██╔╝██╔══╝     ██║   ██║   ██║██╔══██╗██╔═██╗ ██╔══╝    ╚██╔╝  " "$C_RESET"
+    printf "%b%s%b\n" "$C_G6" "╚█████╔╝██║ ╚████╔╝ ███████╗   ██║   ╚██████╔╝██║  ██║██║  ██╗███████╗   ██║   " "$C_RESET"
+    printf "%b%s%b\n" "$C_G7" " ╚════╝ ╚═╝  ╚═══╝  ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   " "$C_RESET"
+}
+
+# ============================================================================
+# Main Greeting Display
+# ============================================================================
+
+_matrix_show_greeting() {
+    local operator="{{ neosetup_operator | default('base') }}"
+
+    # Optional: Brief matrix rain animation
+    if [[ "$MATRIX_HAS_CMATRIX" == "true" ]] && [[ "${MATRIX_RAIN:-false}" == "true" ]]; then
         timeout 1 cmatrix -b -C green 2>/dev/null || true
         clear
     fi
 
-    # Matrix-themed welcome message
-    echo -e "\033[32m"
-    cat << 'EOF'
-╔══════════════════════════════════════════════════════════════════════════╗
-║                                                                          ║
-║   ▄▄▌ ▐ ▄▌▄▄▄ .▄▄▌   ▄▄·       • ▌ ▄ ·. ▄▄▄ .                          ║
-║   ██· █▌▐█▀▄.▀·██•  ▐█ ▌▪▪     ·██ ▐███▪▀▄.▀·                          ║
-║   ██▪▐█▐▐▌▐▀▀▪▄██▪  ██ ▄▄ ▄█▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄                          ║
-║   ▐█▌██▐█▌▐█▄▄▌▐█▌▐▌▐███▌▐█▌.▐▌██ ██▌▐█▌▐█▄▄▌                          ║
-║    ▀▀▀▀ ▀▪ ▀▀▀ .▀▀▀ ·▀▀▀  ▀█▄▀▪▀▀  █▪▀▀▀ ▀▀▀                           ║
-║                                                                          ║
-║            Wake up, {{ ansible_user_id }}... The Matrix has you...                  ║
-║                  Follow the white rabbit 🐇                             ║
-║                                                                          ║
-╚══════════════════════════════════════════════════════════════════════════╝
-EOF
-    echo -e "\033[0m"
+    # Display operator-specific ASCII art
+    case "$operator" in
+        jiveturkey)
+            _matrix_art_jiveturkey
+            ;;
+        matrix)
+            _matrix_art_matrix
+            ;;
+        *)
+            _matrix_art_base
+            ;;
+    esac
 
-    # System info in Matrix style
-    echo -e "\033[32m┌──[ System Matrix ]──────────────────────────────────────────┐\033[0m"
-    echo -e "\033[32m│\033[0m 🎭 Operator: \033[92m{{ neosetup_operator | default('jiveturkey') }}\033[0m"
-    echo -e "\033[32m│\033[0m 🐚 Shell: \033[92m$SHELL\033[0m"
-    echo -e "\033[32m│\033[0m 🧠 Kernel: \033[92m$(uname -r)\033[0m"
-    echo -e "\033[32m│\033[0m ⏱️ Uptime: \033[92m$(uptime | sed 's/.*up \([^,]*\),.*/\1/')\033[0m"
-
-    # Add additional info based on operator
-{% if neosetup_operator == 'jiveturkey' %}
-    echo -e "\033[32m│\033[0m 🐳 Docker: \033[92m$(docker --version 2>/dev/null | cut -d' ' -f3 | cut -d',' -f1 || echo 'Not installed')\033[0m"
-    echo -e "\033[32m│\033[0m 💾 Memory: \033[92m$(free -h 2>/dev/null | awk '/^Mem:/ {print $3"/"$2}' || echo 'N/A')\033[0m"
-{% endif %}
-
-    echo -e "\033[32m└──────────────────────────────────────────────────────────────┘\033[0m"
+    # Animated wake up message
+    echo ""
+    if [[ "${MATRIX_ANIMATE:-true}" == "true" ]]; then
+        _matrix_type "Wake up, {{ ansible_user_id }}..." 0.05 "$C_DIM_GREEN"
+        sleep 0.3 2>/dev/null || true
+        _matrix_type "The Matrix has you..." 0.04 "$C_GREEN"
+        sleep 0.3 2>/dev/null || true
+        _matrix_type "Follow the white rabbit." 0.03 "$C_BRIGHT_GREEN"
+    else
+        printf "%b\n" "${C_DIM_GREEN}Wake up, {{ ansible_user_id }}...${C_RESET}"
+        printf "%b\n" "${C_GREEN}The Matrix has you...${C_RESET}"
+        printf "%b\n" "${C_BRIGHT_GREEN}Follow the white rabbit.${C_RESET}"
+    fi
     echo ""
 
-    # Random Matrix quote
-    MATRIX_QUOTES=(
+    # System info box
+    printf "%b\n" "${C_GREEN}╭──[ System Matrix ]──────────────────────────────────────────╮${C_RESET}"
+    printf "%b\n" "${C_GREEN}│${C_RESET} Operator: ${C_BRIGHT_GREEN}{{ neosetup_operator | default('base') }}${C_RESET}"
+    printf "%b\n" "${C_GREEN}│${C_RESET} Shell: ${C_BRIGHT_GREEN}${SHELL##*/}${C_RESET}"
+    printf "%b\n" "${C_GREEN}│${C_RESET} Kernel: ${C_BRIGHT_GREEN}$(uname -r)${C_RESET}"
+    printf "%b\n" "${C_GREEN}│${C_RESET} Uptime: ${C_BRIGHT_GREEN}$(uptime | sed 's/.*up \([^,]*\),.*/\1/' | xargs)${C_RESET}"
+{% if neosetup_operator == 'jiveturkey' %}
+    printf "%b\n" "${C_GREEN}│${C_RESET} Docker: ${C_BRIGHT_GREEN}$(docker --version 2>/dev/null | cut -d' ' -f3 | tr -d ',' || echo 'N/A')${C_RESET}"
+    printf "%b\n" "${C_GREEN}│${C_RESET} Memory: ${C_BRIGHT_GREEN}$(free -h 2>/dev/null | awk '/^Mem:/ {print $3"/"$2}' || vm_stat 2>/dev/null | awk '/Pages active/ {printf "%.1fG", $3*4096/1073741824}' || echo 'N/A')${C_RESET}"
+{% endif %}
+    printf "%b\n" "${C_GREEN}╰──────────────────────────────────────────────────────────────╯${C_RESET}"
+    echo ""
+
+    # Random Matrix quote with style
+    local quotes=(
         "There is no spoon."
         "Welcome to the desert of the real."
         "Free your mind."
@@ -60,12 +246,41 @@ EOF
         "Unfortunately, no one can be told what the Matrix is."
         "I know kung fu."
         "There's a difference between knowing the path and walking the path."
+        "What is real? How do you define real?"
+        "The answer is out there, Neo."
+        "You've been living in a dream world, Neo."
+        "Fate, it seems, is not without a sense of irony."
+        "Choice. The problem is choice."
     )
 
-    # Select random quote
-    RANDOM_INDEX=$((RANDOM % {{ '${#MATRIX_QUOTES[@]}' }}))
-    echo -e "\033[32m💊 {{ '${MATRIX_QUOTES[$RANDOM_INDEX]}' }}\033[0m"
+{% raw %}
+    local idx=$((RANDOM % ${#quotes[@]}))
+    local quote="${quotes[$idx]}"
+{% endraw %}
+
+    # Display quote with optional lolcat gradient
+    if [[ "$MATRIX_HAS_LOLCAT" == "true" ]] && [[ "${MATRIX_RAINBOW:-false}" == "true" ]]; then
+        echo "$quote" | lolcat -f 2>/dev/null || printf "%b\n" "${C_GREEN}$quote${C_RESET}"
+    else
+        printf "%b\n" "${C_G4}${quote}${C_RESET}"
+    fi
     echo ""
+}
+
+# ============================================================================
+# Initialize and Run
+# ============================================================================
+
+_matrix_detect_capabilities
+_matrix_setup_colors
+_matrix_show_greeting
+
+# Cleanup functions from shell namespace (optional, keeps shell clean)
+unset -f _matrix_detect_capabilities _matrix_setup_colors
+unset -f _matrix_type _matrix_fade_in _matrix_center _matrix_gradient_print
+unset -f _matrix_art_base _matrix_art_matrix _matrix_art_jiveturkey
+unset -f _matrix_show_greeting
+
 fi
 
 # Export that greeting has been shown (to avoid duplication in subshells)

@@ -80,7 +80,7 @@ fi
 {% endif %}
 
 # Custom functions from operator
-e{% if shell_functions is defined %}
+{% if shell_functions is defined %}
   {% for func in shell_functions %}
     # {{ func.description }}
     {{ func.name }}() {
