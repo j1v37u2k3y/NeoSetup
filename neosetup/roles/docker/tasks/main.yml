@@ -8,10 +8,17 @@
   failed_when: false
   changed_when: false
 
+- name: "🔍 Check if Podman is providing Docker compatibility"
+  shell: docker --version 2>&1 | grep -qi podman
+  register: podman_docker_check
+  failed_when: false
+  changed_when: false
+
 - name: "📋 Display Docker installation status"
   debug:
     msg: |
       🐳 Docker Status: {{ 'Already installed' if docker_check.rc == 0 else 'Not found - will install' }}
+      🦭 Podman Mode: {{ 'Yes (podman-docker)' if podman_docker_check.rc == 0 else 'No (native Docker)' }}
       💻 OS Family: {{ ansible_os_family }}
       📦 Distribution: {{ ansible_distribution | default('Unknown') }}
 
@@ -185,7 +192,18 @@
     - neosetup_add_user_to_docker | default(true)
     - ansible_os_family != "Darwin"
 
-- name: "🚀 Start and enable Docker service (Kali)"
+- name: "🦭 Enable Podman socket (when using podman-docker)"
+  systemd:
+    name: podman.socket
+    state: started
+    enabled: yes
+    scope: user
+  when:
+    - podman_docker_check.rc == 0
+    - ansible_os_family != "Darwin"
+  register: podman_socket_result
+
+- name: "🚀 Start and enable Docker service (Kali - native Docker only)"
   systemd:
     name: docker
     state: started
@@ -193,9 +211,10 @@
   become: yes
   when:
     - ansible_distribution == "Kali"
+    - podman_docker_check.rc != 0
   register: docker_service_result_kali
 
-- name: "🚀 Start and enable Docker service (Other Linux)"
+- name: "🚀 Start and enable Docker service (Other Linux - native Docker only)"
   systemd:
     name: docker
     state: started
@@ -204,6 +223,7 @@
   when:
     - ansible_os_family != "Darwin"
     - ansible_distribution != "Kali"
+    - podman_docker_check.rc != 0
   register: docker_service_result_other
 
 - name: "🔍 Verify Docker installation"
@@ -231,19 +251,22 @@
       🐳 Docker Installation Summary:
       ═══════════════════════════════
       📦 Version: {{ docker_version.stdout | default('Check manually') }}
-      🔧 Service Status: {{ 'Started' if ansible_os_family != 'Darwin' else 'Manual start required (macOS)' }}
+      🦭 Backend: {{ 'Podman (daemonless)' if podman_docker_check.rc == 0 else 'Docker Engine' }}
+      🔧 Service Status: {{ 'Podman socket enabled' if podman_docker_check.rc == 0 else ('Started' if ansible_os_family != 'Darwin' else 'Manual start required (macOS)') }}
       👥 User Groups: {{ 'Added to docker group' if ansible_os_family != 'Darwin' else 'Not applicable (macOS)' }}
-      🏗️ BuildKit: {{ 'Enabled' if docker_buildkit.enabled | default(true) else 'Disabled' }}
-      📦 Compose v2: {{ 'Installed' if docker_install_compose | default(true) else 'Not installed' }}
-      🔒 Security: {{ 'Enhanced' if docker_security is defined else 'Default' }}
+      🏗️ BuildKit: {{ 'N/A (Podman)' if podman_docker_check.rc == 0 else ('Enabled' if docker_buildkit.enabled | default(true) else 'Disabled') }}
+      📦 Compose: {{ 'podman-compose' if podman_docker_check.rc == 0 else ('Installed' if docker_install_compose | default(true) else 'Not installed') }}
+      🔒 Security: {{ 'Rootless by default' if podman_docker_check.rc == 0 else ('Enhanced' if docker_security is defined else 'Default') }}
       🧪 Test Result: {{ 'Skipped on macOS' if ansible_os_family == 'Darwin' else 'Check with: docker run hello-world' }}
 
       💡 Next steps:
       {% if ansible_os_family == "Darwin" %}
       - Start Docker Desktop application
+      {% elif podman_docker_check.rc == 0 %}
+      - Podman is daemonless - no service needed!
+      - Use 'docker' commands as normal (aliased to podman)
       {% else %}
       - Log out and back in for group changes to take effect
       {% endif %}
       - Test with: docker run hello-world
       - Use 'docker compose' (v2) instead of 'docker-compose'
-      - BuildKit is enabled for faster builds
