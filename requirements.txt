@@ -3,7 +3,7 @@
 # For runtime dependencies, install: pip3 install -r neosetup/requirements-runtime.txt
 
 # Ansible Core (ansible-lint requires ansible-core>=2.16.14)
-ansible>=9.0.0,<11.0.0
+ansible>=9.0.0,<14.0.0
 
 # Validation and Linting Tools
 ansible-lint>=6.0.0
