@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v4
@@ -62,7 +62,7 @@ jobs:
       contents: read
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔍 Run CodeQL Analysis (Init)
         uses: github/codeql-action/init@v4
@@ -111,7 +111,7 @@ jobs:
         ansible-version: ['6.0', '7.0']
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v4
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📚 Check documentation completeness
         run: |
@@ -189,7 +189,7 @@ jobs:
     if: always()
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v4
