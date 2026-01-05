@@ -1,17 +1,21 @@
 ---
 # Docker role handlers
 
-- name: Restart docker
+- name: restart docker
   systemd:
-    name: "{{ 'docker.io' if ansible_distribution == 'Kali' else 'docker' }}"
+    name: docker
     state: restarted
     daemon_reload: yes
   become: yes
-  when: ansible_os_family != "Darwin"
+  when:
+    - ansible_os_family != "Darwin"
+    - podman_docker_check.rc != 0
 
-- name: Reload docker
+- name: reload docker
   systemd:
-    name: "{{ 'docker.io' if ansible_distribution == 'Kali' else 'docker' }}"
+    name: docker
     state: reloaded
   become: yes
-  when: ansible_os_family != "Darwin"
+  when:
+    - ansible_os_family != "Darwin"
+    - podman_docker_check.rc != 0

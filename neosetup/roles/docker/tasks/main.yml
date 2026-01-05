@@ -243,7 +243,9 @@
 
 - name: "🔧 Configure Docker with modern features"
   include_tasks: configure_docker.yml
-  when: docker_check.rc == 0 or docker_version.rc == 0
+  when:
+    - docker_check.rc == 0 or docker_version.rc == 0
+    - podman_docker_check.rc != 0
 
 - name: "✅ Docker installation complete"
   debug:
