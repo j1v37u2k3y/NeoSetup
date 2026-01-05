@@ -75,7 +75,7 @@ jobs:
           docker save neosetup-test-${{ matrix.os.name }} | gzip > neosetup-test-${{ matrix.os.name }}.tar.gz
 
       - name: 📤 Upload container artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: test-container-${{ matrix.os.name }}
           path: neosetup-test-${{ matrix.os.name }}.tar.gz
