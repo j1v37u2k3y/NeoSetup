@@ -185,21 +185,13 @@ class CallbackModule(CallbackBase):
         c = get_color
         lines = []
 
-        # Overall progress
-        progress = self.stats.completed / self.stats.total if self.stats.total > 0 else 0
-        overall_bar = render_progress_bar(progress, label="Overall")
-        lines.append(f"{c('matrix')}{overall_bar} ({self.stats.completed}/{self.stats.total} tasks){c('reset')}")
+        # Task counter (no percentage - we don't know total upfront)
+        lines.append(f"{c('matrix')}📦 Tasks completed: {self.stats.completed}{c('reset')}")
 
         # Time info
         elapsed = time.time() - self.timing.playbook_start if self.timing.playbook_start else 0
-        remaining_tasks = max(0, self.stats.total - self.stats.completed)
-        remaining = self.timing.estimate_remaining(remaining_tasks)
-
         elapsed_str = format_time(elapsed)
-        if remaining is not None and remaining > 0:
-            lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str} | Remaining: ~{format_time(remaining)}{c('reset')}")
-        else:
-            lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str}{c('reset')}")
+        lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str}{c('reset')}")
 
         return lines
 
@@ -211,23 +203,19 @@ class CallbackModule(CallbackBase):
         if not self.roles.order:
             return lines
 
-        lines.append(f"\n{c('matrix_dim')}Role Progress: {c('reset')}")
+        lines.append(f"\n{c('matrix_dim')}Roles: {c('reset')}")
         for role in self.roles.order:
-            total = self.roles.tasks[role]
             completed = self.roles.completed[role]
-            if total > 0:
-                role_progress = completed / total
-                is_current = role == self.roles.current
+            is_current = role == self.roles.current
 
-                if is_current:
-                    icon, color = "▶", c("yellow")
-                elif completed == total:
-                    icon, color = "✓", c("ok")
-                else:
-                    icon, color = "○", c("matrix_dim")
+            if is_current:
+                icon, color = "▶", c("yellow")
+                status = f"({completed} tasks)"
+            else:
+                icon, color = "✓", c("ok")
+                status = f"({completed} tasks)"
 
-                role_bar = render_progress_bar(role_progress, show_percent=False)
-                lines.append(f"  {color}{icon} {role.ljust(10)} [{role_bar[1:-1]}] {completed}/{total}{c('reset')}")
+            lines.append(f"  {color}{icon} {role} {status}{c('reset')}")
 
         return lines
 
