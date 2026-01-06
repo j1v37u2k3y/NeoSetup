@@ -185,13 +185,29 @@ class CallbackModule(CallbackBase):
         c = get_color
         lines = []
 
-        # Task counter (no percentage - we don't know total upfront)
-        lines.append(f"{c('matrix')}📦 Tasks completed: {self.stats.completed}{c('reset')}")
+        # Show progress bar if we have total, otherwise just counter
+        if self.stats.total > 0:
+            progress = min(1.0, self.stats.completed / self.stats.total)
+            progress_bar = render_progress_bar(progress, label="Progress")
+            lines.append(f"{c('matrix')}{progress_bar} ({self.stats.completed}/{self.stats.total}){c('reset')}")
+        else:
+            lines.append(f"{c('matrix')}📦 Tasks completed: {self.stats.completed}{c('reset')}")
 
-        # Time info
+        # Time info with estimate if we have total
         elapsed = time.time() - self.timing.playbook_start if self.timing.playbook_start else 0
         elapsed_str = format_time(elapsed)
-        lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str}{c('reset')}")
+
+        if self.stats.total > 0 and self.stats.completed > 0:
+            remaining_tasks = max(0, self.stats.total - self.stats.completed)
+            remaining = self.timing.estimate_remaining(remaining_tasks)
+            if remaining is not None and remaining > 0:
+                lines.append(
+                    f"{c('cyan')}⏱️  Elapsed: {elapsed_str} | Remaining: ~{format_time(remaining)}{c('reset')}"
+                )
+            else:
+                lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str}{c('reset')}")
+        else:
+            lines.append(f"{c('cyan')}⏱️  Elapsed: {elapsed_str}{c('reset')}")
 
         return lines
 
@@ -315,13 +331,57 @@ class CallbackModule(CallbackBase):
                 f"failed={summary['failures']} skipped={summary['skipped']}{c('reset')}"
             )
 
+    def _count_tasks_in_block(self, block):
+        """Recursively count tasks in a block."""
+        count = 0
+        if hasattr(block, "block"):
+            for task in block.block:
+                count += self._count_tasks_in_block(task)
+        if hasattr(block, "rescue"):
+            for task in block.rescue:
+                count += self._count_tasks_in_block(task)
+        if hasattr(block, "always"):
+            for task in block.always:
+                count += self._count_tasks_in_block(task)
+        if not hasattr(block, "block"):
+            # It's a task, not a block
+            count = 1
+        return count
+
+    def _count_playbook_tasks(self, playbook):
+        """Count total tasks in the playbook (estimate)."""
+        total = 0
+        for play in playbook.get_plays():
+            # Count pre_tasks
+            for block in play.pre_tasks:
+                total += self._count_tasks_in_block(block)
+            # Count tasks (includes role tasks)
+            for block in play.tasks:
+                total += self._count_tasks_in_block(block)
+            # Count post_tasks
+            for block in play.post_tasks:
+                total += self._count_tasks_in_block(block)
+            # Count handlers
+            for block in play.handlers:
+                total += self._count_tasks_in_block(block)
+        return total
+
     def v2_playbook_on_start(self, playbook):
         """Called when a playbook starts."""
         self.timing.playbook_start = time.time()
+
+        # Try to count total tasks upfront
+        try:
+            self.stats.total = self._count_playbook_tasks(playbook)
+        except (AttributeError, TypeError, KeyError):
+            self.stats.total = 0  # Fall back to counter mode
+
         self._print_header()
 
         playbook_name = os.path.basename(playbook._file_name)
         self._display.display(f"{get_color('matrix_dim')}📂 Playbook: {playbook_name}{get_color('reset')}")
+        if self.stats.total > 0:
+            self._display.display(f"{get_color('matrix_dim')}📋 Estimated tasks: {self.stats.total}{get_color('reset')}")
         self._display.display("")
 
     def v2_playbook_on_play_start(self, play):
@@ -333,8 +393,8 @@ class CallbackModule(CallbackBase):
     def v2_playbook_on_task_start(self, task, is_conditional=None):
         """Called when a task starts."""
         self.timing.task_start = time.time()
-        self.stats.total += 1
 
+        # Track role
         role = self._get_role_from_task(task)
         if role:
             if role != self.roles.current:
