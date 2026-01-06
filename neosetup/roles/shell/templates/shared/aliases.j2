@@ -8,12 +8,7 @@ alias ....='cd ../../..'
 alias ~='cd ~'
 alias -- -='cd -'
 
-# List directory contents
-alias l='ls -lah'
-alias la='ls -lAh'
-alias ll='ls -lh'
-alias ls='ls --color=auto'
-alias lsa='ls -lah'
+# List directory contents - defined as functions below with eza fallback
 
 # Safety aliases
 alias rm='rm -i'
@@ -51,11 +46,66 @@ alias dpa='docker ps -a'
 alias di='docker images'
 alias dex='docker exec -it'
 
-# Modern tool aliases (if installed)
-command -v eza &>/dev/null && alias ls='eza --icons'
-command -v eza &>/dev/null && alias ll='eza -l --icons'
-command -v eza &>/dev/null && alias la='eza -la --icons'
-command -v eza &>/dev/null && alias tree='eza --tree --icons'
+# Modern tool functions (with safe fallback, properly handles arguments)
+# Unalias first to avoid "defining function based on alias" error in zsh
+unalias ls ll la tree l lsa 2>/dev/null
+
+{% if ansible_os_family == "Darwin" %}
+# macOS uses -G for color
+ls() {
+  if command -v eza &>/dev/null; then
+    eza --color=always --group-directories-first --icons "$@"
+  else
+    command ls -G "$@"
+  fi
+}
+ll() {
+  if command -v eza &>/dev/null; then
+    eza -l --color=always --group-directories-first --icons "$@"
+  else
+    command ls -lhG "$@"
+  fi
+}
+la() {
+  if command -v eza &>/dev/null; then
+    eza -la --color=always --group-directories-first --icons "$@"
+  else
+    command ls -lAhG "$@"
+  fi
+}
+{% else %}
+# Linux uses --color=auto
+ls() {
+  if command -v eza &>/dev/null; then
+    eza --color=always --group-directories-first --icons "$@"
+  else
+    command ls --color=auto "$@"
+  fi
+}
+ll() {
+  if command -v eza &>/dev/null; then
+    eza -l --color=always --group-directories-first --icons "$@"
+  else
+    command ls -lh --color=auto "$@"
+  fi
+}
+la() {
+  if command -v eza &>/dev/null; then
+    eza -la --color=always --group-directories-first --icons "$@"
+  else
+    command ls -lAh --color=auto "$@"
+  fi
+}
+{% endif %}
+l() { ls -lah "$@"; }
+lsa() { ls -lah "$@"; }
+tree() {
+  if command -v eza &>/dev/null; then
+    eza --tree --icons "$@"
+  else
+    command tree "$@"
+  fi
+}
 command -v bat &>/dev/null && alias cat='bat'
 command -v rg &>/dev/null && alias grep='rg'
 command -v fd &>/dev/null && alias find='fd'
