@@ -23,7 +23,7 @@
         'wsl' if (proc_version_exists.stat.exists and wsl_check.rc == 0) else
         'darwin' if ansible_os_family == 'Darwin' else
         'ubuntu' if ansible_distribution == 'Ubuntu' else
-        'debian' if ansible_distribution == 'Debian' else
+        'debian' if ansible_distribution in ['Debian', 'Kali', 'Parrot'] else
         'redhat' if ansible_os_family == 'RedHat' else
         'unknown'
       }}
