@@ -54,7 +54,7 @@ jobs:
           - { name: 'fedora-40', dockerfile: 'Dockerfile.fedora-40' }
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🧹 Free disk space
         run: |
@@ -107,7 +107,7 @@ jobs:
         operator: [base, matrix, jiveturkey]
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v7
@@ -173,7 +173,7 @@ jobs:
           - { name: 'fedora-40' }
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v7
@@ -208,7 +208,7 @@ jobs:
     if: github.event.inputs.test_all_operators == 'true'
     steps:
       - name: 🔍 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download test container
         uses: actions/download-artifact@v7
