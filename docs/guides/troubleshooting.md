@@ -513,7 +513,7 @@ gh secret list
 gh variable list
 ```
 
-**Note**: CI runs 4 jobs: `pre-commit`, `security-scan`, `ansible-syntax`, `docs-validation`.
+**Note**: CI runs 5 jobs: `pre-commit`, `security-scan`, `ansible-syntax`, `docs-validation`, and `test-summary`.
 The `pre-commit` job runs all 20 hooks - same as local Docker pre-commit.
 
 ## 🔄 Recovery and Reset
@@ -589,8 +589,7 @@ tmux -V
 ### Community Support
 
 - **GitHub Discussions**: General questions and community help
-- **Issues**: Bug reports and feature requests  
-- **Matrix Chat**: Real-time community support (coming soon)
+- **Issues**: Bug reports and feature requests
 
 ---
 

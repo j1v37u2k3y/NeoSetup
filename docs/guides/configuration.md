@@ -8,11 +8,16 @@ Operators are the core configuration system that defines what gets installed and
 
 ### Built-in Operators
 
-| Operator     | Extends  | Description                                 | Best For                        |
-|--------------|----------|---------------------------------------------|---------------------------------|
-| `base`       | -        | Essential tools and minimal configuration   | Servers, clean environments     |
-| `matrix`     | `base`   | Adds Matrix theme and cyberpunk aesthetics  | Developers who want style       |
-| `jiveturkey` | `matrix` | Adds security tools and power-user features | Security professionals, hackers |
+| Operator      | Extends  | Description                                  | Best For                         |
+|---------------|----------|----------------------------------------------|----------------------------------|
+| `base`        | -        | Essential tools and minimal configuration    | Servers, clean environments      |
+| `matrix`      | `base`   | Adds Matrix theme and cyberpunk aesthetics   | Developers who want style        |
+| `jiveturkey`  | `matrix` | Adds security tools and power-user features  | Security professionals, hackers  |
+| `macos`       | `base`   | Homebrew integration and macOS productivity  | macOS users                      |
+| `python_dev`  | `base`   | pyenv, Poetry, testing and quality tools     | Python developers                |
+| `go_dev`      | `base`   | Go toolchain, linters, and dev utilities     | Go developers                    |
+| `nodejs_dev`  | `base`   | nvm, npm/yarn/pnpm, TypeScript setup         | Node.js/TypeScript developers    |
+| `windows_wsl` | `base`   | WSL2 interoperability and Linux integration  | Windows WSL2 users               |
 
 ### Operator Inheritance
 
@@ -22,31 +27,58 @@ base
 ├── Basic shell configuration
 ├── Minimal tmux setup
 └── Core aliases and functions
-
-matrix (extends base)
-├── Matrix-themed colors and prompts
-├── Cyberpunk tmux configuration
-├── Matrix ASCII art and animations
-├── Custom Matrix functions:
-│   ├── matrix_mode - Toggle Matrix aesthetic
-│   ├── wake_up - System information display
-│   └── enter_matrix - Full Matrix immersion
-└── Green terminal color scheme
-
-jiveturkey (extends matrix)
-├── Security tools (nmap, netcat, wireshark)
-├── Network analysis capabilities
-├── Docker-based security functions
-├── Development tools (terraform, kubectl, ansible)
-├── Penetration testing utilities
-└── Advanced system administration tools
+    │
+    ├── matrix (extends base)
+    │   ├── Matrix-themed colors and prompts
+    │   ├── Cyberpunk tmux configuration
+    │   ├── Matrix ASCII art and animations
+    │   ├── Custom Matrix functions (matrix_mode, wake_up, enter_matrix)
+    │   └── Green terminal color scheme
+    │       │
+    │       └── jiveturkey (extends matrix)
+    │           ├── Security tools (nmap, netcat, wireshark)
+    │           ├── Development tools (terraform, kubectl, ansible)
+    │           └── Penetration testing utilities
+    │
+    ├── macos (extends base)
+    │   ├── Homebrew integration with architecture detection
+    │   ├── Window management (Rectangle) and system monitoring (Stats)
+    │   └── macOS-specific aliases and clipboard integration
+    │
+    ├── python_dev (extends base)
+    │   ├── Python version management (pyenv)
+    │   ├── Package management (pip, pipx, Poetry)
+    │   └── Code quality tools (black, flake8, mypy, pytest)
+    │
+    ├── go_dev (extends base)
+    │   ├── Go toolchain and version management
+    │   ├── Development tools (gopls, golangci-lint, delve)
+    │   └── gRPC/protobuf and build/release tools
+    │
+    ├── nodejs_dev (extends base)
+    │   ├── Node.js version management (nvm)
+    │   ├── Package managers (npm, yarn, pnpm)
+    │   └── TypeScript, testing, and build tools
+    │
+    └── windows_wsl (extends base)
+        ├── WSL2-Windows interoperability
+        ├── Windows Terminal integration
+        └── Cross-platform clipboard and paths
 ```
 
 ## ⚙️ Custom Configuration
 
+### Customizing Your Operator
+
+The primary way to customize NeoSetup is by creating or editing an operator's `vars.yml` file.
+See [Creating Custom Operators](#creating-custom-operators) below for full details.
+
 ### User Configuration File
 
-Create `~/.ansible_local.yml` to override any operator settings:
+> **Planned Feature**: Local user overrides via `~/.ansible_local.yml` are not yet implemented.
+> For now, create a custom operator to override settings.
+
+Example of the planned `~/.ansible_local.yml` override format:
 
 ```yaml
 # Shell Environment Variables
@@ -131,9 +163,12 @@ tool_config:
 
 ### Component-Specific Configuration
 
+> **Planned Feature**: The following component-specific overrides show the target configuration format.
+> Currently, these values are set within operator `vars.yml` files, not as standalone overrides.
+
 #### Shell Configuration
 
-Override shell settings:
+Shell settings within an operator's `vars.yml`:
 
 ```yaml
 # Shell Framework (oh-my-zsh, bash-it, fish)
@@ -162,7 +197,7 @@ p10k_config:
 
 #### Tmux Configuration
 
-Customize tmux behavior:
+Tmux settings within an operator's `vars.yml`:
 
 ```yaml
 # Tmux Theme
@@ -185,7 +220,7 @@ tmux_status_config: |
 
 #### Tool Configuration
 
-Configure individual tools:
+Tool settings within an operator's `vars.yml`:
 
 ```yaml
 # Modern CLI Tools
@@ -250,7 +285,9 @@ matrix_theme:
 
 ### Custom Color Schemes
 
-Create your own color scheme:
+> **Planned Feature**: Custom color scheme support is not yet implemented.
+
+Example of the planned color scheme format:
 
 ```yaml
 # Custom Theme
@@ -310,10 +347,13 @@ shell_env_vars:
 
 ### Environment-Specific Configurations
 
+> **Planned Feature**: Environment-specific configuration profiles are not yet implemented.
+> These show the target format for future environment presets.
+
 #### Development Environment
 
 ```yaml
-# Development-focused configuration
+# Development-focused configuration (planned)
 development_config:
   enable_debug_mode: true
   install_dev_tools: true
@@ -324,7 +364,7 @@ development_config:
 #### Server Environment
 
 ```yaml
-# Server-optimized configuration  
+# Server-optimized configuration (planned)
 server_config:
   minimal_installation: true
   disable_gui_tools: true
@@ -335,7 +375,7 @@ server_config:
 #### Docker Container
 
 ```yaml
-# Container-optimized configuration
+# Container-optimized configuration (planned)
 container_config:
   skip_system_packages: true
   minimal_shell_config: true
@@ -345,10 +385,13 @@ container_config:
 
 ## 🔒 Security Configuration
 
+> **Planned Feature**: Automated security hardening is not yet implemented in the Ansible roles.
+> The jiveturkey operator installs security tools, but the configurations below are planned for a future release.
+
 ### Security Hardening
 
 ```yaml
-# Security settings
+# Security settings (planned)
 security_config:
   # SSH Configuration
   ssh_hardening:
@@ -391,10 +434,12 @@ security_tools_config:
 
 ## 📊 Monitoring and Logging
 
+> **Planned Feature**: Monitoring and logging configuration is not yet implemented.
+
 ### System Monitoring
 
 ```yaml
-# Monitoring configuration
+# Monitoring configuration (planned)
 monitoring_config:
   # Resource monitoring
   btop:
@@ -413,7 +458,7 @@ monitoring_config:
 ### Performance Tuning
 
 ```yaml
-# Performance optimization
+# Performance optimization (planned)
 performance_config:
   # Shell performance
   shell_optimization:
@@ -432,34 +477,30 @@ performance_config:
 
 ### Backup and Restore
 
+Back up your configuration files manually before making changes:
+
 ```bash
 # Backup current configuration
-./setup backup
+cp ~/.zshrc ~/.zshrc.backup
+cp ~/.tmux.conf ~/.tmux.conf.backup
 
 # Restore from backup
-./setup restore
+cp ~/.zshrc.backup ~/.zshrc
+cp ~/.tmux.conf.backup ~/.tmux.conf
 
-# Export configuration
-./setup export --format yaml > my-config.yml
-
-# Import configuration
-./setup import my-config.yml
+# Re-run setup to reset to operator defaults
+./setup install [your-operator]
 ```
 
 ### Version Control
 
-Track your configuration changes:
+Track your operator customizations in git:
 
 ```bash
-# Initialize config repo
-cd ~/.neosetup
-git init
-git add .
-git commit -m "Initial NeoSetup configuration"
-
-# Track changes
-git add ~/.ansible_local.yml
-git commit -m "Updated shell aliases"
+# Your operator vars are already tracked in the repo
+cd neosetup/operators/myoperator
+git add vars.yml
+git commit -m "Updated operator configuration"
 ```
 
 ## 🛠️ Validation and Testing

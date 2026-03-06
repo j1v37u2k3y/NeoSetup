@@ -136,6 +136,85 @@ Choose your reality with different operator configurations:
 - Development tools (terraform, kubectl, ansible)
 - Penetration testing utilities
 
+### macOS Operator
+
+**Perfect for**: macOS users who want a polished native experience
+
+```bash
+./setup install macos
+```
+
+**Includes**: Everything from `base` plus:
+
+- Complete Homebrew integration with architecture detection
+- Window management with Rectangle
+- System monitoring with Stats
+- Configuration sync with Mackup
+- macOS-specific aliases (`brewup`, `showfiles`, `hidefiles`)
+
+### Python Dev Operator
+
+**Perfect for**: Python developers
+
+```bash
+./setup install python_dev
+```
+
+**Includes**: Everything from `base` plus:
+
+- Python version management with pyenv
+- Package management (pip, pipx, Poetry)
+- Code quality tools (black, flake8, mypy, isort, pylint)
+- Testing frameworks (pytest, tox, coverage)
+- Helper functions (`mkproject`, `pyinfo`, `pyformat`)
+
+### Go Dev Operator
+
+**Perfect for**: Go developers
+
+```bash
+./setup install go_dev
+```
+
+**Includes**: Everything from `base` plus:
+
+- Go toolchain with module support
+- Language server and IDE tools (gopls, goimports)
+- Linting and security scanning (golangci-lint, gosec)
+- Debugging and hot reload (delve, air)
+- Helper functions (`mkgo`, `goinfo`, `gocover`, `gobench`)
+
+### Node.js Dev Operator
+
+**Perfect for**: JavaScript and TypeScript developers
+
+```bash
+./setup install nodejs_dev
+```
+
+**Includes**: Everything from `base` plus:
+
+- Node.js version management with nvm
+- Package managers (npm, yarn, pnpm)
+- TypeScript development setup
+- Testing and build tools (Jest, Vitest, Vite, esbuild)
+- Helper functions (`mknode`, `nodeinfo`, `node-clean`)
+
+### Windows WSL Operator
+
+**Perfect for**: Windows users running WSL2
+
+```bash
+./setup install windows_wsl
+```
+
+**Includes**: Everything from `base` plus:
+
+- WSL2-Windows interoperability tools
+- Windows Terminal integration
+- Cross-platform clipboard (`clip.exe` / `powershell.exe Get-Clipboard`)
+- Windows path integration and aliases (`explorer`, `code`, `cmd`)
+
 ## 🔧 Advanced Configuration
 
 ### Custom Variables
@@ -167,13 +246,15 @@ Operators use inheritance for clean configuration:
 
 ```text
 base (essential tools)
- ↓
-matrix (extends base + Matrix theme)
- ↓  
-jiveturkey (extends matrix + security tools)
+ ├── matrix (+ Matrix theme) → jiveturkey (+ security tools)
+ ├── macos (+ Homebrew & macOS productivity)
+ ├── python_dev (+ pyenv, Poetry, quality tools)
+ ├── go_dev (+ Go toolchain & dev utilities)
+ ├── nodejs_dev (+ nvm, npm/yarn/pnpm, TypeScript)
+ └── windows_wsl (+ WSL2 interoperability)
 ```
 
-You can extend existing operators by creating new ones in `neosetup/operators/`.
+You can extend any existing operator by creating new ones in `neosetup/operators/`.
 
 ## 🛠️ Development Installation
 

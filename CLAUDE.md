@@ -78,17 +78,22 @@ NeoSetup/
 - **docker**: Modern Docker setup with BuildKit, Compose v2, and security hardening
 - **common**: Shared tasks and utilities for all roles
 
-### Advanced Operator System
+### Advanced Operator System (8 Operators)
 
 - **base**: Essential tools with enhanced configuration and validation
 - **matrix**: Matrix theme with custom shell functions (matrix_mode, wake_up, enter_matrix)
 - **jiveturkey**: Power-user setup with security tools (wireshark, terraform, kubectl, ansible)
+- **macos**: macOS-optimized with Homebrew integration, Rectangle, Stats, Mackup
+- **python_dev**: Python development with pyenv, Poetry, quality tools, and testing
+- **go_dev**: Go development with full toolchain, linters, gRPC/protobuf support
+- **nodejs_dev**: Node.js/TypeScript with nvm, npm/yarn/pnpm, and build tools
+- **windows_wsl**: WSL2 interoperability with Windows Terminal integration
 - **Validation**: Schema-based validation with detailed error reporting and suggestions
 - **Generation**: Interactive and CLI-based operator creation tools
 
 ### Production-Ready Features
 
-- **CI/CD Pipeline**: 4 focused GitHub Actions jobs (pre-commit, security-scan, ansible-syntax, docs-validation)
+- **CI/CD Pipeline**: 5 GitHub Actions jobs (pre-commit, security-scan, ansible-syntax, docs-validation, test-summary)
 - **Docker Pre-commit**: All 20 linting hooks run in Docker for local/CI parity
 - **Security Scanning**: CodeQL, Trivy, Bandit, Safety, and detect-secrets integration
 - **Quality Assurance**: Custom ansible-lint rules and Matrix theme validation
