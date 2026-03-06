@@ -8,6 +8,15 @@ OPERATOR ?= jiveturkey
 INVENTORY ?= inventories/local/hosts.yml
 PLAYBOOK_DIR = playbooks
 ANSIBLE_FLAGS ?= -v
+# Enable progress bars (set PROGRESS=0 to disable real-time progress display)
+PROGRESS ?= 1
+
+# Progress callback environment variable
+ifeq ($(PROGRESS),1)
+PROGRESS_ENV = ANSIBLE_STDOUT_CALLBACK=matrix_progress
+else
+PROGRESS_ENV =
+endif
 
 # Help target - shows available commands
 help:
@@ -29,46 +38,52 @@ help:
 	@echo "  make precommit-staged            - Run pre-commit on staged files"
 	@echo "  make clean                       - Clean cache files"
 	@echo ""
-	@echo "Operators: base, matrix, jiveturkey"
-	@echo "Example: make install OPERATOR=matrix"
+	@echo "Options:"
+	@echo "  OPERATOR=name    - Select operator (base, matrix, jiveturkey)"
+	@echo "  PROGRESS=0       - Disable real-time progress bars (enabled by default)"
+	@echo "  VERBOSE=true     - Enable verbose output"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make install OPERATOR=matrix"
+	@echo "  make install OPERATOR=jiveturkey PROGRESS=1"
 
 # Full installation with selected operator
 install: deps
 	@echo "🚀 Installing NeoSetup with $(OPERATOR) operator..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Configure shell only
 shell: deps
 	@echo "🐚 Configuring shell with $(OPERATOR) operator..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
 		--tags "shell" --become --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Configure tmux only
 tmux: deps
 	@echo "🖥️ Configuring tmux with $(OPERATOR) operator..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
 		--tags "tmux" --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Install tools only
 tools: deps
 	@echo "🔧 Installing tools with $(OPERATOR) operator..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
 		--tags "tools" --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Install Docker
 docker: deps
 	@echo "🐳 Installing Docker..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		--tags "docker" --ask-become-pass $(ANSIBLE_FLAGS)
 
 # Dry run - show what would change
 dry-run: deps
 	@echo "🔍 Dry run - showing what would change with $(OPERATOR) operator..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" \
 		--check --diff $(ANSIBLE_FLAGS)
 
@@ -96,17 +111,17 @@ no-deps:
 # Direct Ansible commands (bypass deps)
 ansible-dry-run:
 	@echo "🔍 Direct Ansible dry run (no deps)..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" --check --diff $(ANSIBLE_FLAGS)
 
 ansible-install:
 	@echo "🚀 Direct Ansible install (no deps)..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" --ask-become-pass $(ANSIBLE_FLAGS)
 
 ansible-shell:
 	@echo "🐚 Direct Ansible shell config (no deps)..."
-	ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
+	$(PROGRESS_ENV) ansible-playbook -i $(INVENTORY) $(PLAYBOOK_DIR)/site.yml \
 		-e "neosetup_operator=$(OPERATOR)" --tags "shell" $(ANSIBLE_FLAGS)
 
 # Run tests with molecule

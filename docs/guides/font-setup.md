@@ -71,7 +71,7 @@ If Homebrew fonts aren't working:
 1. Download directly from Nerd Fonts:
 
    ```bash
-   curl -fLo ~/Downloads/Meslo.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Meslo.zip
+   curl -fLo ~/Downloads/Meslo.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip
    unzip ~/Downloads/Meslo.zip -d ~/Downloads/Meslo
    ```
 
@@ -81,14 +81,28 @@ If Homebrew fonts aren't working:
 
 ## Testing Icons
 
-After configuring your terminal font, test with:
+After configuring your terminal font, test with these commands using Nerd Font Unicode codepoints:
 
 ```bash
-echo " Git branch icon"
-echo " Folder icon"
-echo " Home icon"
-echo "󰊢 GitHub icon"
-echo " Docker icon"
+# Powerline symbols
+printf "\ue0a0 Git branch icon\n"
+printf "\ue0b0 Powerline arrow\n"
+
+# Font Awesome icons
+printf "\uf115 Folder icon\n"
+printf "\uf015 Home icon\n"
+
+# Dev icons
+printf "\ue709 Docker icon\n"
+printf "\ue702 Linux (Tux) icon\n"
+
+# Material Design icons
+printf "\U000f02a2 GitHub icon\n"
 ```
 
-If you see the icons correctly, your font is properly configured!
+If each line shows a small icon before the label, your Nerd Font is properly configured!
+
+**What to expect:**
+
+- If you see distinct icons/symbols, your font is working
+- If you see empty boxes, question marks, or nothing, your terminal font is not set to a Nerd Font

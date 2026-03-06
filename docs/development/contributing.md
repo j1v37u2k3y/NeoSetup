@@ -368,7 +368,7 @@ Output:
 \`\`\`
 
 # Link between related sections
-See [Troubleshooting Guide](./troubleshooting.md) for common issues.
+See [Troubleshooting Guide](../guides/troubleshooting.md) for common issues.
 ```
 
 ## 🎯 Issue and PR Templates
@@ -448,7 +448,6 @@ Active contributors may be invited to become maintainers with:
 ### Development Questions
 
 - **GitHub Discussions** - General questions
-- **Matrix Chat** - Real-time development discussion (coming soon)
 - **Issues** - Specific bugs or feature requests
 
 ### Resources

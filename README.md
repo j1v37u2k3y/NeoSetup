@@ -54,6 +54,11 @@ That's it! The setup script guides you through everything.
 | 🔴 **Red Pill** | `./setup install jiveturkey` | Full power-user setup with security tools |
 | 🔵 **Blue Pill** | `./setup install base` | Minimal essentials only |
 | 🟢 **Matrix Pill** | `./setup install matrix` | Cyberpunk theme with style |
+b| 🍎 **macOS** | `./setup install macos` | Homebrew integration & macOS productivity |
+| 🐍 **Python Dev** | `./setup install python_dev` | pyenv, Poetry, testing & quality tools |
+| 🔵 **Go Dev** | `./setup install go_dev` | Go toolchain, linters & dev utilities |
+| 🟨 **Node.js Dev** | `./setup install nodejs_dev` | nvm, npm/yarn/pnpm & TypeScript |
+| 🪟 **WSL** | `./setup install windows_wsl` | WSL2 interoperability & Linux integration |
 
 ## ✨ What's Included
 

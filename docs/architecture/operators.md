@@ -14,21 +14,27 @@ development environment personality. Think of it as a "configuration profile" or
 
 ```text
 base
- ├── Minimal configuration
- ├── Essential tools only
- └── Default settings
-     ↓
-matrix
- ├── Extends: base
- ├── Matrix theme and colors
- ├── Cyberpunk aesthetic
- └── Additional Matrix tools
-     ↓
-jiveturkey
- ├── Extends: matrix
- ├── Power-user configuration
- ├── Security tools
- └── Advanced aliases
+ ├── Minimal configuration, essential tools, default settings
+ │
+ ├── matrix (extends base)
+ │   ├── Matrix theme and colors, cyberpunk aesthetic
+ │   └── jiveturkey (extends matrix)
+ │       └── Power-user config, security tools, advanced aliases
+ │
+ ├── macos (extends base)
+ │   └── Homebrew integration, window management, macOS productivity
+ │
+ ├── python_dev (extends base)
+ │   └── pyenv, Poetry, code quality tools, testing frameworks
+ │
+ ├── go_dev (extends base)
+ │   └── Go toolchain, linters, gRPC/protobuf, dev utilities
+ │
+ ├── nodejs_dev (extends base)
+ │   └── nvm, npm/yarn/pnpm, TypeScript, build tools
+ │
+ └── windows_wsl (extends base)
+     └── WSL2 interoperability, Windows Terminal, cross-platform tools
 ```
 
 ## How Operators Work
@@ -161,6 +167,11 @@ available_operators:
   - base
   - matrix
   - jiveturkey
+  - macos
+  - python_dev
+  - go_dev
+  - nodejs_dev
+  - windows_wsl
   - myoperator  # Add your operator
 
 operator_inheritance:
@@ -341,15 +352,23 @@ ansible-inventory --list --vars
 4. **Operator Dependencies** - Required tools/roles
 5. **Operator Marketplace** - Share and discover operators
 
-### Community Operators
+### Language & Platform Operators (Available Now)
 
-Encourage community contributions:
+- `macos` - macOS with Homebrew integration and productivity tools
+- `python_dev` - Python development with pyenv, Poetry, and quality tools
+- `go_dev` - Go development with full toolchain and dev utilities
+- `nodejs_dev` - Node.js/TypeScript with nvm and modern build tools
+- `windows_wsl` - Windows WSL2 with cross-platform interoperability
+
+### Community Operator Ideas
+
+Contributions welcome for specialized operators:
 
 - `webdev` - Frontend development
-- `backend` - API development
 - `mobile` - Mobile app development
 - `gamedev` - Game development
 - `embedded` - Embedded systems
+- `devops` - CI/CD and infrastructure tools
 
 ---
 
