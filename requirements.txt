@@ -33,3 +33,6 @@ pytest-ansible>=3.0.0
 # Development Utilities
 jsonschema>=4.0.0
 pyyaml>=6.0.0
+
+# Release Management (Semantic Versioning via Conventional Commits)
+commitizen>=3.13.0

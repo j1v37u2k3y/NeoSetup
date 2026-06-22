@@ -1,7 +1,7 @@
 # 🎭 NeoSetup Ansible Edition Makefile
 # Welcome to the Matrix - convenient commands for the development environment
 
-.PHONY: help install shell tmux tools docker test lint clean deps
+.PHONY: help install shell tmux tools docker test lint clean deps version bump bump-dry changelog
 
 # Default operator
 OPERATOR ?= jiveturkey
@@ -28,6 +28,11 @@ help:
 	@echo "  make precommit                   - Run pre-commit in Docker"
 	@echo "  make precommit-staged            - Run pre-commit on staged files"
 	@echo "  make clean                       - Clean cache files"
+	@echo ""
+	@echo "  📦 Versioning (Semantic, via Conventional Commits):"
+	@echo "  make version                     - Show current project version"
+	@echo "  make bump-dry                    - Preview next version (no changes)"
+	@echo "  make bump                        - Bump version, update CHANGELOG, tag"
 	@echo ""
 	@echo "Operators: base, matrix, jiveturkey"
 	@echo "Example: make install OPERATOR=matrix"
@@ -171,3 +176,27 @@ dev-setup: deps
 operator-info:
 	@echo "🎭 Available Operators:"
 	@grep -A5 "operators:" group_vars/all/operators.yml | tail -n +2
+
+# ── Semantic Versioning (Commitizen) ──────────────────────────────────────────
+# Config: ../pyproject.toml [tool.commitizen]. Requires commitizen (in requirements.txt).
+# Conventional commits drive the bump: fix->PATCH, feat->MINOR, feat!/BREAKING->MAJOR.
+
+# Show the current project version
+version:
+	@cd .. && cz version --project
+
+# Preview the next version from conventional commits (no files changed, no tag)
+bump-dry:
+	@echo "🔖 Previewing next version from conventional commits..."
+	@cd .. && cz bump --dry-run
+
+# Cut a release: bump version + VERSION + CHANGELOG, commit, tag vX.Y.Z.
+# --no-verify skips the Docker pre-commit hook on the machine-generated bump commit.
+bump:
+	@echo "🔖 Bumping version from conventional commits..."
+	@cd .. && cz bump --no-verify
+	@echo "✅ Done. Push the release with: git push --follow-tags"
+
+# Preview the changelog that would be generated (no files changed)
+changelog:
+	@cd .. && cz changelog --dry-run
