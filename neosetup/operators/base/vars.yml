@@ -27,10 +27,10 @@ shell_config:
     "..": "cd .."
     "...": "cd ../.."
     "~": "cd ~"
-    # File operations
-    "ll": "ls -alF"
-    "la": "ls -A"
-    "l": "ls -CF"
+    # File operations: ls / ll / la / l / lt / l. are defined as
+    # argument-forwarding functions in shared/aliases.j2 (eza-aware). Do not
+    # re-declare them as aliases here — aliases shadow the functions in zsh and
+    # can pass ls-only flags (e.g. -A, -CF) that eza does not understand.
     # Git shortcuts
     "gs": "git status"
     "ga": "git add"

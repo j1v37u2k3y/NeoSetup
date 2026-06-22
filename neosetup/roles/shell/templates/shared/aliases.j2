@@ -106,6 +106,21 @@ tree() {
     command tree "$@"
   fi
 }
+lt() {
+  if command -v eza &>/dev/null; then
+    eza -T --color=always --group-directories-first --icons "$@"
+  else
+    command tree "$@"
+  fi
+}
+# Show hidden (dot) entries only, without recursing into them
+l.() {
+  if command -v eza &>/dev/null; then
+    eza -d --color=always --icons "$@" .* 2>/dev/null
+  else
+    command ls -d --color=auto "$@" .* 2>/dev/null
+  fi
+}
 command -v bat &>/dev/null && alias cat='bat'
 command -v rg &>/dev/null && alias grep='rg'
 command -v fd &>/dev/null && alias find='fd'

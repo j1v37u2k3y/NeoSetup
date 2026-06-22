@@ -46,12 +46,11 @@ shell_config:
     "~": "cd ~"
     "back": "cd -"
 
-    # Better ls with eza fallback
-    "ll": "eza -la --color=always --group-directories-first 2>/dev/null || ls -alF --color=auto"
-    "la": "eza -a --color=always --group-directories-first 2>/dev/null || ls -A --color=auto"
-    "ls": "eza --color=always --group-directories-first 2>/dev/null || ls --color=auto"
-    "lt": "eza -T --color=always --group-directories-first 2>/dev/null || tree"
-    "l.": "eza -a | grep -E '^\\.' 2>/dev/null || ls -la | grep '^\\.' "
+    # ls / ll / la / lt / l. are defined as argument-forwarding functions in
+    # roles/shell/templates/shared/aliases.j2 (eza with a clean ls fallback).
+    # Do NOT re-declare them here as aliases: an alias of the form
+    # "eza ... || ls ..." cannot forward flags (e.g. `ls -al` lands on the
+    # dead `||` branch), and aliases shadow the functions in zsh.
 
     # Git power user
     "g": "git"
