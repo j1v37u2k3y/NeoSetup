@@ -51,3 +51,25 @@ ensure_newline_before_comments = true
 # Bandit configuration for security scanning
 exclude_dirs = [".git", ".venv", "__pycache__", "dist", "build"]
 skips = []  # Don't skip any tests by default - use targeted nosec comments instead
+
+[tool.commitizen]
+# Semantic Versioning driven by Conventional Commits.
+#   preview next version:  cz bump --dry-run        (or: make bump-dry)
+#   cut a release:         cz bump --no-verify      (or: make bump)
+#     -> bumps version below + VERSION, prepends a new CHANGELOG section,
+#        commits, and tags vX.Y.Z
+# On bump, cz writes the new version's entries in INCREMENTAL mode: it prepends
+# only the latest section above the existing hand-curated history, which is
+# preserved (do NOT set changelog_start_rev -- it forces a full regen that drops
+# the bracket-style [2.0.0] history). Commit-message format is enforced by the
+# existing conventional-pre-commit hook.
+# Docs: https://commitizen-tools.github.io/commitizen/
+name = "cz_conventional_commits"
+version = "2.0.0"
+version_scheme = "semver"
+tag_format = "v$version"
+update_changelog_on_bump = true
+bump_message = "chore(release): bump version $current_version → $new_version"
+version_files = [
+    "VERSION",
+]
