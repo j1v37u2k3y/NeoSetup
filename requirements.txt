@@ -12,7 +12,7 @@ pre-commit>=2.20.0
 
 # Python Code Quality Tools
 black>=26.3.1
-flake8>=5.0.0
+flake8>=7.3.0
 isort>=5.10.0
 pylint>=2.15.0
 
