@@ -69,6 +69,7 @@ That's it! The setup script guides you through everything.
 - **[⚙️ Installation Guide](./docs/guides/installation.md)** - Detailed setup options
 - **[🎛️ Configuration Guide](./docs/guides/configuration.md)** - Operators and customization
 - **[🔧 Troubleshooting](./docs/guides/troubleshooting.md)** - Common issues and fixes
+- **[❓ FAQ](./docs/guides/faq.md)** - Frequently asked questions
 
 ## 🚨 Help & Support
 
