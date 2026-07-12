@@ -65,7 +65,7 @@ skips = []  # Don't skip any tests by default - use targeted nosec comments inst
 # existing conventional-pre-commit hook.
 # Docs: https://commitizen-tools.github.io/commitizen/
 name = "cz_conventional_commits"
-version = "2.0.0"
+version = "2.1.0"
 version_scheme = "semver"
 tag_format = "v$version"
 update_changelog_on_bump = true
