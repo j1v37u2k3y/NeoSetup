@@ -123,6 +123,40 @@ git push origin feature/awesome-enhancement
     name: "{{ tools }}"
 ```
 
+### Variable Naming Convention
+
+NeoSetup uses a **hybrid prefix convention**. This is intentional — the prefix tells you the
+*scope* of a variable at a glance.
+
+| Prefix | Scope | Use for | Examples |
+|--------|-------|---------|----------|
+| `neosetup_` | Global / installation control | Variables read across roles or that steer the whole run | `neosetup_operator`, `neosetup_verbose` |
+| `<role>_` | Role-local configuration | Variables owned and consumed by a single role | `shell_framework`, `tmux_theme`, `docker_compose_version` |
+
+**Rules:**
+
+- **Global control variables get the `neosetup_` prefix.** If a variable is set on the command line
+  (`-e "neosetup_operator=matrix"`), read by `site.yml`, or shared between roles, it is global — prefix it
+  `neosetup_`.
+- **Role-specific variables use the role name as the prefix.** A variable that only the `shell` role reads
+  is `shell_*`; one only the `docker` role reads is `docker_*`. Keep it inside that role's `defaults/` and
+  `vars/`.
+- **Be consistent within a role.** Don't mix `docker_` and `docker_config_` for the same concept — pick one
+  and stick to it.
+- **Operator vars follow the same rule.** Values an operator sets that a role consumes should match that
+  role's prefix (e.g. an operator setting `shell_aliases` for the `shell` role).
+
+```yaml
+# ✅ Good - scope is obvious from the prefix
+neosetup_operator: jiveturkey        # global: selects the operator, read everywhere
+shell_framework: oh-my-zsh           # role-local: only the shell role reads this
+docker_buildkit_enabled: true        # role-local: only the docker role reads this
+
+# ❌ Bad - global-looking name for a role-local var (and vice versa)
+operator: jiveturkey                 # missing neosetup_ prefix for a global control var
+neosetup_shell_framework: oh-my-zsh  # over-prefixed; this is role-local, use shell_framework
+```
+
 ### Python Code Style
 
 ```python
