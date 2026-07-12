@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 *.retry
+
+# OS cruft
+.DS_Store
+Thumbs.db

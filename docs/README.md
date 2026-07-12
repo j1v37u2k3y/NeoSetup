@@ -11,6 +11,7 @@ automation system built with Ansible.
 - **[Installation Guide](./guides/installation.md)** - Complete setup instructions for all methods
 - **[Configuration Guide](./guides/configuration.md)** - Operators, customization, and advanced config
 - **[Troubleshooting](./guides/troubleshooting.md)** - Common issues and solutions
+- **[FAQ](./guides/faq.md)** - Frequently asked questions
 - **[Font Setup](./guides/font-setup.md)** - Terminal font configuration for Matrix theme
 
 ### [Development](./development/) - Developer Documentation
@@ -33,10 +34,11 @@ automation system built with Ansible.
 ## Getting Help
 
 1. **Quick Start**: Follow the [Installation Guide](./guides/installation.md)
-2. **Issues**: Check the [Troubleshooting Guide](./guides/troubleshooting.md)
-3. **Customization**: Read the [Configuration Guide](./guides/configuration.md)
-4. **Bugs**: Search [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues)
-5. **Support**: Create a new issue with the bug report template
+2. **Questions**: Check the [FAQ](./guides/faq.md)
+3. **Issues**: Check the [Troubleshooting Guide](./guides/troubleshooting.md)
+4. **Customization**: Read the [Configuration Guide](./guides/configuration.md)
+5. **Bugs**: Search [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues)
+6. **Support**: Create a new issue with the bug report template
 
 ## Documentation Quality
 
