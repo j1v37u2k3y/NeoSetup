@@ -461,6 +461,71 @@ tool_registry:
     packages:
       # Go tooling requires custom installation on all platforms
 
+  # Monitoring and observability tools
+  glances:
+    description: "Cross-platform system monitoring dashboard"
+    category: monitoring
+    packages:
+      darwin: glances
+      ubuntu: glances
+      debian: glances
+      redhat: glances
+
+  duf:
+    description: "Modern, colorful disk usage / free-space viewer"
+    category: monitoring
+    packages:
+      # Not in RHEL/EPEL base repos; installs on macOS and Debian/Ubuntu
+      darwin: duf
+      ubuntu: duf
+      debian: duf
+
+  procs:
+    description: "Modern ps replacement with a richer, colorized view"
+    category: monitoring
+    packages:
+      # Debian 12+ / Ubuntu 23.04+ ship this; older distros skip (ignore_errors)
+      darwin: procs
+      ubuntu: procs
+      debian: procs
+
+  # Git statistics and visualization tools
+  git-quick-stats:
+    description: "Git repository statistics and contribution reports"
+    category: git
+    packages:
+      darwin: git-quick-stats
+      ubuntu: git-quick-stats
+      debian: git-quick-stats
+
+  # Log aggregation and viewing tools
+  lnav:
+    description: "The Log File Navigator - interactive log viewer"
+    category: logs
+    packages:
+      darwin: lnav
+      ubuntu: lnav
+      debian: lnav
+      redhat: lnav
+
+  grc:
+    description: "Generic colouriser for command and log output"
+    category: logs
+    packages:
+      darwin: grc
+      ubuntu: grc
+      debian: grc
+      redhat: grc
+
+  multitail:
+    description: "Tail multiple log files in one split window"
+    category: logs
+    packages:
+      darwin: multitail
+      ubuntu: multitail
+      debian: multitail
+      redhat: multitail
+
   # Cloud and DevOps tools
   awscli:
     description: "Amazon Web Services CLI"
@@ -542,6 +607,16 @@ operator_tool_sets:
     - shellcheck
     - lazygit
     - gh
+    # Monitoring / observability
+    - glances
+    - duf
+    - procs
+    # Git statistics
+    - git-quick-stats
+    # Log viewing
+    - lnav
+    - grc
+    - multitail
 
   modern_cli:
     - eza

@@ -76,6 +76,7 @@ shell_config:
     "gstp": "git stash pop"
     "gundo": "git reset HEAD~1"
     "gwip": "git add -A && git commit -m 'WIP'"
+    "gstats": "git-quick-stats"
 
     # Docker mastery
     "d": "docker"
@@ -106,6 +107,12 @@ shell_config:
     "free": "free -h"
     "ports": "lsof -i -P -n | grep LISTEN"
     "psg": "ps aux | grep"
+    "disk": "duf 2>/dev/null || df -h"
+    "dash": "glances"
+
+    # Log viewing
+    "logview": "lnav"
+    "logtail": "multitail"
 
     # Network tools
     "myip": "curl -s https://ipinfo.io/ip"
@@ -195,6 +202,19 @@ shell_functions:
       echo "Shell: $SHELL"
       if command -v uptime &> /dev/null; then
           echo "Uptime: $(uptime | awk '{print $3,$4}' | sed 's/,//')"
+      fi
+
+  - name: "monitor"
+    description: "Launch the best available system-monitor dashboard"
+    body: |
+      if command -v glances &> /dev/null; then
+          glances
+      elif command -v btop &> /dev/null; then
+          btop
+      elif command -v htop &> /dev/null; then
+          htop
+      else
+          top
       fi
 
   # Security Docker functions
