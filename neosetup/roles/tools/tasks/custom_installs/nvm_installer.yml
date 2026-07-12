@@ -1,0 +1,80 @@
+---
+# Custom installation for nvm - Node.js version manager + global npm tooling
+#
+# The nodejs_dev operator's aliases/functions (node, npm, yarn, pnpm, tsc, ...)
+# assume a real Node.js toolchain. Node tooling does not map to apt/brew/pip, so
+# this ecosystem installer owns it end to end - mirroring how pyenv/poetry own
+# the Python toolchain. It installs nvm, the configured Node.js version(s), sets
+# a default, then installs the global npm CLIs the operator advertises.
+
+- name: "⬢ Install Node.js toolchain via nvm"
+  block:
+    - name: "🔍 Check if nvm is already installed"
+      stat:
+        path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+      register: nvm_check
+
+    - name: "🔽 Install nvm via official install script"
+      when: not nvm_check.stat.exists
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+      args:
+        creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+
+    - name: "📝 Ensure nvm is sourced from shell rc"
+      blockinfile:
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        create: yes
+        marker: "# {mark} NEOSETUP NVM"
+        block: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+    - name: "🔧 Install configured Node.js version(s)"
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        . "$NVM_DIR/nvm.sh"
+        nvm install {{ item }}
+      args:
+        executable: /bin/bash
+      loop: "{{ nodejs_config.default_node_versions | default(['20']) }}"
+      register: nvm_install
+      changed_when: "'is already installed' not in (nvm_install.stdout + nvm_install.stderr)"
+
+    - name: "🎯 Set default Node.js version"
+      when: nodejs_config.global_node_version is defined
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        . "$NVM_DIR/nvm.sh"
+        nvm alias default {{ nodejs_config.global_node_version }}
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: "📦 Install global npm packages"
+      when:
+        - nodejs_config.install_global_packages | default(true)
+        - nodejs_dev_config.global_packages | default([]) | length > 0
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        . "$NVM_DIR/nvm.sh"
+        nvm use default >/dev/null 2>&1 || true
+        npm install -g {{ nodejs_dev_config.global_packages | join(' ') }}
+      args:
+        executable: /bin/bash
+      register: npm_globals
+      changed_when: "'added' in (npm_globals.stdout | default('')) or 'changed' in (npm_globals.stdout | default(''))"
+
+- name: "✅ Node.js toolchain installation complete"
+  debug:
+    msg: |
+      ⬢ Node.js toolchain installed via nvm
+      📂 NVM_DIR: {{ ansible_env.HOME }}/.nvm
+      🔧 Versions: {{ nodejs_config.default_node_versions | default(['20']) | join(', ') }}
+      🎯 Default: {{ nodejs_config.global_node_version | default('20') }}
+
+      💡 Usage (open a new shell first):
+      - Switch version:  nvm use 22
+      - List versions:   nvm ls
+      - Install latest:  nvm install --lts

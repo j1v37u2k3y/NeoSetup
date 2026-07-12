@@ -441,6 +441,26 @@ tool_registry:
     packages:
       pipx: cookiecutter
 
+  # Node.js development tools
+  # The ecosystem installer owns node itself plus the global npm CLIs
+  # (yarn, pnpm, typescript, eslint, ...) since none map to apt/brew/pip.
+  nvm:
+    description: "Node.js version manager and global npm tooling"
+    category: nodejs
+    custom_install: nvm_installer
+    packages:
+      # Node.js tooling requires custom installation on all platforms
+
+  # Go development tools
+  # The ecosystem installer owns the toolchain plus go-install tools
+  # (gopls, golangci-lint, dlv, air, ...) since none map to apt/brew/pip.
+  go:
+    description: "Go toolchain and go-install-based developer tools"
+    category: go
+    custom_install: go_installer
+    packages:
+      # Go tooling requires custom installation on all platforms
+
   # Cloud and DevOps tools
   awscli:
     description: "Amazon Web Services CLI"
@@ -557,6 +577,12 @@ operator_tool_sets:
     - ipython
     - jupyter
     - cookiecutter
+
+  nodejs_dev:
+    - nvm
+
+  go_dev:
+    - go
 
   cloud_tools:
     - awscli

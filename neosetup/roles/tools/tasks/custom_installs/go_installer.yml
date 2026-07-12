@@ -1,0 +1,105 @@
+---
+# Custom installation for Go - toolchain + go-install-based developer tools
+#
+# The go_dev operator's aliases/functions (go build/test, gopls, golangci-lint,
+# air, dlv, ...) assume a real Go toolchain. Go tooling does not map to
+# apt/brew/pip cleanly, so this ecosystem installer owns it - mirroring how
+# pyenv/poetry own Python. It installs the Go toolchain (Homebrew on macOS, the
+# official tarball on Linux) and then `go install`s the tools the operator lists
+# in go_dev_config.go_install_tools.
+#
+# Version policy: a fully pinned go_config.go_version (X.Y.Z) is honored; a
+# partial value (e.g. "1.22") cannot form a valid download URL, so we resolve
+# the latest stable release from go.dev instead. macOS uses Homebrew's current
+# Go. Pinning to an exact series on all platforms is a follow-up.
+
+- name: "🐹 Install Go toolchain and developer tools"
+  block:
+    - name: "🔍 Check for an existing Go toolchain"
+      command: go version
+      register: go_check
+      ignore_errors: yes
+      changed_when: false
+
+    # --- macOS: Homebrew ---
+    - name: "🍎 Install Go via Homebrew (macOS)"
+      when:
+        - ansible_os_family == "Darwin"
+        - go_check.rc != 0
+      homebrew:
+        name: go
+        state: present
+
+    # --- Linux: official tarball ---
+    - name: "🔎 Resolve latest stable Go version"
+      when:
+        - platform_key in ['ubuntu', 'debian', 'redhat', 'wsl']
+        - go_check.rc != 0
+      uri:
+        url: https://go.dev/VERSION?m=text
+        return_content: yes
+      register: go_version_lookup
+
+    - name: "🧮 Select Go version and architecture (Linux)"
+      when:
+        - platform_key in ['ubuntu', 'debian', 'redhat', 'wsl']
+        - go_check.rc != 0
+      set_fact:
+        go_target: >-
+          {{ ('go' + go_config.go_version)
+             if (go_config.go_version | default('') | regex_search('^[0-9]+\.[0-9]+\.[0-9]+$'))
+             else (go_version_lookup.content | trim | split('\n') | first) }}
+        go_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+
+    - name: "🧹 Remove any previous Go install (Linux)"
+      when:
+        - platform_key in ['ubuntu', 'debian', 'redhat', 'wsl']
+        - go_check.rc != 0
+      become: yes
+      file:
+        path: /usr/local/go
+        state: absent
+
+    - name: "🔽 Download and extract Go to /usr/local (Linux)"
+      when:
+        - platform_key in ['ubuntu', 'debian', 'redhat', 'wsl']
+        - go_check.rc != 0
+      become: yes
+      unarchive:
+        src: "https://go.dev/dl/{{ go_target }}.linux-{{ go_arch }}.tar.gz"
+        dest: /usr/local
+        remote_src: yes
+        creates: /usr/local/go/bin/go
+
+    - name: "📝 Ensure Go is on PATH from shell rc"
+      blockinfile:
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        create: yes
+        marker: "# {mark} NEOSETUP GO"
+        block: |
+          export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin"
+
+    - name: "🔧 Install Go developer tools via go install"
+      when: go_config.install_tools | default(true)
+      shell: |
+        export PATH="$PATH:/usr/local/go/bin:/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.HOME }}/go/bin"
+        export GOPATH="{{ ansible_env.HOME }}/go"
+        export GOBIN="{{ ansible_env.HOME }}/go/bin"
+        go install {{ item }}
+      args:
+        executable: /bin/bash
+        creates: "{{ ansible_env.HOME }}/go/bin/{{ item | regex_replace('^.*/([^/@]+)@.*$', '\\1') }}"
+      loop: "{{ go_dev_config.go_install_tools | default([]) }}"
+
+- name: "✅ Go toolchain installation complete"
+  debug:
+    msg: |
+      🐹 Go toolchain installed
+      📂 GOROOT: {{ '/usr/local/go' if platform_key != 'darwin' else '(Homebrew)' }}
+      📂 GOPATH: {{ ansible_env.HOME }}/go
+      🔧 Tools:  {{ go_dev_config.go_install_tools | default([]) | length }} installed via `go install`
+
+      💡 Usage (open a new shell first):
+      - Verify:  go version
+      - Lint:    golangci-lint run
+      - Hot reload: air

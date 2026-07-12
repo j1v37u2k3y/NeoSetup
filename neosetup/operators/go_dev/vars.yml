@@ -46,43 +46,12 @@ go_config:
 
 # Tool configuration
 tools_config:
-  additional_tools:
-    # Language server and IDE support
-    - gopls
-    - goimports
-    - gofumpt
-    # Linting and code quality
-    - golangci-lint
-    - staticcheck
-    - gosec
-    # Testing tools
-    - gotestsum
-    - gotest
-    - mockgen
-    - gomock
-    # Code generation
-    - stringer
-    - go-enum
-    - wire
-    # Protocol Buffers and gRPC
-    - protoc
-    - protoc-gen-go
-    - protoc-gen-go-grpc
-    # Development utilities
-    - air  # Hot reload
-    - gore  # REPL
-    - delve  # Debugger
-    - cobra-cli  # CLI scaffolding
-    # Database tools
-    - migrate
-    - sqlc
-    - goose
-    # Build and release
-    - goreleaser
-    - ko
-    # Documentation
-    - godoc
-    - pkgsite
+  # Go tooling is installed by the go ecosystem installer, NOT the generic
+  # package loop: `go` (via operator_tool_sets.go_dev in the tool registry)
+  # brings the toolchain, and go_dev_config.go_install_tools lists the tools to
+  # `go install`. These are go-install targets, not apt/brew/pip packages, so
+  # listing them here would silently no-op.
+  additional_tools: []
   go_specific_tools: true
 
 # Shell configuration optimized for Go development
@@ -265,11 +234,12 @@ go_dev_config:
   enable_cgo: true
   enable_vendoring: false
 
-  # Tools to install via go install
+  # Tools to install via `go install` (run by go_installer). These are module
+  # paths, not package names; they can drift over time and may need updating.
   go_install_tools:
     - golang.org/x/tools/gopls@latest
     - golang.org/x/tools/cmd/goimports@latest
     - github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     - github.com/go-delve/delve/cmd/dlv@latest
-    - github.com/cosmtrek/air@latest
+    - github.com/air-verse/air@latest
     - github.com/spf13/cobra-cli@latest

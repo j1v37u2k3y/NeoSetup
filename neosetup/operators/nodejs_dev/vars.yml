@@ -47,40 +47,12 @@ nodejs_config:
 
 # Tool configuration
 tools_config:
-  additional_tools:
-    # Version managers
-    - nvm
-    # Package managers
-    - yarn
-    - pnpm
-    # Development utilities
-    - typescript
-    - ts-node
-    - tsx
-    - nodemon
-    - pm2
-    # Code quality
-    - eslint
-    - prettier
-    # Build tools
-    - vite
-    - esbuild
-    # Testing
-    - jest
-    - vitest
-    # Full-stack frameworks CLI
-    - "@nestjs/cli"
-    - "create-next-app"
-    - "create-vite"
-    # Monorepo tools
-    - turbo
-    - nx
-    # Utilities
-    - npkill
-    - npm-check-updates
-    - depcheck
-    - serve
-    - http-server
+  # Node.js tooling is installed by the nvm ecosystem installer, NOT the generic
+  # package loop: `nvm` (via operator_tool_sets.nodejs_dev in the tool registry)
+  # brings Node.js/npm, and nodejs_dev_config.global_packages lists the global
+  # npm CLIs to install. npm/yarn/pnpm/tsc/eslint/... are not apt/brew/pip
+  # packages, so listing them here would silently no-op.
+  additional_tools: []
   nodejs_specific_tools: true
 
 # Shell configuration optimized for Node.js development
@@ -180,7 +152,7 @@ shell_functions:
         echo "NVM Version: $(nvm --version)"
         echo "NVM Current: $(nvm current)"
       fi
-      echo "Node Path: $(which node 2>/dev/null || echo 'Not found'kasync)"
+      echo "Node Path: $(which node 2>/dev/null || echo 'Not found')"
 
   - name: "node-clean"
     description: "Clean node_modules and lock files recursively"
@@ -242,10 +214,17 @@ nodejs_dev_config:
   prefer_pnpm: true
   use_corepack: false
 
-  # Global packages to install
+  # Global npm packages installed by nvm_installer after Node.js is set up.
+  # Covers the CLIs the operator's aliases/functions assume (yarn, pnpm, tsc,
+  # eslint, prettier, ...).
   global_packages:
+    - yarn
+    - pnpm
     - typescript
     - ts-node
+    - tsx
     - nodemon
+    - eslint
+    - prettier
     - npm-check-updates
     - serve
