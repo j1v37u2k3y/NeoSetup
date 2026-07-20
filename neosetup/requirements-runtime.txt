@@ -3,7 +3,7 @@
 # Also install Ansible Galaxy collections with: ansible-galaxy install -r requirements.yml
 
 # Core Ansible
-ansible>=4.0
+ansible>=14.2.0
 ansible-core>=2.11.7
 
 # Python Dependencies
