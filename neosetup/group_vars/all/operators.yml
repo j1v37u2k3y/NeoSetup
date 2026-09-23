@@ -9,6 +9,8 @@ operator_inheritance:
   macos: [ "base" ]
   windows_wsl: [ "base" ]
   python_dev: [ "base" ]
+  nodejs_dev: [ "base" ]
+  go_dev: [ "base" ]
 
 # Available operators
 available_operators:
@@ -18,6 +20,8 @@ available_operators:
   - macos
   - windows_wsl
   - python_dev
+  - nodejs_dev
+  - go_dev
 
 # Default operator if none specified
 default_operator: "jiveturkey"
@@ -56,6 +60,18 @@ operators:
   python_dev:
     name: "Python Developer"
     description: "Python development environment with modern tooling, package managers, and best practices"
+    author: "NeoSetup Team"
+    theme: "minimal"
+    extends: "base"
+  nodejs_dev:
+    name: "Node.js Developer"
+    description: "Node.js development environment with nvm, Node versions, and global npm CLIs"
+    author: "NeoSetup Team"
+    theme: "minimal"
+    extends: "base"
+  go_dev:
+    name: "Go Developer"
+    description: "Go development environment with the Go toolchain and go-install CLIs"
     author: "NeoSetup Team"
     theme: "minimal"
     extends: "base"
