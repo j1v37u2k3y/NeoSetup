@@ -110,6 +110,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
+          - docker-buildx-plugin
         state: present
       become: yes
 
@@ -146,6 +147,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
+          - docker-buildx-plugin
         state: present
       become: yes
 
