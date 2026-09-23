@@ -42,7 +42,7 @@ operator_metadata:
 
     extends:
       type: string
-      enum: [ "base", "matrix", "developer", "devops", "security" ]
+      enum: [ "base", "matrix", "jiveturkey", "macos", "windows_wsl", "python_dev", "nodejs_dev", "go_dev" ]
       description: "Parent operator to inherit from"
 
     dependencies:
@@ -55,7 +55,7 @@ operator_metadata:
       type: array
       items:
         type: string
-        enum: [ "development", "security", "devops", "minimal", "theme", "productivity" ]
+      description: "Free-form descriptive tags (e.g. development, security, python, go, nodejs)"
 
 # Shell configuration schema
 shell_config:

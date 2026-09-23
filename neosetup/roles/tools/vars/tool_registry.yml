@@ -168,6 +168,15 @@ tool_registry:
       debian: jq
       redhat: jq
 
+  unzip:
+    description: "Archive extraction utility"
+    category: system
+    packages:
+      darwin: unzip
+      ubuntu: unzip
+      debian: unzip
+      redhat: unzip
+
   # Security tools
   nmap:
     description: "Network scanner"
@@ -406,6 +415,76 @@ tool_registry:
     packages:
       pip: mypy
 
+  pylint:
+    description: "Python linter"
+    category: python
+    install_method: pip
+    packages:
+      pip: pylint
+
+  bandit:
+    description: "Security linter for Python"
+    category: python
+    install_method: pip
+    packages:
+      pip: bandit
+
+  tox:
+    description: "Python test automation across environments"
+    category: python
+    install_method: pip
+    packages:
+      pip: tox
+
+  coverage:
+    description: "Python code coverage measurement"
+    category: python
+    install_method: pip
+    packages:
+      pip: coverage
+
+  virtualenv:
+    description: "Python virtual environment creator"
+    category: python
+    install_method: pip
+    packages:
+      pip: virtualenv
+
+  virtualenvwrapper:
+    description: "Wrapper utilities for virtualenv"
+    category: python
+    install_method: pip
+    packages:
+      pip: virtualenvwrapper
+
+  sphinx:
+    description: "Documentation generator"
+    category: python
+    install_method: pip
+    packages:
+      pip: sphinx
+
+  mkdocs:
+    description: "Project documentation with Markdown"
+    category: python
+    install_method: pip
+    packages:
+      pip: mkdocs
+
+  py-spy:
+    description: "Sampling profiler for Python programs"
+    category: python
+    install_method: pip
+    packages:
+      pip: py-spy
+
+  memory-profiler:
+    description: "Monitor memory usage of Python code"
+    category: python
+    install_method: pip
+    packages:
+      pip: memory-profiler
+
   isort:
     description: "Python import sorter"
     category: python
@@ -627,7 +706,7 @@ operator_tool_sets:
     - delta
     - btop
 
-  macos_tools:
+  macos:
     - duti
     - mas
     - mackup

@@ -28,13 +28,18 @@
         'unknown'
       }}
 
-- name: "📦 Determine tools to install"
+- name: "📦 Determine tools to install (composed across the operator inheritance spine)"
   set_fact:
     tools_to_install: >-
       {{
-        (operator_tool_sets.modern_cli | default([])) +
-        (operator_tool_sets[neosetup_operator] | default([])) +
-        (tools_config.additional_tools | default([]))
+        (operator_tool_sets.modern_cli | default([]))
+        + (
+            ((operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator])
+            | select('in', operator_tool_sets)
+            | map('extract', operator_tool_sets)
+            | flatten
+          )
+        + (tools_config.additional_tools | default([]))
       }}
 
 - name: "📝 Display installation plan"
@@ -43,6 +48,19 @@
       Platform: {{ platform_key }}
       Operator: {{ neosetup_operator }}
       Tools to install: {{ tools_to_install | unique | sort }}
+
+# Fail loud on the silent-gate class: a tool declared by an operator but absent
+# from tool_registry.yml would otherwise skip every install task with no error.
+- name: "🚦 Assert all declared tools are registered"
+  assert:
+    that:
+      - "(tools_to_install | unique | reject('in', tool_registry) | list | length) == 0"
+    fail_msg: >-
+      Operator '{{ neosetup_operator }}' declares tools with no tool_registry entry
+      (they would silently install nothing):
+      {{ tools_to_install | unique | reject('in', tool_registry) | list }}.
+      Register them in roles/tools/vars/tool_registry.yml or remove them from the operator.
+    success_msg: "All {{ tools_to_install | unique | length }} declared tools are registered."
 
 # macOS installation using Homebrew
 - name: "🍎 Install tools on macOS"
@@ -161,24 +179,8 @@
   loop_control:
     label: "{{ item }} (custom install)"
 
-# Create tool aliases if needed
-- name: "🔗 Create tool aliases"
-  set_fact:
-    tool_aliases:
-      - { alias: "ls", command: "eza --icons" }
-      - { alias: "ll", command: "eza -l --icons" }
-      - { alias: "la", command: "eza -la --icons" }
-      - { alias: "tree", command: "eza --tree --icons" }
-      - { alias: "cat", command: "bat" }
-      - { alias: "find", command: "fd" }
-      - { alias: "grep", command: "rg" }
-      - { alias: "top", command: "btop" }
-      - { alias: "diff", command: "delta" }
-  when: "'modern_cli' in tools_to_install"
-
 - name: "✅ Tool installation complete"
   debug:
     msg: |
-      Installed {{ tools_to_install | unique | length }} tools
-      Platform: {{ platform_key }}
-      Operator: {{ neosetup_operator }}
+      Planned {{ tools_to_install | unique | length }} tools for operator '{{ neosetup_operator }}' on {{ platform_key }}.
+      See the per-task results above for actual install status — skips and failures are reported per item.
