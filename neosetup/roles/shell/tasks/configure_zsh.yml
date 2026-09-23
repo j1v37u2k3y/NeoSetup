@@ -32,6 +32,7 @@
         url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Meslo.zip"
         dest: "/tmp/Meslo.zip"
         mode: '0644'
+        checksum: "sha256:7c1096e15649443bb0b177d4727e8fbaf032ebfad11741838d4572e33487a2f7"
 
     - name: "📦 Extract Meslo font"
       unarchive:

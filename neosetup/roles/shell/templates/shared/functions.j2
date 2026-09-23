@@ -52,7 +52,7 @@ curl "wttr.in/${1:-$(curl -s ipinfo.io/city)}"
 fi
 
 # Matrix-themed functions
-{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+{% if operators[neosetup_operator].theme == 'matrix' %}
   # Enter the Matrix
   enter_matrix() {
   echo -e "\033[32m"
@@ -70,7 +70,8 @@ fi
   pill() {
   echo -e "\033[31m🔴 Red Pill\033[0m: See how deep the rabbit hole goes (full system info)"
   echo -e "\033[34m🔵 Blue Pill\033[0m: Return to blissful ignorance"
-  read -p "Choose (r/b): " choice
+  printf "Choose (r/b): "
+  read choice
   case "$choice" in
   r|R) neofetch --config ~/.config/neofetch/matrix.conf 2>/dev/null || neofetch ;;
   b|B) echo "You wake up in your bed and believe whatever you want to believe." ;;
@@ -87,9 +88,5 @@ fi
       {{ func.body }}
     }
 
-  {% endfor %}
-{% elif shell_config.functions is defined %}
-  {% for func in shell_config.functions %}
-    {{ func.content }}
   {% endfor %}
 {% endif %}

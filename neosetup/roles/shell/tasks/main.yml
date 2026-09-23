@@ -5,16 +5,16 @@
 - name: "📋 Load operator metadata"
   include_vars: "../../../group_vars/all/operators.yml"
 
-- name: "📦 Load base operator variables"
-  include_vars: "../../../operators/base/vars.yml"
-
-- name: "📦 Load matrix operator variables (if extends matrix)"
-  include_vars: "../../../operators/matrix/vars.yml"
-  when: neosetup_operator | default('jiveturkey') in ['matrix', 'jiveturkey']
-
-- name: "📦 Load current operator variables"
-  include_vars: "../../../operators/{{ neosetup_operator | default('jiveturkey') }}/vars.yml"
-  when: neosetup_operator | default('jiveturkey') not in ['base', 'matrix']
+- name: "🔗 Load operator variables in inheritance order"
+  include_vars: "../../../operators/{{ item }}/vars.yml"
+  loop: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+  loop_control:
+    label: "Loading {{ item }} shell config"
+  when:
+    - operator_inheritance is defined
+    - available_operators is defined
+    - item in available_operators
+  ignore_errors: yes
 
 - name: "🔍 Detect current shell"
   set_fact:
@@ -65,13 +65,14 @@
     - neosetup_backup_configs | default(true)
   ignore_errors: yes
 
-# Deploy Matrix greeting script (shared between shells)
+# Deploy Matrix greeting script (only for matrix-themed operators)
 - name: "🐇 Deploy Matrix greeting script"
   template:
     src: "matrix_greeting.sh.j2"
     dest: "{{ ansible_env.HOME }}/.matrix_greeting.sh"
     mode: '0755'
     backup: yes
+  when: operators[neosetup_operator].theme == 'matrix'
 
 # Configure shell-specific settings (includes template generation)
 - name: "🔧 Configure shell-specific settings"

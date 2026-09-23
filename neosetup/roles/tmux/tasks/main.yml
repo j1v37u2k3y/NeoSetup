@@ -30,7 +30,6 @@
     repo: https://github.com/tmux-plugins/tpm
     dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
     depth: 1
-    force: yes
   when: neosetup_install_tpm | default(true)
 
 - name: "📋 Load operator metadata"

@@ -21,7 +21,7 @@ set -g status-right-length {{ tmux_config.status_bar.right_length | default('100
   set -g status-left '#[fg=#000000,bg=#00ff00,bold] 🎭 #{session_name} #[fg=#00ff00,bg=#003300]#[fg=#00ff00,bg=#003300] 💻 #H #[fg=#003300,bg=#000000]'
   set -g status-right '#[fg=#003300,bg=#000000]#[fg=#00ff00,bg=#003300] 🐇 %H:%M #[fg=#00ff00,bg=#003300]#[fg=#000000,bg=#00ff00,bold] %Y-%m-%d '
 
-{% elif neosetup_operator == 'matrix' %}
+{% elif operators[neosetup_operator].theme == 'matrix' %}
   # Matrix operator status
   set -g status-left '#[fg=#000000,bg=#00ff00,bold] ⚡ #{session_name} #[fg=#00ff00,bg=#000000]'
   set -g status-right '#[fg=#00ff00,bg=#000000] %H:%M | %Y-%m-%d '
@@ -33,7 +33,7 @@ set -g status-right-length {{ tmux_config.status_bar.right_length | default('100
 {% endif %}
 
 # Window status format
-{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+{% if operators[neosetup_operator].theme == 'matrix' %}
   setw -g window-status-format ' #I:#W#{?window_flags,#{window_flags}, } '
   setw -g window-status-current-format ' #I:#W#{?window_flags,#{window_flags}, } '
 {% else %}
