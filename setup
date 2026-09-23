@@ -186,9 +186,8 @@ class MatrixSetup:
       print("Files staged. Enter commit message:")
       commit_msg = input("> ")
 
-      # Create commit with attribution
-      full_msg = f"{commit_msg}\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
-      subprocess.run(["git", "commit", "-m", full_msg], check=True)
+      # Create commit (no attribution footer per repo policy)
+      subprocess.run(["git", "commit", "-m", commit_msg], check=True)
       print("✅ Commit created successfully")
       return True
     except subprocess.CalledProcessError as e:

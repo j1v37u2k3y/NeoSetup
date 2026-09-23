@@ -3,6 +3,7 @@
 Performance Testing Script for NeoSetup
 Measures execution time and validates performance targets
 """
+
 # pylint: disable=duplicate-code  # Test scripts share common patterns
 
 import os
@@ -81,7 +82,7 @@ class PerformanceTester:
 
         cmd = """timeout 300 ansible-playbook playbooks/site.yml \\
             -i ../test-inventory/hosts \\
-            -e 'operator=base' \\
+            -e 'neosetup_operator=base' \\
             --check \\
             --diff || true"""
 

@@ -147,7 +147,12 @@ def main():
     """Main function to run container tests."""
     parser = argparse.ArgumentParser(description="Run NeoSetup container tests")
     parser.add_argument("--os", required=True, help="Operating system name")
-    parser.add_argument("--operator", required=True, help="Operator to test")
+    parser.add_argument(
+        "--operator",
+        required=True,
+        choices=["base", "matrix", "jiveturkey"],
+        help="Operator to test",
+    )
     parser.add_argument("--working-dir", default="/neosetup/neosetup", help="Working directory")
 
     args = parser.parse_args()

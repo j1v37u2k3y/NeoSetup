@@ -48,8 +48,8 @@ def check_requirements():
     print_matrix("Checking system requirements...")
 
     # Check Python version
-    if sys.version_info < (3, 8):
-        print(f"{RED}❌ Python 3.8+ required. Current: {sys.version}{RESET}")
+    if sys.version_info < (3, 12):
+        print(f"{RED}❌ Python 3.12+ required. Current: {sys.version}{RESET}")
         return False
 
     # Check if we're in the right directory

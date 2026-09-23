@@ -8,7 +8,7 @@
 #   ./scripts/run-precommit.sh run                # Run on staged files only
 #   ./scripts/run-precommit.sh run yamllint       # Run specific hook
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

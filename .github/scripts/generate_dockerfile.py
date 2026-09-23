@@ -2,6 +2,7 @@
 """
 Generate Dockerfile for NeoSetup testing containers.
 """
+
 # pylint: disable=duplicate-code  # Test utilities share common patterns
 
 import sys
