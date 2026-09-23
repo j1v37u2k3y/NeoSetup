@@ -98,7 +98,9 @@ shell_config:
       type: array
       items:
         type: string
-        pattern: "^[\\$\\w\\-\\.\\/]+$"
+        # Allow real-world PATH entries: spaces (Windows "Program Files"),
+        # command substitution ("$(nvm current)"), ~, and shell variables.
+        pattern: "^[\\w\\s\\$\\(\\)\\-\\.\\/~]+$"
 
     aliases:
       type: object
