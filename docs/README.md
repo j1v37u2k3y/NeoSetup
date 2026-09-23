@@ -13,6 +13,7 @@ automation system built with Ansible.
 - **[Troubleshooting](./guides/troubleshooting.md)** - Common issues and solutions
 - **[FAQ](./guides/faq.md)** - Frequently asked questions
 - **[Font Setup](./guides/font-setup.md)** - Terminal font configuration for Matrix theme
+- **[Tools Reference](../TOOLS.md)** - Every tool installed by each operator (auto-generated)
 
 ### [Development](./development/) - Developer Documentation
 
@@ -44,7 +45,7 @@ automation system built with Ansible.
 
 - **Complete**: All referenced files exist and are comprehensive
 - **Tested**: Examples work as documented
-- **Current**: Reflects Phase 9 implementation
+- **Current**: Reflects the 2.1.0 release (versioning is semver-driven; see [CHANGELOG](../CHANGELOG.md))
 - **Standards**: Markdown format, 120 char lines, syntax highlighting
 
 ## Development Workflow

@@ -7,8 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 NeoSetup is a Matrix-themed development environment automation system built entirely with Ansible. It uses an innovative
 operator-based configuration system to provide different levels of customization from minimal to power-user setups.
 
-**Current Status: Phase 9 Complete** - Production-ready system with Docker-based pre-commit, consolidated CI/CD (4 jobs),
-and complete local/CI parity for all 20 validation hooks.
+**Current Version: 2.1.0** - Production-ready system with Docker-based pre-commit, consolidated CI/CD (4 jobs),
+and complete local/CI parity for all 20 validation hooks. Releases follow [Semantic Versioning](https://semver.org/)
+driven by [Conventional Commits](https://www.conventionalcommits.org/) via
+[Commitizen](https://commitizen-tools.github.io/commitizen/); the version lives in `VERSION` and history is in
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Current Architecture
 
@@ -33,9 +36,9 @@ NeoSetup/
 │   │   ├── site.yml        # Master playbook
 │   │   └── shell.yml       # Shell-specific playbook
 │   ├── roles/              # Modular Ansible roles (REFACTORED)
-│   │   ├── shell/          # Unified shell framework (oh-my-zsh, bash-it, fish)
+│   │   ├── shell/          # Unified shell framework (zsh/oh-my-zsh, bash/bash-it)
 │   │   ├── tmux/           # Theme-based tmux config (matrix/base themes)
-│   │   ├── tools/          # Tool registry system (30+ tools)
+│   │   ├── tools/          # Tool registry system (60+ tools)
 │   │   ├── docker/         # Modern Docker (BuildKit, Compose v2)
 │   │   └── common/         # Shared tasks and utilities
 │   ├── operators/          # Validated operator configurations
@@ -72,17 +75,28 @@ NeoSetup/
 
 ### Ansible Roles (Refactored & Enhanced)
 
-- **shell**: Unified framework support (Oh-My-Zsh, Bash-it, Fish) with shared Jinja2 templates
+- **shell**: Unified framework support for zsh (Oh-My-Zsh) and bash (Bash-it) with shared Jinja2 templates
 - **tmux**: Theme-based configuration system with matrix/base themes and shared components
-- **tools**: Tool registry with 30+ tools and cross-platform package management
+- **tools**: Tool registry with 60+ tools and cross-platform package management
 - **docker**: Modern Docker setup with BuildKit, Compose v2, and security hardening
 - **common**: Shared tasks and utilities for all roles
 
 ### Advanced Operator System
 
+Eight operators ship and are all registered in `group_vars/all/operators.yml`. Inheritance spine:
+`jiveturkey → matrix → base`; every other operator extends `base` directly.
+
 - **base**: Essential tools with enhanced configuration and validation
-- **matrix**: Matrix theme with custom shell functions (matrix_mode, wake_up, enter_matrix)
-- **jiveturkey**: Power-user setup with security tools (wireshark, terraform, kubectl, ansible)
+- **matrix**: Matrix theme with custom shell functions (matrix_mode, wake_up, enter_matrix); extends base
+- **jiveturkey**: Power-user setup with productivity + networking tools (nmap, netcat) and Docker-based
+  security functions; extends matrix. Note: the heavier security/DevOps arsenal (wireshark, sqlmap, gobuster,
+  ffuf, john, hashcat, kubectl, helm, awscli, terraform, ansible) is **planned/deferred**, not yet installed
+  (needs per-platform packaging + installers).
+- **macos**: macOS integration (Homebrew, productivity apps, window management); extends base
+- **windows_wsl**: Windows WSL2 integration and interoperability; extends base
+- **python_dev**: Python toolchain (pyenv, poetry, pipx, linters, jupyter); extends base
+- **nodejs_dev**: Node.js environment (nvm); extends base
+- **go_dev**: Go toolchain; extends base
 - **Validation**: Schema-based validation with detailed error reporting and suggestions
 - **Generation**: Interactive and CLI-based operator creation tools
 
@@ -131,9 +145,9 @@ python3 scripts/validate_operator.py --all          # Validate all operators
 python3 scripts/validate_operator.py base           # Validate specific operator
 
 # Comprehensive testing
-python3 tests/test_operator_validation.py           # Run validation test suite
+python3 tests/test_operator_validation.py           # Run the validation test suite (the working test entry point)
 make lint                                           # Run ansible-lint
-make test                                           # Run all tests
+# Note: `make test` invokes molecule, but no molecule scenarios exist yet — use the command above instead.
 
 # Container testing (matches CI/CD)
 .github/scripts/test_container.py --os ubuntu --operator jiveturkey
@@ -142,8 +156,8 @@ make test                                           # Run all tests
 python3 scripts/create_operator.py --interactive    # Interactive operator creation
 python3 scripts/create_operator.py --list-templates # List available templates
 
-# Debugging & verbose output
-make install OPERATOR=jiveturkey VERBOSE=true
+# Debugging & verbose output (VERBOSE=true is not wired; pass verbosity through ANSIBLE_FLAGS)
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv"
 ```
 
 ## Development Guidelines
@@ -170,92 +184,22 @@ make dry-run OPERATOR=jiveturkey
 # Test individual roles
 ansible-playbook playbooks/site.yml --tags "shell" --check
 
-# Use verbose mode for debugging
-make install OPERATOR=base VERBOSE=true
+# Use verbose mode for debugging (verbosity is passed via ANSIBLE_FLAGS; VERBOSE=true is not wired)
+make install OPERATOR=base ANSIBLE_FLAGS="-vvv"
 ```
 
-## Completed Development Phases
+## Project Status & History
 
-### ✅ Phase 1: Documentation Consolidation (COMPLETE)
+NeoSetup is versioned with [Semantic Versioning](https://semver.org/) driven by
+[Conventional Commits](https://www.conventionalcommits.org/) via
+[Commitizen](https://commitizen-tools.github.io/commitizen/). The canonical version lives in `VERSION`
+(currently **2.1.0**) and the full, per-release history — what shipped and when — is maintained in
+[CHANGELOG.md](CHANGELOG.md), regenerated on each `make bump`.
 
-- Consolidated duplicate documentation across the project
-- Created organized structure under `docs/` directory
-- Archived historical migration documents
-
-### ✅ Phase 2: Code Consolidation & DRY Improvements (COMPLETE)
-
-- Refactored all roles to eliminate code duplication
-- Created shared Jinja2 templates and reusable components
-- Unified shell framework installation and configuration
-- Enhanced Docker role with BuildKit and Compose v2
-- Modularized tmux configuration with theme system
-
-### ✅ Phase 3: Operator System Enhancement (COMPLETE)
-
-- Built comprehensive operator validation infrastructure
-- Created schema-based validation with detailed error reporting
-- Implemented interactive and CLI-based operator generation tools
-- Enhanced all existing operators with new features and tools
-- Added 12-test validation suite with full coverage
-
-### ✅ Phase 4: Testing & Quality Assurance (COMPLETE)
-
-- Implemented comprehensive CI/CD pipeline with 15+ parallel jobs
-- Added multi-OS testing with Docker containers (Ubuntu, Debian, CentOS, Fedora)
-- Integrated security scanning (CodeQL, Trivy, Gitleaks, Bandit)
-- Created custom ansible-lint rules and Matrix theme validation
-- Added performance benchmarking with 5-minute installation target
-- Built project management infrastructure (issue templates, PR templates)
-
-### ✅ Phase 5: Developer Experience & Local Testing (COMPLETE)
-
-- Comprehensive requirements.txt with all development dependencies
-- Updated Makefile with dev-setup command for easy environment setup
-- Pre-commit hooks for automated validation before commits
-- Local-first testing methodology (test before CI/CD)
-- Resolved ansible-lint "common role not found" error
-- Enhanced multi-OS Docker testing reliability
-- Enterprise-grade development workflow established
-
-### ✅ Phase 6: Enhanced Developer Experience & CI/CD Improvements (COMPLETE)
-
-- Separated development vs runtime dependencies (clean architecture)
-- Upgraded from Rocky Linux 8 to Rocky Linux 9 for Docker testing
-- Standardized 120 character line length across all linters
-- Created `./develop` script for comprehensive environment setup
-- Fixed Docker container Ansible PATH issues
-- Comprehensive dependency management with pip and venv
-
-### ✅ Phase 7: Pre-commit/CI Perfect Alignment (COMPLETE)
-
-- Added safety dependency security scanning with perfect CI alignment
-- Optimized markdownlint configuration for archived documentation
-- Made CodeQL security scanning resilient to repository settings issues
-- Created bulletproof development workflow with immediate feedback
-- Pre-commit now catches ALL issues that would fail in CI
-
-### ✅ Phase 8: Container Testing Infrastructure (COMPLETE)
-
-- Fixed workflow_run trigger issues with proper branch checking
-- Resolved "ansible_distribution is not defined" errors with explicit fact gathering
-- Corrected inventory path references in container test scripts
-- Aligned test execution with actual Makefile installation patterns
-- Removed redundant test jobs from CI/CD pipeline for efficiency
-- Changed container tests from dry-run to actual execution with safe tags
-- Complete documentation refactoring with comprehensive guides
-
-### ✅ Phase 9: Docker Pre-commit & CI Consolidation (COMPLETE)
-
-- Docker-based pre-commit environment for local/CI parity
-- Consolidated CI from 10+ jobs to 4 focused jobs
-- All 20 pre-commit hooks run identically in Docker and CI
-- Simplified git hooks using .githooks directory
-- Roadmap items migrated to GitHub Issues
-
-### 🚀 Next Phase: Advanced Features (Phase 10)
-
-See [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues) for roadmap including multi-platform support,
-cloud integrations, and language-specific operators.
+- **Roadmap & planned work**: tracked in [GitHub Issues](https://github.com/j1v37u2k3y/NeoSetup/issues)
+  (multi-platform support, cloud integrations, language-specific operators, and the deferred jiveturkey
+  security/DevOps arsenal).
+- **Release history**: see [CHANGELOG.md](CHANGELOG.md) rather than the older "phase" narrative.
 
 ## Important Notes
 

@@ -8,7 +8,7 @@ Ansible-powered development environment automation.
 ### Prerequisites
 
 - Git and GitHub account
-- Python 3.8+
+- Python 3.12+
 - Basic understanding of Ansible
 - Love for the Matrix theme 🔋
 
@@ -29,9 +29,9 @@ make dev-setup
 # Install pre-commit hooks (uses Docker for consistency)
 git config core.hooksPath .githooks
 
-# Run tests to ensure everything works
-make test
-make lint
+# Run the checks to ensure everything works
+python3 tests/test_operator_validation.py   # operator validation test suite
+make lint                                    # ansible-lint + yamllint
 ```
 
 ## 🎭 Code of Conduct
@@ -82,7 +82,7 @@ git checkout -b feature/awesome-enhancement
 
 # Test your changes
 make dry-run OPERATOR=jiveturkey
-make test
+python3 tests/test_operator_validation.py
 make lint
 
 # Run operator validation
@@ -230,7 +230,7 @@ Fixes #123
 **Examples**:
 
 ```text
-feat(shell): add fish shell support
+feat(shell): add zsh-autosuggestions plugin to base operator
 fix(tmux): resolve color display issues in terminal
 docs(guides): update installation instructions for macOS
 refactor(tools): consolidate package installation logic
@@ -330,13 +330,14 @@ shell_functions:
 ### Running Tests
 
 ```bash
-# Full test suite
-make test
+# Primary test suite (the working entry point)
+python3 tests/test_operator_validation.py    # Operator tests
+
+# Note: `make test` calls molecule, but no molecule scenarios exist yet — use the command above.
 
 # Specific test types
-make lint                                    # Code quality
+make lint                                    # Code quality (ansible-lint + yamllint)
 ansible-lint .                               # Ansible linting
-python3 tests/test_operator_validation.py    # Operator tests
 python3 scripts/validate_operator.py --all  # Schema validation
 
 # Docker container tests (like CI)

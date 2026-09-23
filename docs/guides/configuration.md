@@ -4,29 +4,43 @@ Customize your Matrix environment to match your workflow and preferences.
 
 ## 🎯 Understanding Operators
 
-Operators are the core configuration system that defines what gets installed and how it's configured.
+Operators are the core configuration system that defines what gets installed and how it's configured. Each
+operator is a directory under `neosetup/operators/<name>/` containing a `vars.yml`. Operators inherit from
+one another via `extends`, so you compose configuration rather than copy it.
 
 ### Built-in Operators
 
-| Operator     | Extends  | Description                                 | Best For                        |
-|--------------|----------|---------------------------------------------|---------------------------------|
-| `base`       | -        | Essential tools and minimal configuration   | Servers, clean environments     |
-| `matrix`     | `base`   | Adds Matrix theme and cyberpunk aesthetics  | Developers who want style       |
-| `jiveturkey` | `matrix` | Adds security tools and power-user features | Security professionals, hackers |
+Eight operators ship with NeoSetup. The `jiveturkey → matrix → base` chain is the main spine; the rest
+extend `base` directly.
+
+| Operator      | Extends  | Description                                             | Best For                          |
+|---------------|----------|--------------------------------------------------------|-----------------------------------|
+| `base`        | -        | Essential tools and minimal configuration              | Servers, clean environments       |
+| `matrix`      | `base`   | Matrix theme and cyberpunk aesthetics                  | Developers who want style         |
+| `jiveturkey`  | `matrix` | Power-user productivity + networking tools             | Power users, security enthusiasts |
+| `python_dev`  | `base`   | Python toolchain (pyenv, poetry, pipx, linters)        | Python developers                 |
+| `nodejs_dev`  | `base`   | Node.js environment (nvm)                              | Node.js developers                |
+| `go_dev`      | `base`   | Go toolchain                                           | Go developers                     |
+| `macos`       | `base`   | macOS integration (Homebrew, window management)        | macOS users                       |
+| `windows_wsl` | `base`   | Windows WSL2 integration and interoperability          | WSL2 users                        |
+
+Install any operator with `make install OPERATOR=<name>`. (The `./setup` wrapper only knows `base`,
+`matrix`, and `jiveturkey`; use `make` for the rest.)
 
 ### Operator Inheritance
 
 ```text
 base
-├── Essential CLI tools (eza, bat, ripgrep, btop, fzf)
-├── Basic shell configuration
+├── Essential CLI tools (htop, tree, jq, curl, wget, yamllint, act, pre-commit)
+├── Shared modern-CLI tools (eza, bat, ripgrep, fd, fzf, delta, btop)
+├── Basic shell configuration (oh-my-zsh + robbyrussell)
 ├── Minimal tmux setup
 └── Core aliases and functions
 
 matrix (extends base)
 ├── Matrix-themed colors and prompts
-├── Cyberpunk tmux configuration
-├── Matrix ASCII art and animations
+├── Cyberpunk tmux theme
+├── Matrix animation tools (cmatrix, neofetch, lolcat, figlet, cowsay, fortune)
 ├── Custom Matrix functions:
 │   ├── matrix_mode - Toggle Matrix aesthetic
 │   ├── wake_up - System information display
@@ -34,447 +48,209 @@ matrix (extends base)
 └── Green terminal color scheme
 
 jiveturkey (extends matrix)
-├── Security tools (nmap, netcat, wireshark)
-├── Network analysis capabilities
-├── Docker-based security functions
-├── Development tools (terraform, kubectl, ansible)
-├── Penetration testing utilities
-└── Advanced system administration tools
+├── Powerlevel10k prompt + power-user oh-my-zsh plugins
+├── Networking tools (nmap, netcat)
+├── Docker-based security helper functions (impacket, metasploit, SMB/HTTP servers)
+├── Productivity/observability tools (ncdu, httpie, tldr, lazygit, glances, duf, lnav, ...)
+└── Extensive git/docker/kubectl aliases
 ```
 
-## ⚙️ Custom Configuration
+> **Note**: jiveturkey's heavier security/DevOps arsenal (wireshark, sqlmap, gobuster, ffuf, john, hashcat,
+> kubectl, helm, awscli, terraform, ansible) is **planned/deferred** — it is declared in the operator but not
+> yet wired into installation (it needs per-platform packaging + installers). A fresh `jiveturkey` install
+> gives you nmap/netcat plus the Docker-based security functions, not the full toolkit.
 
-### User Configuration File
+## ⚙️ Customizing Configuration
 
-Create `~/.ansible_local.yml` to override any operator settings:
+There is **no external override file** — NeoSetup does not read `~/.ansible_local.yml`, `~/.neosetup`, or any
+similar user config. Customization happens in one of two places:
+
+1. **Edit your operator's `vars.yml`** (`neosetup/operators/<name>/vars.yml`), or
+2. **Create your own operator** that `extends` an existing one and adds only your overrides
+   (see [Creating Custom Operators](#-creating-custom-operators) below).
+
+Editing `vars.yml` uses the real nested keys the Ansible roles consume. The main sections are `shell_config`,
+`shell_functions`, `tools_config`, `tmux_config`, and `docker_config`.
+
+### Shell Configuration
 
 ```yaml
-# Shell Environment Variables
-shell_env_vars:
-  EDITOR: "nvim"
-  BROWSER: "firefox"
-  TERMINAL: "alacritty"
-  PAGER: "less"
+shell_config:
+  # Shell selection: auto, zsh, or bash
+  preferred_shell: "auto"
 
-# Custom Shell Aliases
-shell_aliases:
-  # Development shortcuts
-  - { alias: "vim", command: "nvim" }
-  - { alias: "v", command: "nvim" }
-  - { alias: "lg", command: "lazygit" }
+  # Framework: oh-my-zsh (zsh) or bash-it (bash)
+  framework: "oh-my-zsh"
+  oh_my_zsh_theme: "powerlevel10k/powerlevel10k"
 
-  # Kubernetes shortcuts
-  - { alias: "k", command: "kubectl" }
-  - { alias: "kgp", command: "kubectl get pods" }
-  - { alias: "kgs", command: "kubectl get services" }
+  # Oh My Zsh plugins
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - kubectl
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    - history-substring-search
 
-  # Terraform shortcuts
-  - { alias: "tf", command: "terraform" }
-  - { alias: "tfa", command: "terraform apply" }
-  - { alias: "tfp", command: "terraform plan" }
+  # Aliases are a simple name -> command map
+  aliases:
+    vim: "nvim"
+    k: "kubectl"
+    tf: "terraform"
+    gs: "git status -sb"
 
-  # Docker shortcuts
-  - { alias: "d", command: "docker" }
-  - { alias: "dc", command: "docker-compose" }
-  - { alias: "dps", command: "docker ps" }
+  # Environment variables
+  environment:
+    EDITOR: "nvim"
+    PAGER: "less"
 
-# Custom Shell Functions
+  # Extra directories to prepend to PATH
+  paths:
+    - "$HOME/.local/bin"
+    - "$HOME/bin"
+```
+
+> Note: `ls`, `ll`, `la`, `l`, `lt`, and `l.` are defined as argument-forwarding shell **functions**
+> (eza-aware, with a clean `ls` fallback) in `roles/shell/templates/shared/aliases.j2`. Don't redeclare them
+> as aliases — aliases shadow the functions and can't forward flags.
+
+### Custom Shell Functions
+
+```yaml
 shell_functions:
   - name: "mkcd"
-    definition: |
+    description: "Create directory and cd into it"
+    body: |
       mkdir -p "$1" && cd "$1"
 
   - name: "extract"
-    definition: |
+    description: "Extract any archive"
+    body: |
       if [ -f "$1" ]; then
         case "$1" in
-          *.tar.bz2)   tar xjf "$1"     ;;
-          *.tar.gz)    tar xzf "$1"     ;;
-          *.bz2)       bunzip2 "$1"     ;;
-          *.rar)       unrar x "$1"     ;;
-          *.gz)        gunzip "$1"      ;;
-          *.tar)       tar xf "$1"      ;;
-          *.tbz2)      tar xjf "$1"     ;;
-          *.tgz)       tar xzf "$1"     ;;
-          *.zip)       unzip "$1"       ;;
-          *.Z)         uncompress "$1"  ;;
-          *.7z)        7z x "$1"        ;;
-          *)           echo "'$1' cannot be extracted" ;;
+          *.tar.gz)  tar xzf "$1" ;;
+          *.zip)     unzip "$1"   ;;
+          *)         echo "'$1' cannot be extracted" ;;
         esac
       else
         echo "'$1' is not a valid file"
       fi
-
-# Tmux Custom Configuration
-tmux_custom_config: |
-  # Mouse support
-  set -g mouse on
-
-  # Increase history limit
-  set -g history-limit 10000
-
-  # Custom key bindings
-  bind r source-file ~/.tmux.conf \; display "Config reloaded!"
-  bind | split-window -h
-  bind - split-window -v
-
-# Tool Configuration Overrides
-tool_config:
-  git:
-    user_name: "Your Name"
-    user_email: "your.email@example.com"
-
-  nvim:
-    enable_plugins: true
-    theme: "matrix"
 ```
 
-### Component-Specific Configuration
+### Tools Configuration
 
-#### Shell Configuration
-
-Override shell settings:
+Extra tools are added through `tools_config.additional_tools`. **A tool only installs if it is registered in
+`neosetup/roles/tools/vars/tool_registry.yml`** — listing an unregistered name does nothing (and, after the
+tool-model fix, the install fails loudly rather than silently skipping). Every operator also gets the shared
+`modern_cli` tool set plus the tool sets of every operator in its inheritance chain.
 
 ```yaml
-# Shell Framework (oh-my-zsh, bash-it, fish)
-shell_framework: "oh-my-zsh"
-
-# Shell Theme
-shell_theme: "powerlevel10k/powerlevel10k"
-
-# Shell Plugins
-shell_plugins:
-  - git
-  - docker
-  - kubectl
-  - terraform
-  - zsh-autosuggestions
-  - zsh-syntax-highlighting
-  - history-substring-search
-
-# Powerlevel10k Configuration
-p10k_config:
-  show_battery: true
-  show_time: true
-  show_git: true
-  two_lines: false
+tools_config:
+  additional_tools:
+    - ncdu
+    - httpie
+    - lazygit
 ```
 
-#### Tmux Configuration
+To add a brand-new tool, first register it in `tool_registry.yml` with its per-platform package names, then
+reference it here. See the [Operator Creation Guide](../development/operator-creation-guide.md).
 
-Customize tmux behavior:
+### Tmux Configuration
 
 ```yaml
-# Tmux Theme
-tmux_theme: "matrix"  # Options: matrix, base, custom
+tmux_config:
+  theme: "matrix"      # matrix, base, or custom
+  prefix: "C-a"        # Screen-style prefix
+  terminal: "tmux-256color"
 
-# Tmux Settings
-tmux_settings:
-  prefix_key: "C-a"
-  mouse_support: true
-  history_limit: 10000
-  base_index: 1
+  settings:
+    mouse: true
+    base_index: 1
+    pane_base_index: 1
+    history_limit: 50000
 
-# Custom Status Bar
-tmux_status_config: |
-  set -g status-bg black
-  set -g status-fg green
-  set -g status-left '#[fg=green]#S '
-  set -g status-right '#[fg=green]%H:%M %d-%b-%y'
+  key_bindings:
+    reload_config: "r"
+    split_horizontal: "|"
+    split_vertical: "-"
 ```
 
-#### Tool Configuration
-
-Configure individual tools:
+### Docker Configuration
 
 ```yaml
-# Modern CLI Tools
-modern_tools:
-  eza:
-    enable: true
-    aliases: [ "ls", "ll", "la" ]
-
-  bat:
-    enable: true
-    theme: "Matrix"
-
-  ripgrep:
-    enable: true
-    aliases: [ "grep" ]
-
-  btop:
-    enable: true
-    theme: "matrix"
-
-  fzf:
-    enable: true
-    key_bindings: true
-    completion: true
-
-# Security Tools (jiveturkey operator)
-security_tools:
-  nmap:
-    enable: true
-    custom_scripts: true
-
-  wireshark:
-    enable: true
-    gui_support: false
-
-  docker_security:
-    enable: true
-    custom_functions: true
+docker_config:
+  install_compose: true
+  compose_version: "v2"
+  enable_buildkit: true
 ```
 
 ## 🎨 Theming and Appearance
 
-### Matrix Theme Customization
+The Matrix look is driven by the `matrix` tmux theme (`tmux_config.theme: "matrix"`), the Powerlevel10k
+prompt, and the operator's greeting. The `matrix` and `jiveturkey` operators set a startup greeting:
 
 ```yaml
-# Matrix Theme Settings
-matrix_theme:
-  primary_color: "#00ff00"      # Matrix green
-  secondary_color: "#008000"    # Dark green
-  background_color: "#000000"   # Black
-  text_color: "#00ff00"         # Bright green
-
-  # ASCII Art
-  show_matrix_banner: true
-  show_matrix_rain: true
-  show_neo_quotes: true
-
-  # Animations
-  enable_animations: true
-  animation_speed: "medium"     # slow, medium, fast
+matrix_greeting: "🚀 Welcome back! Let's build something awesome!"
+startup_command: "neofetch 2>/dev/null || echo '$matrix_greeting'"
 ```
 
-### Custom Color Schemes
+To change the color scheme, switch the Powerlevel10k configuration (`p10k configure`) and choose the tmux
+theme via `tmux_config.theme`. Custom tmux themes live in the `tmux` role.
 
-Create your own color scheme:
+## 🔧 Creating Custom Operators
 
-```yaml
-# Custom Theme
-custom_theme:
-  name: "cyberpunk"
-  colors:
-    primary: "#ff0080"      # Hot pink
-    secondary: "#8000ff"    # Purple  
-    background: "#0a0a0a"   # Near black
-    text: "#ffffff"         # White
-    accent: "#00ffff"       # Cyan
-```
-
-## 🔧 Advanced Configuration
-
-### Creating Custom Operators
-
-Create a new operator by extending existing ones:
+The cleanest way to customize is to create your own operator that extends an existing one and overrides only
+what you need.
 
 ```bash
 # Interactive operator creation
 cd neosetup
 python3 scripts/create_operator.py --interactive
-
-# Or create manually
-mkdir -p operators/myoperator
 ```
 
-Example custom operator (`operators/myoperator/vars.yml`):
+Example custom operator (`neosetup/operators/myoperator/vars.yml`):
 
 ```yaml
-# Custom operator configuration
-extends: matrix  # Inherit from matrix operator
+---
+operator_name: "myoperator"
+operator_version: "1.0.0"
+operator_description: "Custom development environment for my workflow"
+extends: "matrix"
 
-description: "Custom development environment for my workflow"
-author: "Your Name"
-version: "1.0.0"
+shell_config:
+  aliases:
+    go-test: "go test ./..."
+    npm-dev: "npm run dev"
+  environment:
+    GO111MODULE: "on"
+    NODE_ENV: "development"
 
-# Override or add tools
-additional_packages:
-  - name: "golang"
-    description: "Go programming language"
-  - name: "nodejs"
-    description: "Node.js runtime"
-
-# Custom shell configuration
-shell_aliases:
-  - { alias: "go-test", command: "go test ./..." }
-  - { alias: "npm-dev", command: "npm run dev" }
-
-# Custom environment variables
-shell_env_vars:
-  GO111MODULE: "on"
-  GOPROXY: "https://proxy.golang.org"
-  NODE_ENV: "development"
+tools_config:
+  additional_tools:
+    - go        # must exist in tool_registry.yml
+    - nvm
 ```
 
-### Environment-Specific Configurations
-
-#### Development Environment
-
-```yaml
-# Development-focused configuration
-development_config:
-  enable_debug_mode: true
-  install_dev_tools: true
-  setup_git_hooks: true
-  configure_ide_support: true
-```
-
-#### Server Environment
-
-```yaml
-# Server-optimized configuration  
-server_config:
-  minimal_installation: true
-  disable_gui_tools: true
-  enable_monitoring: true
-  security_hardening: true
-```
-
-#### Docker Container
-
-```yaml
-# Container-optimized configuration
-container_config:
-  skip_system_packages: true
-  minimal_shell_config: true
-  disable_animations: true
-  lightweight_tools: true
-```
-
-## 🔒 Security Configuration
-
-### Security Hardening
-
-```yaml
-# Security settings
-security_config:
-  # SSH Configuration
-  ssh_hardening:
-    disable_root_login: true
-    use_key_auth: true
-    change_default_port: false
-
-  # Firewall Settings
-  firewall:
-    enable_ufw: true
-    default_deny: true
-    allow_ssh: true
-
-  # System Hardening
-  system_hardening:
-    disable_unused_services: true
-    secure_kernel_parameters: true
-    audit_logging: true
-```
-
-### Security Tools Configuration
-
-```yaml
-# Security tools for jiveturkey operator
-security_tools_config:
-  nmap:
-    enable_stealth_mode: true
-    custom_scripts: true
-    output_format: "xml"
-
-  wireshark:
-    capture_filters: [ "tcp", "udp", "icmp" ]
-    disable_gui: true
-
-  custom_functions:
-    quick_scan: "nmap -sS -O -v"
-    port_scan: "nmap -p- -v"
-    vuln_scan: "nmap --script vuln"
-```
-
-## 📊 Monitoring and Logging
-
-### System Monitoring
-
-```yaml
-# Monitoring configuration
-monitoring_config:
-  # Resource monitoring
-  btop:
-    update_interval: 2000
-    show_temps: true
-    show_battery: true
-
-  # Log monitoring
-  log_monitoring:
-    enable: true
-    watch_files:
-      - "/var/log/syslog"
-      - "/var/log/auth.log"
-```
-
-### Performance Tuning
-
-```yaml
-# Performance optimization
-performance_config:
-  # Shell performance
-  shell_optimization:
-    lazy_load_plugins: true
-    async_loading: true
-    minimal_prompt: false
-
-  # System performance
-  system_optimization:
-    increase_history_size: true
-    optimize_PATH: true
-    cache_completions: true
-```
-
-## 🔄 Configuration Management
-
-### Backup and Restore
-
-```bash
-# Backup current configuration
-./setup backup
-
-# Restore from backup
-./setup restore
-
-# Export configuration
-./setup export --format yaml > my-config.yml
-
-# Import configuration
-./setup import my-config.yml
-```
-
-### Version Control
-
-Track your configuration changes:
-
-```bash
-# Initialize config repo
-cd ~/.neosetup
-git init
-git add .
-git commit -m "Initial NeoSetup configuration"
-
-# Track changes
-git add ~/.ansible_local.yml
-git commit -m "Updated shell aliases"
-```
+Register it in `neosetup/group_vars/all/operators.yml` (add it to `available_operators` and
+`operator_inheritance`), then install with `make install OPERATOR=myoperator`. Full details are in the
+[Operator Creation Guide](../development/operator-creation-guide.md).
 
 ## 🛠️ Validation and Testing
 
-### Configuration Validation
-
 ```bash
-# Validate operator configuration
 cd neosetup
-python3 scripts/validate_operator.py myoperator
 
-# Test configuration without applying
+# Validate operator configuration against the schema
+python3 scripts/validate_operator.py myoperator
+python3 scripts/validate_operator.py --all
+
+# Run the operator validation test suite
+python3 tests/test_operator_validation.py
+
+# Test configuration without applying it
 make dry-run OPERATOR=myoperator
 
-# Validate custom configuration
+# Syntax-check the playbook
 ansible-playbook playbooks/site.yml --syntax-check
 ```
 

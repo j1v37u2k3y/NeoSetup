@@ -1,6 +1,10 @@
 # NeoSetup Tools Reference
 
 > **Auto-generated** - Do not edit manually. Run `python3 neosetup/scripts/generate_tools_doc.py` to regenerate.
+>
+> **⚠️ Stale — needs regeneration.** This file was generated before the tool-model/operator fixes landed, so
+> it only lists `base`, `matrix`, and `jiveturkey` and its counts predate the corrected registry. Regenerate
+> it (command above) once the code PRs merge so it reflects all 8 operators and the post-merge registry.
 
 This document lists all tools installed by each NeoSetup operator.
 

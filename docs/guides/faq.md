@@ -140,8 +140,9 @@ tool in an operator's `additional_tools` without a registry entry does nothing �
 
 ### How do I change the theme or shell?
 
-Set the relevant role variable in your operator's `vars.yml` — e.g. `shell_framework` (oh-my-zsh, bash-it,
-fish) or `tmux_theme` (matrix, base). See the [Configuration Guide](./configuration.md) and the
+Set the relevant role variable in your operator's `vars.yml` — e.g. `shell_config.framework` (oh-my-zsh for
+zsh, or bash-it for bash) or `tmux_config.theme` (matrix, base). See the
+[Configuration Guide](./configuration.md) and the
 [Variable Naming Convention](../development/contributing.md#variable-naming-convention) for how variables are
 scoped.
 

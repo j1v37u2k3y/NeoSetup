@@ -25,11 +25,16 @@ A single "install everything" approach either:
 
 ### 1. **Tailored User Experiences**
 
-| Operator     | Target User           | Tools Installed     | Experience                 |
-|--------------|-----------------------|---------------------|----------------------------|
-| `base`       | New users, servers    | 12 essential tools  | Clean, minimal setup       |
-| `matrix`     | Theme enthusiasts     | Base + visual tools | Matrix cyberpunk aesthetic |
-| `jiveturkey` | Power users, security | 40+ advanced tools  | Full productivity suite    |
+| Operator     | Target User           | Tools Installed          | Experience                 |
+|--------------|-----------------------|--------------------------|----------------------------|
+| `base`       | New users, servers    | 8 essentials + modern CLI | Clean, minimal setup       |
+| `matrix`     | Theme enthusiasts     | Base + visual tools      | Matrix cyberpunk aesthetic |
+| `jiveturkey` | Power users, security | ~39 tools total          | Full productivity suite    |
+
+> The tool registry defines **60+ tools**; each operator installs a subset composed from the shared
+> `modern_cli` set plus the tool sets of every operator in its inheritance chain. Five more operators ship
+> beyond the three above — `python_dev`, `nodejs_dev`, `go_dev`, `macos`, and `windows_wsl` — each extending
+> `base`.
 
 ### 2. **Inheritance & Modularity**
 
@@ -54,9 +59,9 @@ base (essentials)
 | Approach             | Install Time | Disk Usage | Tools Installed |
 |----------------------|--------------|------------|-----------------|
 | "Install Everything" | ~15 minutes  | ~2GB       | 60+ tools       |
-| Base Operator        | ~3 minutes   | ~200MB     | 12 tools        |
-| Matrix Operator      | ~5 minutes   | ~400MB     | 20 tools        |
-| JiveTurkey Operator  | ~8 minutes   | ~1GB       | 40+ tools       |
+| Base Operator        | ~3 minutes   | ~200MB     | ~15 tools       |
+| Matrix Operator      | ~5 minutes   | ~400MB     | ~21 tools       |
+| JiveTurkey Operator  | ~8 minutes   | ~1GB       | ~39 tools       |
 
 ### 5. **Professional Workflows**
 
@@ -64,9 +69,11 @@ base (essentials)
 
 ```bash
 ./setup install jiveturkey
-# Gets: nmap, wireshark, metasploit, burp, gobuster, hashcat, john
-# Plus: Docker security containers, custom shell functions
-# Result: Ready for penetration testing in 8 minutes
+# Gets: nmap, netcat + productivity/observability tools (lazygit, glances, httpie, lnav, ...)
+# Plus: Docker-based security functions (impacket, metasploit, SMB/HTTP servers) that run tools from containers
+# Result: a power-user environment with networking + container-based security tooling
+# Planned/deferred (not yet installed): wireshark, sqlmap, gobuster, ffuf, john, hashcat, kubectl, helm,
+#   awscli, terraform, ansible
 ```
 
 **Developer using Matrix:**
@@ -82,7 +89,7 @@ base (essentials)
 
 ```bash
 ./setup install base
-# Gets: essential tools only (htop, curl, git, docker)
+# Gets: essentials only (htop, tree, jq, curl, wget) plus the shared modern-CLI tools
 # Result: Minimal, reliable server setup
 ```
 
@@ -152,12 +159,12 @@ Month 2: ./setup install jiveturkey # Full power-user setup
 
 ```yaml
 # create operators/devops/vars.yml
-extends: jiveturkey
 operator_name: devops
+extends: jiveturkey
 tools_config:
-  devops_tools:
+  additional_tools:      # each must be registered in tool_registry.yml
     - terraform
-    - kubernetes
+    - kubectl
     - helm
 ```
 
