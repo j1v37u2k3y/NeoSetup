@@ -72,8 +72,8 @@ bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
 # Clear screen and history
 bind C-l send-keys 'C-l' \; clear-history
 
-# Synchronize panes
-bind S setw synchronize-panes
+# Synchronize panes (S is bound to new-session above)
+bind y setw synchronize-panes
 
 # Toggle status bar
 bind T set-option status

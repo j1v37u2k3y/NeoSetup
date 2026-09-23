@@ -133,7 +133,7 @@ command -v delta &>/dev/null && alias diff='delta'
 {% endfor %}
 
 # Matrix-themed aliases
-{% if neosetup_operator in ['matrix', 'jiveturkey'] %}
+{% if operators[neosetup_operator].theme == 'matrix' %}
   alias matrix='cmatrix -b'
   alias neo='neofetch'
   alias hack='echo "Accessing the Matrix..." && sleep 1 && cmatrix -b'

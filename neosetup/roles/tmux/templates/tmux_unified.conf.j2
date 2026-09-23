@@ -7,7 +7,7 @@
 # ============================================================================
 # THEME SELECTION
 # ============================================================================
-{% set tmux_theme = tmux_config.theme | default('matrix' if neosetup_operator in ['matrix', 'jiveturkey'] else 'base') %}
+{% set tmux_theme = tmux_config.theme | default('matrix' if operators[neosetup_operator].theme == 'matrix' else 'base') %}
 {% if tmux_theme == 'matrix' %}
   {% include 'themes/matrix.j2' %}
 {% elif tmux_theme == 'base' %}
@@ -54,20 +54,9 @@ set -g pane-base-index 1
 set -g main-pane-width 80
 set -g main-pane-height 24
 
-# ============================================================================
-# PERFORMANCE SETTINGS
-# ============================================================================
-# Increase scrollback buffer size
-set -g history-limit {{ tmux_config.history_limit | default('50000') }}
-
-# Increase tmux messages display duration
-set -g display-time {{ tmux_config.display_time | default('4000') }}
-
-# Refresh 'status-left' and 'status-right' more often
-set -g status-interval {{ tmux_config.status_interval | default('5') }}
-
-# Address vim mode switching delay
-set -s escape-time 0
+# NOTE: history-limit, display-time, status-interval and escape-time are set
+# once from their canonical var paths in shared/basic_settings.j2 and
+# shared/status_bar.j2 — do not re-declare them here.
 
 # ============================================================================
 # CUSTOM CONFIGURATIONS

@@ -255,6 +255,9 @@ _matrix_show_greeting() {
 
 {% raw %}
     local idx=$((RANDOM % ${#quotes[@]}))
+    # zsh arrays are 1-based, bash arrays are 0-based; shift the index for zsh
+    # so we never land on an empty element.
+    [ -n "$ZSH_VERSION" ] && idx=$((idx + 1))
     local quote="${quotes[$idx]}"
 {% endraw %}
 

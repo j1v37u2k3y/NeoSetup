@@ -1,6 +1,6 @@
 ---
 # Unified shell framework installation
-# Supports: oh-my-zsh, bash-it, fish-shell
+# Supports: oh-my-zsh, bash-it
 
 - name: "🔍 Detect shell framework to install"
   set_fact:
@@ -24,7 +24,11 @@
 
     - name: "📥 Download and install Oh My Zsh"
       shell: |
-        RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/{{ oh_my_zsh_install_ref }}/tools/install.sh)"
+      vars:
+        # Pin the installer to a specific commit for reproducibility (upstream
+        # publishes no version tags). Matches the nvm pinning discipline.
+        oh_my_zsh_install_ref: "74965c96098134b192f00084f966b4b02438a739"  # pragma: allowlist secret
       when: not oh_my_zsh_stat.stat.exists
       changed_when: true
 
@@ -90,26 +94,6 @@
           - ssh
       ignore_errors: yes
 
-# Fish Shell Installation (future)
-- name: "🐟 Fish Shell Configuration Block"
-  when: shell_framework == 'fish'
-  block:
-    - name: "📦 Install Fisher plugin manager"
-      shell: |
-        curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
-      args:
-        executable: /usr/bin/fish
-      changed_when: true
-      ignore_errors: yes
-
-    - name: "🔌 Install Fish plugins"
-      shell: |
-        fisher install {{ item }}
-      args:
-        executable: /usr/bin/fish
-      loop: "{{ shell_config.fish_plugins | default([]) }}"
-      ignore_errors: yes
-
 # Common post-installation tasks
 - name: "📝 Set framework configuration facts"
   set_fact:
@@ -119,7 +103,6 @@
       {{
         ansible_env.HOME + '/.oh-my-zsh' if shell_framework == 'oh-my-zsh' else
         ansible_env.HOME + '/.bash_it' if shell_framework == 'bash-it' else
-        ansible_env.HOME + '/.config/fish' if shell_framework == 'fish' else
         'none'
       }}
 
