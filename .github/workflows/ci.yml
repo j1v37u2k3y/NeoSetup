@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.12'
   MATRIX_MODE: enabled
 
 jobs:
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible-version: ['6.0', '7.0']
+        ansible-version: ['14.0']
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v7
@@ -119,12 +119,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: 📦 Install Ansible ${{ matrix.ansible-version }}
-        run: |
-          if [ "${{ matrix.ansible-version }}" = "6.0" ]; then
-            pip install "ansible>=6.0,<7.0"
-          elif [ "${{ matrix.ansible-version }}" = "7.0" ]; then
-            pip install "ansible>=7.0,<8.0"
-          fi
+        run: pip install "ansible>=14.2,<15.0"
 
       - name: ✅ Ansible syntax check
         run: |
