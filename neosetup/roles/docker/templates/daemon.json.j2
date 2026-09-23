@@ -19,11 +19,9 @@
   {% endif %}
   "userland-proxy": false,
   "metrics-addr": "127.0.0.1:9323",
-  "experimental-metrics": true,
-  "dns": [
-    "8.8.8.8",
-    "8.8.4.4"
-  ],
+  {% if docker_config.dns is defined and docker_config.dns %}
+  "dns": {{ docker_config.dns | to_json }},
+  {% endif %}
   "max-concurrent-downloads": 10,
   "max-concurrent-uploads": 5
 }

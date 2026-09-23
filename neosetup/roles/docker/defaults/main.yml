@@ -20,6 +20,11 @@ docker_config:
   storage_driver: "overlay2"
   live_restore: true
   experimental: true
+  # dns: intentionally unset. When omitted, containers inherit the host DNS
+  # resolver. Set an explicit list to override, e.g.:
+  #   dns:
+  #     - "1.1.1.1"
+  #     - "9.9.9.9"
 
 # Security options
 docker_security:
