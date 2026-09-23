@@ -3,6 +3,7 @@
 Package Installation Testing Script for NeoSetup
 Tests package manager compatibility across different OS distributions
 """
+
 # pylint: disable=duplicate-code  # Test utilities share common patterns
 
 import subprocess  # nosec B404

@@ -24,6 +24,10 @@ env:
   PYTHON_VERSION: '3.12'
   MATRIX_MODE: enabled
 
+# Least-privilege default; jobs opt into more scopes as needed
+permissions:
+  contents: read
+
 jobs:
   # ============================================================================
   # PRE-COMMIT - All linting and validation in one job
@@ -75,7 +79,7 @@ jobs:
         continue-on-error: true  # Allow failure if code scanning not enabled
 
       - name: 🔍 Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -84,7 +88,7 @@ jobs:
           exit-code: '1'
 
       - name: 📤 Generate SARIF for GitHub Security
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
