@@ -13,11 +13,11 @@ pre-commit>=2.20.0
 # Python Code Quality Tools
 black>=26.5.1
 flake8>=7.3.0
-isort>=5.10.0
+isort>=8.0.1
 pylint>=4.0.6
 
 # Security Scanning
-detect-secrets>=1.4.0
+detect-secrets>=1.5.0
 bandit>=1.7.0
 safety==3.7.0
 
@@ -28,7 +28,7 @@ markdown>=3.4.0
 molecule>=26.6.0
 molecule-docker>=2.0.0
 pytest>=9.1.1
-pytest-ansible>=3.0.0
+pytest-ansible>=26.6.0
 
 # Development Utilities
 jsonschema>=4.0.0
