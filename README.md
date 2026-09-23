@@ -51,9 +51,32 @@ That's it! The setup script guides you through everything.
 
 | Pill | Command | What You Get |
 |------|---------|--------------|
-| 🔴 **Red Pill** | `./setup install jiveturkey` | Full power-user setup with security tools |
+| 🔴 **Red Pill** | `./setup install jiveturkey` | Full power-user setup with security tooling |
 | 🔵 **Blue Pill** | `./setup install base` | Minimal essentials only |
 | 🟢 **Matrix Pill** | `./setup install matrix` | Cyberpunk theme with style |
+
+## 🎭 Operators
+
+Eight operators ship with NeoSetup. `jiveturkey` extends `matrix`, which extends `base`; every other operator
+extends `base` directly.
+
+| Operator | Extends | Best for |
+|----------|---------|----------|
+| `base` | - | Minimal essentials and a clean config |
+| `matrix` | `base` | The full Matrix theme + cyberpunk shell functions |
+| `jiveturkey` | `matrix` | Power users — productivity + networking tools on top of matrix |
+| `python_dev` | `base` | Python development (pyenv, poetry, pipx, linters, jupyter) |
+| `nodejs_dev` | `base` | Node.js development (nvm) |
+| `go_dev` | `base` | Go development (Go toolchain) |
+| `macos` | `base` | macOS integration (Homebrew, window management) |
+| `windows_wsl` | `base` | Windows WSL2 integration |
+
+The `./setup` shortcut covers `base`, `matrix`, and `jiveturkey`. Install any operator with `make`:
+
+```bash
+cd neosetup
+make install OPERATOR=python_dev
+```
 
 ## ✨ What's Included
 

@@ -16,7 +16,8 @@ Run these commands to diagnose issues:
 ./setup dry-run
 
 # Verbose output for debugging
-./setup install jiveturkey --verbose
+cd neosetup
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv"
 
 # Check Ansible installation
 ansible --version
@@ -61,12 +62,9 @@ ansible --version
 **Solutions**:
 
 ```bash
-# Use sudo password prompt
-./setup install jiveturkey --ask-become-pass
-
-# Or use make with sudo
+# Prompt for the sudo password by passing --ask-become-pass through ANSIBLE_FLAGS
 cd neosetup
-make install OPERATOR=jiveturkey --ask-become-pass
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="--ask-become-pass"
 
 # Check sudo access
 sudo -v
@@ -79,15 +77,15 @@ sudo -v
 **Solutions**:
 
 ```bash
-# Check Python version (need 3.8+)
+# Check Python version (need 3.12+)
 python3 --version
 
-# Install Python 3.8+
+# Install Python 3.12+
 # Ubuntu/Debian
-sudo apt install python3.8 python3.8-pip
+sudo apt install python3.12 python3.12-venv
 
-# CentOS/RHEL
-sudo dnf install python38 python38-pip
+# CentOS/RHEL/Fedora
+sudo dnf install python3.12 python3.12-pip
 
 # Update pip
 python3 -m pip install --upgrade pip
@@ -443,9 +441,9 @@ sudo yum install epel-release
 # Install development tools
 sudo dnf groupinstall "Development Tools"
 
-# Python 3.8+ on older systems
-sudo dnf install python38 python38-pip
-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+# Python 3.12+ on older systems
+sudo dnf install python3.12 python3.12-pip
+alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 ```
 
 ## 🧪 Development and Testing Issues
@@ -576,7 +574,8 @@ tmux -V
 ./setup status
 
 # Detailed logs
-./setup install jiveturkey --verbose > install.log 2>&1
+cd neosetup
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv" > install.log 2>&1
 ```
 
 ### Reporting Bugs

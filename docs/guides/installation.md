@@ -7,16 +7,20 @@ Complete guide for installing and configuring your Matrix-themed development env
 ### Required
 
 - **Git** - For cloning the repository
-- **Python 3.8+** - For Ansible automation
+- **Python 3.12+** - For Ansible automation (Ansible is pinned to `>=14.2,<15`)
 - **sudo access** - Some installations require elevated privileges
 
 ### Operating System Support
 
-- ✅ Ubuntu 20.04+
-- ✅ Debian 11+
-- ✅ CentOS/RHEL 8+
-- ✅ Fedora 35+
-- ✅ macOS 11+
+Actively supported:
+
+- ✅ Ubuntu 22.04+
+- ✅ Debian 12+
+- ✅ Kali / Parrot (rolling)
+- ✅ macOS 11+ (via the `macos` operator)
+- ✅ Windows via WSL2 (via the `windows_wsl` operator)
+
+Exercised in container testing (CentOS Stream 9, Rocky 9, AlmaLinux 9, Fedora 40) but not a primary target.
 
 ## 🚀 Installation Methods
 
@@ -79,9 +83,13 @@ make docker                   # Docker setup
 # Preview changes (dry run)
 make dry-run OPERATOR=matrix
 
-# Verbose installation
-make install OPERATOR=jiveturkey VERBOSE=true
+# Verbose installation (pass extra ansible-playbook flags via ANSIBLE_FLAGS)
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv"
 ```
+
+> **Note**: `make` accepts any registered operator via `OPERATOR=<name>` (all 8 operators). The `./setup`
+> wrapper only knows `base`, `matrix`, and `jiveturkey` — for the others (`python_dev`, `nodejs_dev`,
+> `go_dev`, `macos`, `windows_wsl`) use `make install OPERATOR=<name>`.
 
 ## 💊 Operator Guide
 
@@ -99,7 +107,8 @@ Choose your reality with different operator configurations:
 
 - Essential shell configuration
 - Basic aliases and functions
-- Minimal tool set (curl, wget, jq, unzip)
+- Essential tool set (htop, tree, jq, curl, wget, yamllint, act, pre-commit) plus the shared modern-CLI
+  tools (eza, bat, ripgrep, fd, fzf, delta, btop)
 - Clean, professional appearance
 
 ### Matrix Operator
@@ -130,50 +139,82 @@ Choose your reality with different operator configurations:
 
 **Includes**: Everything from `matrix` plus:
 
-- Advanced security tools (nmap, netcat, wireshark)
-- Docker-based security functions
-- Network analysis capabilities
-- Development tools (terraform, kubectl, ansible)
-- Penetration testing utilities
+- Networking tools (nmap, netcat)
+- Docker-based security helper functions (impacket, metasploit, SMB/HTTP servers, etc. — these run tools
+  from containers, so no host install is required)
+- Power-user aliases and productivity functions
+
+> **Not yet installed**: the heavier security/DevOps arsenal (wireshark, sqlmap, gobuster, ffuf, john,
+> hashcat, kubectl, helm, awscli, terraform, ansible) is **planned/deferred** — it needs per-platform
+> packaging and installers before it ships. Don't expect these on a fresh `jiveturkey` install today.
+
+### Other Operators
+
+Install any of these with `make install OPERATOR=<name>`:
+
+- **python_dev** - Python toolchain (pyenv, poetry, pipx, black, flake8, mypy, pytest, jupyter)
+- **nodejs_dev** - Node.js environment (nvm)
+- **go_dev** - Go toolchain
+- **macos** - macOS integration (Homebrew, productivity apps, window management)
+- **windows_wsl** - Windows WSL2 integration and interoperability
 
 ## 🔧 Advanced Configuration
 
-### Custom Variables
+### Customizing an Operator
 
-Create `~/.ansible_local.yml` to override defaults:
+There is no separate user-override file — NeoSetup does not read `~/.ansible_local.yml` or any similar
+external config. Customization happens by editing your operator's `vars.yml` (or creating your own operator
+that extends an existing one). Use the real nested keys the roles actually consume:
 
 ```yaml
-# Custom shell configuration
-shell_env_vars:
-  EDITOR: "nvim"
-  BROWSER: "firefox"
+# neosetup/operators/<your-operator>/vars.yml
+shell_config:
+  # Aliases are a name -> command map
+  aliases:
+    vim: "nvim"
+    k: "kubectl"
+  # Oh My Zsh plugins
+  oh_my_zsh_plugins:
+    - git
+    - docker
+    - kubectl
+  # Environment variables
+  environment:
+    EDITOR: "nvim"
+    PAGER: "less"
 
-# Custom aliases
-shell_aliases:
-  - { alias: "vim", command: "nvim" }
-  - { alias: "k", command: "kubectl" }
-  - { alias: "tf", command: "terraform" }
+# Extra tools to install (must be registered in roles/tools/vars/tool_registry.yml)
+tools_config:
+  additional_tools:
+    - ncdu
+    - httpie
 
-# Custom tmux settings
-tmux_custom_config: |
-  # Additional tmux configuration
-  set -g mouse on
-  set -g history-limit 10000
+# Tmux behaviour
+tmux_config:
+  theme: "matrix"      # matrix, base, or custom
+  prefix: "C-a"
+  settings:
+    mouse: true
+    history_limit: 10000
 ```
+
+See the [Configuration Guide](./configuration.md) and the
+[Operator Creation Guide](../development/operator-creation-guide.md) for the full set of keys.
 
 ### Operator Inheritance
 
-Operators use inheritance for clean configuration:
+Operators use inheritance for clean configuration. The main spine is:
 
 ```text
 base (essential tools)
  ↓
 matrix (extends base + Matrix theme)
- ↓  
-jiveturkey (extends matrix + security tools)
+ ↓
+jiveturkey (extends matrix + power-user tools)
 ```
 
-You can extend existing operators by creating new ones in `neosetup/operators/`.
+The remaining operators (`python_dev`, `nodejs_dev`, `go_dev`, `macos`, `windows_wsl`) each extend `base`
+directly. You can extend any existing operator by creating a new one in `neosetup/operators/`.
 
 ## 🛠️ Development Installation
 
@@ -299,7 +340,8 @@ pip3 install ansible
 **Permission denied**:
 
 ```bash
-./setup install jiveturkey --ask-become-pass
+cd neosetup
+make install OPERATOR=jiveturkey ANSIBLE_FLAGS="--ask-become-pass"
 ```
 
 **Network issues**:
@@ -309,7 +351,8 @@ pip3 install ansible
 curl -s https://github.com
 
 # Use verbose mode
-./setup install matrix --verbose
+cd neosetup
+make install OPERATOR=matrix ANSIBLE_FLAGS="-vvv"
 ```
 
 ## 🔄 Updates and Maintenance

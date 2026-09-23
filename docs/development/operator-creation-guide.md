@@ -22,14 +22,22 @@ inheritance, allowing you to create specialized configurations that build upon e
 
 ```text
 base → matrix → jiveturkey
- ↓
-minimal
+
+base → macos
+base → windows_wsl
+base → python_dev
+base → nodejs_dev
+base → go_dev
 ```
 
 - **base**: Essential tools and minimal configuration
-- **matrix**: Matrix-themed aesthetic with additional tools
-- **jiveturkey**: Power-user setup with security tools and advanced configuration
-- **minimal**: Bare-bones setup (extends base)
+- **matrix**: Matrix-themed aesthetic with additional tools (extends base)
+- **jiveturkey**: Power-user setup with productivity + networking tools (extends matrix)
+- **macos / windows_wsl**: Platform-specific integration (each extends base)
+- **python_dev / nodejs_dev / go_dev**: Language-focused developer environments (each extends base)
+
+The eight operators above are the built-ins registered in `group_vars/all/operators.yml`. `minimal`,
+`standard`, and `advanced` are generator *templates* (see below), not operators.
 
 ## Operator Structure
 
@@ -259,7 +267,8 @@ python3 scripts/validate_operator.py my_operator --info
 
 - **operator_name**: lowercase, alphanumeric + underscore, max 50 chars
 - **operator_version**: semantic version (e.g., "1.0.0", "2.1.0-beta")
-- **preferred_shell**: "zsh", "bash", "fish", or "auto"
+- **preferred_shell**: `"zsh"`, `"bash"`, or `"auto"`. The schema also accepts `"fish"`, but the installer
+  only implements zsh (oh-my-zsh) and bash (bash-it) — fish is not supported, so don't rely on it.
 - **tmux_prefix**: format "C-x" where x is a letter
 - **oh_my_zsh_plugins**: max 20 plugins (warning beyond 15)
 
@@ -455,8 +464,8 @@ function_test    # Test your functions
 5. **Permission issues**
 
    ```bash
-   # Some tasks need sudo privileges
-   make install OPERATOR=my_operator --ask-become-pass
+   # Some tasks need sudo privileges — pass --ask-become-pass through ANSIBLE_FLAGS
+   make install OPERATOR=my_operator ANSIBLE_FLAGS="--ask-become-pass"
    ```
 
 ### Getting Help
@@ -471,8 +480,8 @@ function_test    # Test your functions
 Enable verbose output for troubleshooting:
 
 ```bash
-# Verbose Ansible output
-make install OPERATOR=my_operator VERBOSE=true
+# Verbose Ansible output (VERBOSE=true is not wired; pass verbosity via ANSIBLE_FLAGS)
+make install OPERATOR=my_operator ANSIBLE_FLAGS="-vvv"
 
 # Debug specific tasks
 ansible-playbook playbooks/site.yml --tags "shell" -vvv
