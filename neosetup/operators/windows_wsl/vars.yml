@@ -46,9 +46,6 @@ tools_config:
     - wget
     - unzip
   wsl_specific_tools: true
-  windows_integration_tools:
-    - powershell  # PowerShell Core for cross-platform scripting
-    - code  # VS Code integration
 
 # Shell configuration optimized for WSL2
 shell_config:
