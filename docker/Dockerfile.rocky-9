@@ -31,13 +31,19 @@ COPY neosetup/requirements.yml /tmp/requirements.yml
 # Create virtual environment and install from requirements
 # ansible >=14.2 requires Python >=3.12, which these base distros ship older.
 # uv provides a standalone CPython 3.12 uniformly across distros (test harness only).
+# Store uv's managed CPython under /opt (world-readable) instead of the default
+# /root, so the venv interpreter stays usable after we drop to testuser below.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
+# venv first on PATH so python3/ansible/ansible-playbook resolve to it (has PyYAML
+# + ansible) for the non-login `docker run ... python3 ...` test invocation.
+ENV PATH="/opt/ansible-venv/bin:/root/.local/bin:${PATH}"
 RUN uv python install 3.12 && \
     uv venv --python 3.12 --seed /opt/ansible-venv && \
     /opt/ansible-venv/bin/pip install --no-cache-dir --upgrade pip && \
     /opt/ansible-venv/bin/pip install --no-cache-dir -r /tmp/requirements-runtime.txt && \
-    rm -rf /root/.cache
+    rm -rf /root/.cache && \
+    chmod -R a+rX /opt/uv-python /opt/ansible-venv
 
 # Install Ansible Galaxy collections and roles
 RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml && \
