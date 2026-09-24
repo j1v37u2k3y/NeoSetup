@@ -1,0 +1,71 @@
+---
+# Custom installation for Azure CLI.
+# Linux: official Microsoft apt/yum repo with GPG-verified signing key.
+# macOS: Homebrew. No unverified curl|bash.
+# NOTE: execution is proven by the Container Multi-OS Testing matrix, not locally.
+
+- name: "☁️  Install azure-cli on macOS"
+  when: platform_key == 'darwin'
+  community.general.homebrew:
+    name: azure-cli
+    state: present
+
+- name: "☁️  Install azure-cli on Ubuntu/Debian"
+  when: platform_key in ['ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if az is already installed"
+      command: which az
+      register: az_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📁 Ensure apt keyrings directory exists"
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+      when: az_check.rc != 0
+
+    - name: "📥 Add Microsoft apt signing key + Azure CLI repository"
+      when: az_check.rc != 0
+      shell: |
+        set -euo pipefail
+        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
+          | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
+        chmod 0644 /etc/apt/keyrings/microsoft.gpg
+        AZ_DIST="$(lsb_release -cs)"
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ ${AZ_DIST} main" \
+          > /etc/apt/sources.list.d/azure-cli.list
+      args:
+        executable: /bin/bash
+        creates: /etc/apt/sources.list.d/azure-cli.list
+
+    - name: "📦 Install azure-cli"
+      apt:
+        name: azure-cli
+        update_cache: yes
+        state: present
+
+- name: "☁️  Install azure-cli on RedHat/Fedora"
+  when: platform_key == 'redhat'
+  become: yes
+  block:
+    - name: "📥 Import Microsoft RPM signing key"
+      rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: "📥 Add Azure CLI yum repository"
+      yum_repository:
+        name: azure-cli
+        description: Azure CLI
+        baseurl: https://packages.microsoft.com/yumrepos/azure-cli
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+        gpgcheck: yes
+        enabled: yes
+
+    - name: "📦 Install azure-cli"
+      package:
+        name: azure-cli
+        state: present

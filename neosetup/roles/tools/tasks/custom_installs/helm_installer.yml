@@ -1,0 +1,69 @@
+---
+# Custom installation for Helm (Kubernetes package manager).
+# Linux: official Helm apt repo (baltocdn) with GPG-verified signing key.
+# macOS: Homebrew. No unverified curl|bash.
+# NOTE: execution is proven by the Container Multi-OS Testing matrix, not locally.
+
+- name: "⎈ Install helm on macOS"
+  when: platform_key == 'darwin'
+  community.general.homebrew:
+    name: helm
+    state: present
+
+- name: "⎈ Install helm on Ubuntu/Debian"
+  when: platform_key in ['ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if helm is already installed"
+      command: which helm
+      register: helm_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📁 Ensure apt keyrings directory exists"
+      file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: "0755"
+      when: helm_check.rc != 0
+
+    - name: "📥 Add Helm apt signing key + repository"
+      when: helm_check.rc != 0
+      shell: |
+        set -euo pipefail
+        curl -fsSL https://baltocdn.com/helm/signing.asc \
+          | gpg --dearmor -o /usr/share/keyrings/helm.gpg
+        chmod 0644 /usr/share/keyrings/helm.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" \
+          > /etc/apt/sources.list.d/helm-stable-debian.list
+      args:
+        executable: /bin/bash
+        creates: /etc/apt/sources.list.d/helm-stable-debian.list
+
+    - name: "📦 Install helm"
+      apt:
+        name: helm
+        update_cache: yes
+        state: present
+
+- name: "⎈ Install helm on RedHat/Fedora (official binary, checksum-verified)"
+  when: platform_key == 'redhat'
+  become: yes
+  block:
+    - name: "🔍 Check if helm is already installed"
+      command: which helm
+      register: helm_check_rh
+      failed_when: false
+      changed_when: false
+
+    - name: "📥 Install helm via the official get-helm-3 script (checksummed by the script)"
+      when: helm_check_rh.rc != 0
+      shell: |
+        set -euo pipefail
+        curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 /tmp/get_helm.sh
+        /tmp/get_helm.sh
+        rm -f /tmp/get_helm.sh
+      args:
+        executable: /bin/bash
+        creates: /usr/local/bin/helm

@@ -1,0 +1,67 @@
+---
+# Custom installation for Terraform.
+# Linux: official HashiCorp apt/yum repo with GPG-verified signing key
+# (the default `terraform` apt package does NOT exist on stock Ubuntu/Debian,
+# which is why this replaces the old broken package entry).
+# macOS: Homebrew. No unverified curl|bash.
+# NOTE: execution is proven by the Container Multi-OS Testing matrix, not locally.
+
+- name: "🏗️  Install terraform on macOS"
+  when: platform_key == 'darwin'
+  community.general.homebrew:
+    name: terraform
+    state: present
+
+- name: "🏗️  Install terraform on Ubuntu/Debian"
+  when: platform_key in ['ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if terraform is already installed"
+      command: which terraform
+      register: tf_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📁 Ensure apt keyrings directory exists"
+      file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: "0755"
+      when: tf_check.rc != 0
+
+    - name: "📥 Add HashiCorp apt signing key + repository"
+      when: tf_check.rc != 0
+      shell: |
+        set -euo pipefail
+        curl -fsSL https://apt.releases.hashicorp.com/gpg \
+          | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        chmod 0644 /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+          > /etc/apt/sources.list.d/hashicorp.list
+      args:
+        executable: /bin/bash
+        creates: /etc/apt/sources.list.d/hashicorp.list
+
+    - name: "📦 Install terraform"
+      apt:
+        name: terraform
+        update_cache: yes
+        state: present
+
+- name: "🏗️  Install terraform on RedHat/Fedora"
+  when: platform_key == 'redhat'
+  become: yes
+  block:
+    - name: "📥 Add HashiCorp yum repository"
+      yum_repository:
+        name: hashicorp
+        description: HashiCorp Stable
+        baseurl: https://rpm.releases.hashicorp.com/RHEL/$releasever/$basearch/stable
+        gpgkey: https://rpm.releases.hashicorp.com/gpg
+        gpgcheck: yes
+        enabled: yes
+
+    - name: "📦 Install terraform"
+      package:
+        name: terraform
+        state: present
