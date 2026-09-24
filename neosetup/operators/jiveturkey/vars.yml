@@ -8,6 +8,12 @@ operator_version: "2.1.0"
 operator_description: "Power-user setup with security tools and productivity enhancements"
 extends: "matrix"
 
+# Composable tool-set categories — jiveturkey's arsenal.
+# offsec = the full red-team kit (see tool_sets in roles/tools/vars/tool_registry.yml).
+# cloud + devops get added once their categories land (Phases 2/3b).
+tool_categories:
+  - offsec
+
 # Shell configuration (extends matrix)
 shell_config:
   # Keep Matrix theme
