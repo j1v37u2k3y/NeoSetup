@@ -99,7 +99,7 @@
   block:
     - name: "⚙️ Configure custom environment variables"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: "export {{ item.key }}='{{ item.value }}'"
         create: yes
       loop:

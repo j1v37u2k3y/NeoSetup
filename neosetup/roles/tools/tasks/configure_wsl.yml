@@ -24,14 +24,14 @@
 
     - name: "⚙️ Configure Windows PATH integration"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: "export PATH=\"$PATH:/mnt/c/Windows/System32:/mnt/c/Program Files/Git/cmd\""
         create: yes
       when: wsl_config.enable_windows_path_integration | default(true)
 
     - name: "🔗 Create Windows integration aliases"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: "alias {{ item.alias }}='{{ item.command }}'"
         create: yes
       loop:
@@ -44,7 +44,7 @@
 
     - name: "🌐 Set Windows browser as default"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: "export BROWSER='/mnt/c/Program Files/Google/Chrome/Application/chrome.exe'"
         create: yes
       when: wsl_config.configure_windows_integration | default(true)

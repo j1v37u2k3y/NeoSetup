@@ -23,7 +23,7 @@
 
     - name: "📝 Ensure nvm is sourced from shell rc"
       blockinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         create: yes
         marker: "# {mark} NEOSETUP NVM"
         block: |

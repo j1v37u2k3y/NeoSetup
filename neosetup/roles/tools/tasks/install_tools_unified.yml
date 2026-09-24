@@ -79,8 +79,9 @@
       loop: "{{ tools_to_install | unique }}"
       when:
         - item in tool_registry
-        - platform_key in tool_registry[item].packages
         - tool_registry[item].custom_install is not defined
+        - tool_registry[item].packages is defined
+        - platform_key in tool_registry[item].packages
         - tool_registry[item].install_method | default('brew') != 'cask'
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
@@ -92,6 +93,8 @@
       loop: "{{ tools_to_install | unique }}"
       when:
         - item in tool_registry
+        - tool_registry[item].custom_install is not defined
+        - tool_registry[item].packages is defined
         - platform_key in tool_registry[item].packages
         - tool_registry[item].install_method | default('brew') == 'cask'
       loop_control:
@@ -124,8 +127,9 @@
       loop: "{{ tools_to_install | unique }}"
       when:
         - item in tool_registry
-        - (tool_registry[item].packages.ubuntu is defined) or (tool_registry[item].packages.debian is defined) or (platform_key in tool_registry[item].packages)
         - tool_registry[item].custom_install is not defined
+        - tool_registry[item].packages is defined
+        - (tool_registry[item].packages.ubuntu is defined) or (tool_registry[item].packages.debian is defined) or (platform_key in tool_registry[item].packages)
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [WSL2]"
       ignore_errors: yes
@@ -142,8 +146,9 @@
       loop: "{{ tools_to_install | unique }}"
       when:
         - item in tool_registry
-        - platform_key in tool_registry[item].packages
         - tool_registry[item].custom_install is not defined
+        - tool_registry[item].packages is defined
+        - platform_key in tool_registry[item].packages
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
       ignore_errors: yes
@@ -157,6 +162,7 @@
   when:
     - item in tool_registry
     - tool_registry[item].install_method | default('') == 'pip'
+    - tool_registry[item].packages is defined
     - tool_registry[item].packages.pip is defined
   loop_control:
     label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pip]"
@@ -170,6 +176,7 @@
   when:
     - item in tool_registry
     - tool_registry[item].install_method | default('') == 'pipx'
+    - tool_registry[item].packages is defined
     - tool_registry[item].packages.pipx is defined
   loop_control:
     label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pipx]"
