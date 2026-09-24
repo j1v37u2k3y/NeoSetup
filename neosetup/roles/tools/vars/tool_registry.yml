@@ -744,3 +744,56 @@ operator_tool_sets:
     - helm
     - terraform
     - docker-compose
+
+# Composable category tool sets. Operators opt in via `tool_categories: [...]`;
+# the installer unions these with the inheritance-spine sets.
+# See docs/architecture/composable-tool-sets.md.
+# Phase 1 defines only fully-registered categories; security/offsec/cloud/devops
+# arrive in later phases alongside their tool registrations and installers.
+tool_sets:
+  core:
+    - htop
+    - tree
+    - jq
+    - curl
+    - wget
+    - yamllint
+    - act
+    - pre-commit
+  modern_cli:
+    - eza
+    - bat
+    - ripgrep
+    - fd
+    - fzf
+    - delta
+    - btop
+  matrix_fun:
+    - cmatrix
+    - neofetch
+    - lolcat
+    - figlet
+    - cowsay
+    - fortune
+  python:
+    - pyenv
+    - poetry
+    - pipx
+    - black
+    - flake8
+    - mypy
+    - isort
+    - pytest
+    - ipython
+    - jupyter
+    - cookiecutter
+  node:
+    - nvm
+  go:
+    - go
+  macos:
+    - duti
+    - mas
+    - mackup
+    - stats
+    - rectangle

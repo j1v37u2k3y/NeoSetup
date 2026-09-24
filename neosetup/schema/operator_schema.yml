@@ -57,6 +57,13 @@ operator_metadata:
         type: string
       description: "Free-form descriptive tags (e.g. development, security, python, go, nodejs)"
 
+    tool_categories:
+      type: array
+      items:
+        type: string
+        enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos" ]
+      description: "Composable tool-set categories this operator opts into (see tool_sets in tool_registry.yml)"
+
 # Shell configuration schema
 shell_config:
   optional_fields:
