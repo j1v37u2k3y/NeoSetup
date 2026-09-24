@@ -39,6 +39,12 @@
             | map('extract', operator_tool_sets)
             | flatten
           )
+        + (
+            (tool_categories | default([]))
+            | select('in', tool_sets | default({}))
+            | map('extract', tool_sets | default({}))
+            | flatten
+          )
         + (tools_config.additional_tools | default([]))
       }}
 
