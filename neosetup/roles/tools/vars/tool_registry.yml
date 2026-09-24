@@ -196,6 +196,86 @@ tool_registry:
       debian: netcat-openbsd
       redhat: nmap-ncat
 
+  # OffSec / security tools (Phase 3). Coverage verified: apt on ubuntu/debian/Kali,
+  # brew on macOS. redhat omitted where not in default repos (honest coverage);
+  # metasploit / responder / netexec + Linux coverage for the brew-only tools land
+  # in Phase 3b with dedicated verified installers.
+  sqlmap:
+    description: "Automatic SQL injection and takeover tool"
+    category: security
+    packages:
+      darwin: sqlmap
+      ubuntu: sqlmap
+      debian: sqlmap
+
+  gobuster:
+    description: "Directory/DNS/vhost brute-forcer"
+    category: security
+    packages:
+      darwin: gobuster
+      ubuntu: gobuster
+      debian: gobuster
+
+  ffuf:
+    description: "Fast web fuzzer"
+    category: security
+    packages:
+      darwin: ffuf
+      ubuntu: ffuf
+      debian: ffuf
+
+  john:
+    description: "John the Ripper password cracker"
+    category: security
+    packages:
+      darwin: john-jumbo
+      ubuntu: john
+      debian: john
+
+  hashcat:
+    description: "Advanced password recovery"
+    category: security
+    packages:
+      darwin: hashcat
+      ubuntu: hashcat
+      debian: hashcat
+
+  wireshark:
+    description: "Network protocol analyzer"
+    category: security
+    install_method: cask
+    packages:
+      darwin: wireshark
+      ubuntu: wireshark
+      debian: wireshark
+
+  nuclei:
+    description: "Template-based vulnerability scanner (macOS via brew; Linux installer in Phase 3b)"
+    category: security
+    packages:
+      darwin: nuclei
+
+  impacket:
+    description: "Python classes for working with network protocols (SMB/MSRPC/etc.)"
+    category: security
+    install_method: pip
+    packages:
+      pip: impacket
+
+  burp-suite:
+    description: "Web security testing proxy (GUI; macOS cask, Linux installer in Phase 3b)"
+    category: security
+    install_method: cask
+    packages:
+      darwin: burp-suite
+
+  bloodhound:
+    description: "Active Directory attack-path mapping (GUI; macOS cask, Linux installer in Phase 3b)"
+    category: security
+    install_method: cask
+    packages:
+      darwin: bloodhound
+
   # File managers
   ranger:
     description: "Terminal file manager"
@@ -797,3 +877,28 @@ tool_sets:
     - mackup
     - stats
     - rectangle
+  # Lighter shared security CLI set (cross-platform: apt + brew)
+  security:
+    - nmap
+    - netcat
+    - sqlmap
+    - gobuster
+    - ffuf
+    - john
+    - hashcat
+    - wireshark
+  # Full red-team kit (jiveturkey's combo). macOS-complete; Linux coverage for
+  # nuclei/burp-suite/bloodhound + metasploit/responder/netexec arrives in Phase 3b.
+  offsec:
+    - nmap
+    - netcat
+    - sqlmap
+    - gobuster
+    - ffuf
+    - john
+    - hashcat
+    - wireshark
+    - nuclei
+    - impacket
+    - burp-suite
+    - bloodhound

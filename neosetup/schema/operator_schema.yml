@@ -61,7 +61,7 @@ operator_metadata:
       type: array
       items:
         type: string
-        enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos" ]
+        enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec" ]
       description: "Composable tool-set categories this operator opts into (see tool_sets in tool_registry.yml)"
 
 # Shell configuration schema
