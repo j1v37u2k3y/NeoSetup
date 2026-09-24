@@ -72,7 +72,7 @@
 
     - name: "📝 Add pyenv to shell PATH"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: "{{ item }}"
         create: yes
       loop:

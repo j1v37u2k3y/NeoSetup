@@ -18,7 +18,7 @@
 
     - name: "📝 Add Poetry to shell PATH"
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc"
+        path: "{{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc"
         line: 'export PATH="$HOME/.local/bin:$PATH"'
         create: yes
 
@@ -33,8 +33,8 @@
     - name: "🔧 Enable Poetry shell completion"
       shell: |
         export PATH="$HOME/.local/bin:$PATH"
-        poetry completions {{ ansible_env.SHELL | basename }} > {{ ansible_env.HOME }}/.poetry_completion
-        echo 'source ~/.poetry_completion' >> {{ ansible_env.HOME }}/.{{ ansible_env.SHELL | basename }}rc
+        poetry completions {{ ansible_env.SHELL | default('/bin/bash', true) | basename }} > {{ ansible_env.HOME }}/.poetry_completion
+        echo 'source ~/.poetry_completion' >> {{ ansible_env.HOME }}/.{{ ansible_env.SHELL | default('/bin/bash', true) | basename }}rc
       when: poetry_check.rc != 0
       ignore_errors: yes
 
