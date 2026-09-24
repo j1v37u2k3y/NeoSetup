@@ -29,10 +29,15 @@ COPY neosetup/requirements-runtime.txt /tmp/requirements-runtime.txt
 COPY neosetup/requirements.yml /tmp/requirements.yml
 
 # Create virtual environment and install from requirements
-RUN python3 -m venv /opt/ansible-venv && \
+# ansible >=14.2 requires Python >=3.12, which these base distros ship older.
+# uv provides a standalone CPython 3.12 uniformly across distros (test harness only).
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+RUN uv python install 3.12 && \
+    uv venv --python 3.12 --seed /opt/ansible-venv && \
     /opt/ansible-venv/bin/pip install --no-cache-dir --upgrade pip && \
     /opt/ansible-venv/bin/pip install --no-cache-dir -r /tmp/requirements-runtime.txt && \
-    rm -rf /root/.cache/pip
+    rm -rf /root/.cache
 
 # Install Ansible Galaxy collections and roles
 RUN /opt/ansible-venv/bin/ansible-galaxy install -r /tmp/requirements.yml && \
