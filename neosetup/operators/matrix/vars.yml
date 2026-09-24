@@ -73,41 +73,6 @@ tmux_config:
     - "tmux-plugins/tmux-continuum"
 
 # Tools configuration (extends base)
-tools_config:
-  # Matrix-specific tools
-  matrix_tools:
-    - name: "cmatrix"
-      description: "Matrix digital rain"
-      package:
-        macos: "cmatrix"
-        debian: "cmatrix"
-        redhat: "cmatrix"
-    - name: "figlet"
-      description: "ASCII art text"
-      package:
-        macos: "figlet"
-        debian: "figlet"
-        redhat: "figlet"
-    - name: "lolcat"
-      description: "Rainbow text"
-      package:
-        macos: "lolcat"
-        debian: "lolcat"
-        redhat: "lolcat"
-    - name: "neofetch"
-      description: "System info"
-      package:
-        macos: "neofetch"
-        debian: "neofetch"
-        redhat: "neofetch"
-    - name: "fortune"
-      description: "Random quotes"
-      package:
-        macos: "fortune"
-        debian: "fortune-mod"
-        redhat: "fortune-mod"
-
-# Matrix theme settings
 matrix_theme:
   primary_color: "#00ff00"
   secondary_color: "#003300"
