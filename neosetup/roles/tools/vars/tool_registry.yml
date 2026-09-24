@@ -687,13 +687,10 @@ tool_registry:
 
   # Cloud and DevOps tools
   awscli:
-    description: "Amazon Web Services CLI"
+    description: "Amazon Web Services CLI (macOS via brew; Linux v2 installer is a follow-up)"
     category: cloud
     packages:
       darwin: awscli
-      ubuntu: awscli
-      debian: awscli
-      redhat: awscli
 
   kubectl:
     description: "Kubernetes command-line tool"
@@ -712,11 +709,10 @@ tool_registry:
   terraform:
     description: "Infrastructure as Code tool"
     category: cloud
+    custom_install: terraform_installer
     packages:
-      darwin: terraform
-      ubuntu: terraform
-      debian: terraform
-      redhat: terraform
+      # HashiCorp apt/yum repo on Linux, brew on macOS — see terraform_installer.yml
+      # (the default `terraform` apt package does not exist on stock Ubuntu/Debian)
 
   docker-compose:
     description: "Multi-container Docker applications"
@@ -902,3 +898,11 @@ tool_sets:
     - impacket
     - burp-suite
     - bloodhound
+  # Cloud / IaC (verified installers: official GPG apt/yum repos on Linux, brew on macOS).
+  # awscli is macOS-only for now (Linux v2 installer is a follow-up).
+  cloud:
+    - kubectl
+    - helm
+    - awscli
+    - azure-cli
+    - terraform

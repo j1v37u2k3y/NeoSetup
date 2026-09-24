@@ -1,0 +1,65 @@
+---
+# Custom installation for kubectl (Kubernetes CLI).
+# Linux: official pkgs.k8s.io apt/yum repo with GPG-verified signing key.
+# macOS: Homebrew. No unverified curl|bash.
+# NOTE: execution is proven by the Container Multi-OS Testing matrix, not locally.
+
+- name: "☸️  Install kubectl on macOS"
+  when: platform_key == 'darwin'
+  community.general.homebrew:
+    name: kubernetes-cli
+    state: present
+
+- name: "☸️  Install kubectl on Ubuntu/Debian"
+  when: platform_key in ['ubuntu', 'debian']
+  become: yes
+  block:
+    - name: "🔍 Check if kubectl is already installed"
+      command: which kubectl
+      register: kubectl_check
+      failed_when: false
+      changed_when: false
+
+    - name: "📁 Ensure apt keyrings directory exists"
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+      when: kubectl_check.rc != 0
+
+    - name: "📥 Add Kubernetes apt signing key + repository"
+      when: kubectl_check.rc != 0
+      shell: |
+        set -euo pipefail
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kubectl_channel | default('v1.31') }}/deb/Release.key \
+          | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubectl_channel | default('v1.31') }}/deb/ /" \
+          > /etc/apt/sources.list.d/kubernetes.list
+      args:
+        executable: /bin/bash
+        creates: /etc/apt/sources.list.d/kubernetes.list
+
+    - name: "📦 Install kubectl"
+      apt:
+        name: kubectl
+        update_cache: yes
+        state: present
+
+- name: "☸️  Install kubectl on RedHat/Fedora"
+  when: platform_key == 'redhat'
+  become: yes
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: "https://pkgs.k8s.io/core:/stable:/{{ kubectl_channel | default('v1.31') }}/rpm/"
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/{{ kubectl_channel | default('v1.31') }}/rpm/repodata/repomd.xml.key"
+    gpgcheck: yes
+    enabled: yes
+
+- name: "📦 Install kubectl (RedHat/Fedora)"
+  when: platform_key == 'redhat'
+  become: yes
+  package:
+    name: kubectl
+    state: present
