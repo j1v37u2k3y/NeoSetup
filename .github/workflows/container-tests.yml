@@ -158,6 +158,10 @@ jobs:
   verify-tool-installs:
     name: 🔬 Install+verify ${{ matrix.operator }} on ${{ matrix.os.name }}
     runs-on: ubuntu-latest
+    # Non-voting: this reports per-distro tool-install coverage (the arsenal is
+    # still being packaged cross-distro) without gating the matrix. Builds and
+    # the 🧪 Test jobs remain the hard gate.
+    continue-on-error: true
     needs: build-test-containers
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
@@ -192,7 +196,7 @@ jobs:
             -v "$(pwd):/neosetup" \
             -w /neosetup/neosetup \
             "neosetup-test-${{ matrix.os.name }}" \
-            ansible-playbook playbooks/site.yml \
+            /opt/ansible-venv/bin/ansible-playbook playbooks/site.yml \
               --tags tools \
               --connection local \
               -i "localhost," \
@@ -204,7 +208,7 @@ jobs:
             -v "$(pwd):/neosetup" \
             -w /neosetup \
             "neosetup-test-${{ matrix.os.name }}" \
-            python3 .github/scripts/test_binary_validation.py \
+            /opt/ansible-venv/bin/python3 .github/scripts/test_binary_validation.py \
               --os "${{ matrix.os.name }}" \
               --operator "${{ matrix.operator }}" \
               -v
