@@ -68,10 +68,10 @@ def _write_summary(jobs, critical_jobs, summary_file):
     log_both(f"{emoji} pre-commit: {status}", summary_file)
     log_both("", summary_file)
 
-    # Ansible multi-version
+    # Ansible syntax check
     log_both("## 🎭 Ansible Compatibility", summary_file)
     log_both("", summary_file)
-    log_both("Tests syntax with Ansible 6.0 and 7.0.", summary_file)
+    log_both("Tests playbook syntax with Ansible 14 on Python 3.12.", summary_file)
     log_both("", summary_file)
     emoji, status = get_job_status_emoji(jobs["ansible-syntax"])
     log_both(f"{emoji} ansible-syntax: {status}", summary_file)
