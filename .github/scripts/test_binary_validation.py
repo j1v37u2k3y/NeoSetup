@@ -94,7 +94,8 @@ def get_operator_tools(
     # Inheritance spine (dynamic, from group_vars) + the operator itself.
     inheritance = {}
     if group_vars_path and group_vars_path.exists():
-        gv = yaml.safe_load(open(group_vars_path, encoding="utf-8")) or {}
+        with open(group_vars_path, encoding="utf-8") as f:
+            gv = yaml.safe_load(f) or {}
         inheritance = gv.get("operator_inheritance", {}) or {}
     for op in (inheritance.get(operator, []) or []) + [operator]:
         tools |= set(operator_sets.get(op, []))
@@ -103,7 +104,8 @@ def get_operator_tools(
     if operators_dir:
         op_vars_path = operators_dir / operator / "vars.yml"
         if op_vars_path.exists():
-            ov = yaml.safe_load(open(op_vars_path, encoding="utf-8")) or {}
+            with open(op_vars_path, encoding="utf-8") as f:
+                ov = yaml.safe_load(f) or {}
             for category in ov.get("tool_categories", []) or []:
                 tools |= set(tool_sets.get(category, []))
             tools |= set((ov.get("tools_config") or {}).get("additional_tools") or [])
@@ -190,10 +192,10 @@ def validate_operator_tools(
     operator: str,
     os_name: str,
     verbose: bool = False,
-    group_vars_path: Path | None = None,
-    operators_dir: Path | None = None,
+    source_paths: tuple[Path | None, Path | None] = (None, None),
 ) -> tuple[int, int, list]:
     """Validate all tools for an operator are installed."""
+    group_vars_path, operators_dir = source_paths
     tools = get_operator_tools(registry, operator, group_vars_path, operators_dir)
     tool_registry = registry.get("tool_registry", {})
     platform = get_platform(os_name)
@@ -272,7 +274,7 @@ def main():
     operators_dir = neosetup_root / "operators"
 
     passed, failed, failures = validate_operator_tools(
-        registry, args.operator, args.os, args.verbose, group_vars_path, operators_dir
+        registry, args.operator, args.os, args.verbose, (group_vars_path, operators_dir)
     )
 
     # Summary
