@@ -24,6 +24,7 @@ BINARY_NAME_MAP = {
     "python3-pip": "pip3",
     "awscli": "aws",
     "azure-cli": "az",
+    "impacket": "impacket-smbserver",
 }
 
 # Platform-specific binary name overrides
@@ -75,28 +76,41 @@ def get_binary_name(tool_name: str, platform: str = "") -> str:
     return BINARY_NAME_MAP.get(tool_name, tool_name)
 
 
-def get_operator_tools(registry: dict, operator: str) -> set:
-    """Get all tools for an operator including inherited tools."""
+def get_operator_tools(
+    registry: dict,
+    operator: str,
+    group_vars_path: Path | None = None,
+    operators_dir: Path | None = None,
+) -> set:
+    """Compose an operator's expected tools exactly like install_tools_unified.yml:
+    modern_cli + operator_tool_sets across the inheritance spine + tool_categories
+    (via tool_sets) + tools_config.additional_tools. Reads inheritance from
+    group_vars and the operator's own vars so it stays correct as operators change."""
     operator_sets = registry.get("operator_tool_sets", {})
+    tool_sets = registry.get("tool_sets", {})
 
-    # Base tools included with all operators
-    base_tools = set(operator_sets.get("base", []))
-    modern_cli = set(operator_sets.get("modern_cli", []))
+    tools = set(operator_sets.get("modern_cli", []))
 
-    if operator == "base":
-        return base_tools | modern_cli
+    # Inheritance spine (dynamic, from group_vars) + the operator itself.
+    inheritance = {}
+    if group_vars_path and group_vars_path.exists():
+        with open(group_vars_path, encoding="utf-8") as f:
+            gv = yaml.safe_load(f) or {}
+        inheritance = gv.get("operator_inheritance", {}) or {}
+    for op in (inheritance.get(operator, []) or []) + [operator]:
+        tools |= set(operator_sets.get(op, []))
 
-    if operator == "matrix":
-        matrix_tools = set(operator_sets.get("matrix", []))
-        return base_tools | matrix_tools | modern_cli
+    # The operator's opted-in categories + additional_tools (from its vars.yml).
+    if operators_dir:
+        op_vars_path = operators_dir / operator / "vars.yml"
+        if op_vars_path.exists():
+            with open(op_vars_path, encoding="utf-8") as f:
+                ov = yaml.safe_load(f) or {}
+            for category in ov.get("tool_categories", []) or []:
+                tools |= set(tool_sets.get(category, []))
+            tools |= set((ov.get("tools_config") or {}).get("additional_tools") or [])
 
-    if operator == "jiveturkey":
-        matrix_tools = set(operator_sets.get("matrix", []))
-        jiveturkey_tools = set(operator_sets.get("jiveturkey", []))
-        return base_tools | matrix_tools | jiveturkey_tools | modern_cli
-
-    # Unknown operator - just return its tools
-    return set(operator_sets.get(operator, []))
+    return tools
 
 
 def get_platform(os_name: str) -> str:
@@ -174,10 +188,15 @@ def validate_single_tool(tool: str, platform: str, tool_registry: dict, verbose:
 
 
 def validate_operator_tools(
-    registry: dict, operator: str, os_name: str, verbose: bool = False
+    registry: dict,
+    operator: str,
+    os_name: str,
+    verbose: bool = False,
+    source_paths: tuple[Path | None, Path | None] = (None, None),
 ) -> tuple[int, int, list]:
     """Validate all tools for an operator are installed."""
-    tools = get_operator_tools(registry, operator)
+    group_vars_path, operators_dir = source_paths
+    tools = get_operator_tools(registry, operator, group_vars_path, operators_dir)
     tool_registry = registry.get("tool_registry", {})
     platform = get_platform(os_name)
 
@@ -203,7 +222,7 @@ def main():
     parser.add_argument(
         "--operator",
         required=True,
-        choices=["base", "matrix", "jiveturkey"],
+        choices=["base", "matrix", "jiveturkey", "macos", "windows_wsl", "python_dev", "nodejs_dev", "go_dev"],
         help="Operator to validate",
     )
     parser.add_argument(
@@ -248,7 +267,15 @@ def main():
     print(f"📋 Loading registry from {registry_path}")
     registry = load_tool_registry(registry_path)
 
-    passed, failed, failures = validate_operator_tools(registry, args.operator, args.os, args.verbose)
+    # Derive group_vars + operators dir from the registry location
+    # (.../neosetup/roles/tools/vars/tool_registry.yml -> neosetup root is parents[3]).
+    neosetup_root = registry_path.resolve().parents[3]
+    group_vars_path = neosetup_root / "group_vars" / "all" / "operators.yml"
+    operators_dir = neosetup_root / "operators"
+
+    passed, failed, failures = validate_operator_tools(
+        registry, args.operator, args.os, args.verbose, (group_vars_path, operators_dir)
+    )
 
     # Summary
     print(f"\n{'=' * 60}")

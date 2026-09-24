@@ -144,9 +144,70 @@ jobs:
               --os "${{ matrix.os.name }}" \
               --pkg-mgr "${{ matrix.os.pkg_mgr }}"
 
-      # NOTE: Binary validation (test_binary_validation.py) is available for local testing
-      # but not included in CI since container tests use dry-run mode and don't install tools.
-      # Run locally with: python3 .github/scripts/test_binary_validation.py --os darwin --operator base -v
+      # Dry-run compatibility is checked above. The ACTUAL install + binary
+      # verification (the real proving ground) is the verify-tool-installs job
+      # below — issue #77.
+
+  # ============================================================================
+  # ACTUAL TOOL INSTALL + BINARY VERIFICATION (issue #77)
+  # The real proof that the registered tools + custom installers work.
+  # Heavy (real installs across distros) -> nightly schedule + on-demand only,
+  # NOT on every workflow_run/push.
+  # ============================================================================
+
+  verify-tool-installs:
+    name: 🔬 Install+verify ${{ matrix.operator }} on ${{ matrix.os.name }}
+    runs-on: ubuntu-latest
+    needs: build-test-containers
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: 'ubuntu-22.04' }
+          - { name: 'ubuntu-24.04' }
+          - { name: 'debian-12' }
+          - { name: 'kali-rolling' }
+          - { name: 'parrot-security' }
+          - { name: 'centos-stream-9' }
+          - { name: 'rocky-9' }
+          - { name: 'almalinux-9' }
+          - { name: 'fedora-40' }
+        operator: [base, matrix, jiveturkey]
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v7
+
+      - name: 📥 Download test container
+        uses: actions/download-artifact@v8
+        with:
+          name: test-container-${{ matrix.os.name }}
+
+      - name: 🐳 Load test container
+        run: docker load < neosetup-test-${{ matrix.os.name }}.tar.gz
+
+      - name: 📦 Install the operator's tools (actual install — tools role)
+        run: |
+          docker run --rm \
+            -v "$(pwd):/neosetup" \
+            -w /neosetup/neosetup \
+            "neosetup-test-${{ matrix.os.name }}" \
+            ansible-playbook playbooks/site.yml \
+              --tags tools \
+              --connection local \
+              -i "localhost," \
+              -e "neosetup_operator=${{ matrix.operator }}"
+
+      - name: 🔬 Verify the expected binaries are installed
+        run: |
+          docker run --rm \
+            -v "$(pwd):/neosetup" \
+            -w /neosetup \
+            "neosetup-test-${{ matrix.os.name }}" \
+            python3 .github/scripts/test_binary_validation.py \
+              --os "${{ matrix.os.name }}" \
+              --operator "${{ matrix.operator }}" \
+              -v
 
   # ============================================================================
   # PERFORMANCE TESTING ACROSS OS
