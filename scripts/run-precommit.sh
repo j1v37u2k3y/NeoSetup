@@ -33,11 +33,17 @@ echo "Running pre-commit in Docker..."
 echo "================================"
 
 # Run pre-commit in container
-# Mount the project directory and preserve git state
+# Mount the project directory and preserve git state.
+# The bind-mounted /workspace is owned by a different uid than the container's
+# root, so git refuses it as "dubious ownership" and pre-commit dies with
+# "git failed". Mark it safe via GIT_CONFIG_* env (no on-disk config needed).
 docker run --rm \
     -v "$PROJECT_DIR:/workspace" \
     -v "$PROJECT_DIR/.git:/workspace/.git" \
     -w /workspace \
+    -e GIT_CONFIG_COUNT=1 \
+    -e GIT_CONFIG_KEY_0=safe.directory \
+    -e GIT_CONFIG_VALUE_0=/workspace \
     "$IMAGE_NAME" \
     "$@"
 
