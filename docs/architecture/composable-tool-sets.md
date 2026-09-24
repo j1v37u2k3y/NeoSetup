@@ -49,6 +49,7 @@ tool_sets:
   modern_cli:  [eza, bat, ripgrep, fd, fzf, delta, btop]
   matrix_fun:  [cmatrix, neofetch, lolcat, figlet, cowsay, fortune]
   security:    [nmap, netcat, sqlmap, gobuster, ffuf, john, hashcat, wireshark, nuclei]
+  offsec:      [nmap, netcat, sqlmap, gobuster, ffuf, john, hashcat, wireshark, nuclei, burpsuite, metasploit, bloodhound, impacket, responder, netexec]  # Rick's full red-team kit — Kali/Parrot-native
   cloud:       [kubectl, helm, awscli, azure-cli, terraform]
   devops:      [ansible, gh, lazygit]
   python:      [pyenv, poetry, pipx, black, flake8, mypy, isort, pytest, pylint, bandit, tox, ...]
@@ -65,7 +66,7 @@ An operator declares which category sets it wants, in addition to what it inheri
 
 ```yaml
 # operators/jiveturkey/vars.yml
-tool_categories: [security, cloud, devops]     # jiveturkey's combo
+tool_categories: [offsec, cloud, devops]       # jiveturkey's combo (offsec = the full kit)
 ```
 
 ```yaml
@@ -150,8 +151,9 @@ remote-exec debt for these tools).
 
 ## 7. Worked examples
 
-- **jiveturkey** (the flagship): `extends: matrix` + `tool_categories: [security, cloud, devops]` →
-  core + modern_cli + matrix_fun + jiveturkey's own set + security + cloud + devops. The real arsenal.
+- **jiveturkey** (the flagship): `extends: matrix` + `tool_categories: [offsec, cloud, devops]` →
+  core + modern_cli + matrix_fun + jiveturkey's own set + offsec (the full red-team kit) + cloud +
+  devops. The real arsenal.
 - **base**: nothing opted in → core + modern_cli. Genuinely minimal.
 - **python_dev**: `tool_categories: [python]` → core + modern_cli + python. (Replaces today's
   operator-keyed `python_dev` set.)
@@ -199,16 +201,23 @@ real-ansible composition test + `validate_operator --all`) before merge. Each is
 - **Risk — scope creep:** the arsenal is large. Phases 2–3 are gated per-tool; ship what's verified,
   track the rest. Never fake coverage to look complete.
 
-## 11. Open questions for the owner
+## 11. Decisions (locked 2026-09-23)
 
-1. **Category taxonomy** — is `[core, modern_cli, matrix_fun, security, cloud, devops, python, node,
-   go, macos, windows]` the right cut? Split `security` into `recon` / `exploit` / `cracking`? Add a
-   `wireless` or `forensics` category?
-2. **jiveturkey's exact combo** — is `[security, cloud, devops]` right, or do you want your full
-   Rick-toolset (burp, metasploit, bloodhound, nuclei, etc.) as a dedicated `offsec` category?
-3. **Opt-in field name** — `tool_categories`? `tool_sets`? `include_sets`?
-4. **base/matrix migration** — collapse their operator-keyed sets into `core`/`matrix_fun` categories
-   now (Phase 1) or later?
+1. **Taxonomy** — keep `[core, modern_cli, matrix_fun, security, cloud, devops, python, node, go,
+   macos, windows]`, **plus a dedicated `offsec` category** for the full red-team kit (§3.1).
+2. **jiveturkey's combo** — `tool_categories: [offsec, cloud, devops]`. `offsec` carries the full kit
+   (burpsuite, metasploit, bloodhound, impacket, responder, netexec + the security CLI tools);
+   `security` stays as a lighter shared set others can pick.
+3. **Opt-in field** — `tool_categories` (array of category names).
+4. **base/matrix migration** — **deferred** (not Phase 1). base/matrix keep their operator-keyed sets
+   for now; collapsing them into `core`/`matrix_fun` categories is a later cleanup.
+
+**`offsec` honest-coverage note:** the kit is **Kali/Parrot-native** — apt provides
+metasploit-framework, burpsuite, bloodhound, sqlmap, gobuster, ffuf, nuclei, hashcat, john, impacket,
+responder, netexec — and most are on **brew** for macOS (several as casks). On plain
+ubuntu/debian/rocky/fedora most need custom installers or aren't packaged, so `offsec` registers
+per-platform honestly (rich on Kali/Parrot/macOS; heavy ones like burp/metasploit deferred with
+installers where they don't ship). The fail-loud gate keeps any gap loud, never silent.
 
 ---
 
