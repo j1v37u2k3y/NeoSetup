@@ -139,6 +139,29 @@
   when: platform_key in ['ubuntu', 'debian', 'redhat']
   become: yes
   block:
+    # RHEL-family bootstrap (#132): most modern-CLI tools (bat, fd, fzf, ripgrep,
+    # btop, htop) live in EPEL, not the base repos, on RHEL clones; and Fedora's
+    # system python lacks `packaging`, which the ansible dnf module needs. Both
+    # are done with raw dnf (command) so they don't depend on the dnf module.
+    - name: "🔴 Enable EPEL (+ CRB) on RHEL clones"
+      shell: |
+        dnf install -y epel-release || dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        dnf install -y dnf-plugins-core 2>/dev/null || true
+        dnf config-manager --set-enabled crb 2>/dev/null || dnf config-manager --set-enabled powertools 2>/dev/null || true
+      when:
+        - platform_key == 'redhat'
+        - ansible_distribution != 'Fedora'
+      changed_when: false
+      ignore_errors: yes
+
+    - name: "🔴 Ensure python3-packaging for the dnf module (Fedora)"
+      command: dnf install -y python3-packaging
+      when:
+        - platform_key == 'redhat'
+        - ansible_distribution == 'Fedora'
+      changed_when: false
+      ignore_errors: yes
+
     - name: "📦 Install tools via package manager"
       package:
         name: "{{ tool_registry[item].packages[platform_key] }}"
