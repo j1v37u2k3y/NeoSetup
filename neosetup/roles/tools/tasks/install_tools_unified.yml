@@ -183,8 +183,14 @@
   ignore_errors: yes
 
 # Custom installations
+# `apply: ignore_errors` propagates into the INCLUDED tasks (ignore_errors on the
+# include statement itself does not), so one broken installer is reported per-item
+# but never aborts the whole tools play. See GitHub #128.
 - name: "🔧 Handle custom tool installations"
-  include_tasks: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
+  include_tasks:
+    file: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
+    apply:
+      ignore_errors: yes
   loop: "{{ tools_to_install | unique }}"
   when:
     - item in tool_registry
