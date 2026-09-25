@@ -7,11 +7,15 @@ tool_registry:
   eza:
     description: "Modern ls replacement"
     category: modern_cli
+    install_method: custom
+    custom_install: github_binary_installer
     packages:
       darwin: eza
-      ubuntu: eza
-      debian: eza
-      redhat: eza
+    github_binary:
+      repo: eza-community/eza
+      bin: eza
+      asset_amd64: "eza_x86_64-unknown-linux-gnu.tar.gz"
+      asset_arm64: "eza_aarch64-unknown-linux-gnu.tar.gz"
 
   bat:
     description: "Cat with syntax highlighting"
@@ -52,11 +56,15 @@ tool_registry:
   delta:
     description: "Better git diff"
     category: modern_cli
+    install_method: custom
+    custom_install: github_binary_installer
     packages:
       darwin: git-delta
-      ubuntu: git-delta
-      debian: git-delta
-      redhat: git-delta
+    github_binary:
+      repo: dandavison/delta
+      bin: delta
+      asset_amd64: "delta-{{ ghb_ver }}-x86_64-unknown-linux-gnu.tar.gz"
+      asset_arm64: "delta-{{ ghb_ver }}-aarch64-unknown-linux-gnu.tar.gz"
 
   btop:
     description: "Modern top replacement"
@@ -308,11 +316,15 @@ tool_registry:
   lazygit:
     description: "Git TUI"
     category: development
+    install_method: custom
+    custom_install: github_binary_installer
     packages:
       darwin: lazygit
-      ubuntu: lazygit
-      debian: lazygit
-      redhat: lazygit
+    github_binary:
+      repo: jesseduffield/lazygit
+      bin: lazygit
+      asset_amd64: "lazygit_{{ ghb_ver }}_Linux_x86_64.tar.gz"
+      asset_arm64: "lazygit_{{ ghb_ver }}_Linux_arm64.tar.gz"
 
   gh:
     description: "GitHub CLI"
@@ -642,11 +654,15 @@ tool_registry:
   procs:
     description: "Modern ps replacement with a richer, colorized view"
     category: monitoring
+    install_method: custom
+    custom_install: github_binary_installer
     packages:
-      # Debian 12+ / Ubuntu 23.04+ ship this; older distros skip (ignore_errors)
       darwin: procs
-      ubuntu: procs
-      debian: procs
+    github_binary:
+      repo: dalance/procs
+      bin: procs
+      asset_amd64: "procs-v{{ ghb_ver }}-x86_64-linux.zip"
+      asset_arm64: "procs-v{{ ghb_ver }}-aarch64-linux.zip"
 
   # Git statistics and visualization tools
   git-quick-stats:

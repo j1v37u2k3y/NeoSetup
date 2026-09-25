@@ -1,0 +1,102 @@
+---
+# Generic GitHub-release single-binary installer (#130).
+# For single-binary tools (eza, delta, lazygit, procs, ...) that ship as GitHub
+# release archives rather than distro packages. Reads per-tool params from
+# tool_registry[item].github_binary:
+#   repo         owner/name                              (required)
+#   bin          installed binary name                   (default: item)
+#   asset_amd64  x86_64 asset filename                   (required for Linux)
+#   asset_arm64  aarch64 asset filename                  (optional; falls back to amd64)
+# Asset names may reference {{ ghb_ver }} (release tag minus a leading 'v') or
+# {{ ghb_tag }} (raw tag) — Ansible templates them recursively after we resolve
+# the latest release. macOS still uses Homebrew via packages.darwin.
+- name: "🐙 Install {{ item }} ({{ tool_registry[item].description | default('') }})"
+  vars:
+    ghb: "{{ tool_registry[item].github_binary }}"
+    ghb_bin: "{{ tool_registry[item].github_binary.bin | default(item) }}"
+  block:
+    - name: "🔍 Is {{ ghb_bin }} already installed?"
+      command: "which {{ ghb_bin }}"
+      register: ghb_which
+      failed_when: false
+      changed_when: false
+
+    - name: "🍎 Install {{ item }} via Homebrew (macOS)"
+      homebrew:
+        name: "{{ tool_registry[item].packages.darwin }}"
+        state: present
+      when:
+        - ghb_which.rc != 0
+        - ansible_os_family == 'Darwin'
+        - tool_registry[item].packages.darwin is defined
+
+    - name: "📦 Install {{ item }} from GitHub releases (Linux)"
+      when:
+        - ghb_which.rc != 0
+        - ansible_os_family != 'Darwin'
+      block:
+        - name: "🌐 Resolve latest release for {{ ghb.repo }}"
+          uri:
+            url: "https://api.github.com/repos/{{ ghb.repo }}/releases/latest"
+            return_content: yes
+          register: ghb_release
+
+        - name: "🏷️  Record tag / version / asset for {{ item }}"
+          set_fact:
+            ghb_tag: "{{ ghb_release.json.tag_name }}"
+            ghb_ver: "{{ ghb_release.json.tag_name | regex_replace('^v', '') }}"
+
+        - name: "🧮 Select the asset for this architecture"
+          set_fact:
+            ghb_asset: >-
+              {{ ghb.asset_arm64
+                 if (ansible_architecture in ['aarch64', 'arm64'] and ghb.asset_arm64 is defined)
+                 else ghb.asset_amd64 }}
+
+        - name: "🗜️  Ensure unzip is present (zip assets)"
+          become: yes
+          package:
+            name: unzip
+            state: present
+          when: ghb_asset is search('\.zip$')
+          ignore_errors: yes
+
+        - name: "📁 Temp workdir"
+          tempfile:
+            state: directory
+          register: ghb_tmp
+
+        - name: "⬇️  Download {{ ghb_asset }}"
+          get_url:
+            url: "https://github.com/{{ ghb.repo }}/releases/download/{{ ghb_tag }}/{{ ghb_asset }}"
+            dest: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
+            mode: "0644"
+
+        - name: "📦 Extract {{ ghb_asset }}"
+          unarchive:
+            src: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
+            dest: "{{ ghb_tmp.path }}"
+            remote_src: yes
+
+        - name: "🔎 Locate the {{ ghb_bin }} binary"
+          find:
+            paths: "{{ ghb_tmp.path }}"
+            patterns: "{{ ghb_bin }}"
+            recurse: yes
+            file_type: file
+          register: ghb_found
+
+        - name: "🚚 Install {{ ghb_bin }} -> /usr/local/bin"
+          become: yes
+          copy:
+            src: "{{ ghb_found.files[0].path }}"
+            dest: "/usr/local/bin/{{ ghb_bin }}"
+            mode: "0755"
+            remote_src: yes
+          when: ghb_found.files | length > 0
+
+        - name: "🧹 Clean up"
+          file:
+            path: "{{ ghb_tmp.path }}"
+            state: absent
+          when: ghb_tmp.path is defined
