@@ -153,34 +153,45 @@
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
       ignore_errors: yes
 
-# Pip installations
-- name: "🐍 Install tools via pip"
-  pip:
-    name: "{{ tool_registry[item].packages.pip }}"
-    state: present
-  loop: "{{ tools_to_install | unique }}"
-  when:
-    - item in tool_registry
-    - tool_registry[item].install_method | default('') == 'pip'
-    - tool_registry[item].packages is defined
-    - tool_registry[item].packages.pip is defined
-  loop_control:
-    label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pip]"
-  ignore_errors: yes
+# Python CLI tools via pipx (#131).
+# Installing into the ansible venv (/opt/ansible-venv) fails read-only for a
+# non-root user, and PEP 668 blocks system pip on modern distros. pipx sidesteps
+# both: each tool gets an isolated venv and its console scripts are exposed on
+# PATH. We bootstrap a self-contained pipx (a venv, not a distro package) so this
+# works uniformly on every distro, and point PIPX_BIN_DIR at /usr/local/bin so
+# the installed CLIs land on the default PATH.
+- name: "🐍 Install Python CLI tools via pipx"
+  become: yes
+  vars:
+    neosetup_pipx: /opt/neosetup-pipx/bin/pipx
+  block:
+    - name: "🧰 Bootstrap a self-contained pipx"
+      pip:
+        name: pipx
+        state: present
+        virtualenv: /opt/neosetup-pipx
+        virtualenv_command: "python3 -m venv"
 
-# Pipx installations
-- name: "📦 Install tools via pipx"
-  shell: |
-    pipx install {{ tool_registry[item].packages.pipx }}
-  loop: "{{ tools_to_install | unique }}"
-  when:
-    - item in tool_registry
-    - tool_registry[item].install_method | default('') == 'pipx'
-    - tool_registry[item].packages is defined
-    - tool_registry[item].packages.pipx is defined
-  loop_control:
-    label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [pipx]"
-  ignore_errors: yes
+    - name: "📦 Install Python CLI tools via pipx (scripts -> /usr/local/bin)"
+      environment:
+        PIPX_HOME: /opt/pipx
+        PIPX_BIN_DIR: /usr/local/bin
+      command: >-
+        {{ neosetup_pipx }} install
+        {{ tool_registry[item].packages.pip | default(tool_registry[item].packages.pipx) }}
+      register: pipx_install
+      # pipx exits non-zero when a package is already installed or has no apps
+      # (e.g. a pure library); neither is fatal for a best-effort tools run.
+      failed_when: false
+      changed_when: "'installed package' in (pipx_install.stdout | default(''))"
+      loop: "{{ tools_to_install | unique }}"
+      when:
+        - item in tool_registry
+        - (tool_registry[item].install_method | default('')) in ['pip', 'pipx']
+        - tool_registry[item].packages is defined
+        - (tool_registry[item].packages.pip is defined) or (tool_registry[item].packages.pipx is defined)
+      loop_control:
+        label: "{{ item }} [pipx]"
 
 # Custom installations
 # `apply: ignore_errors` propagates into the INCLUDED tasks (ignore_errors on the
