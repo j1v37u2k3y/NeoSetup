@@ -5,6 +5,7 @@ Validates that all expected tools are installed and executable for each operator
 """
 
 import argparse
+import os
 import subprocess  # nosec B404
 import sys
 from pathlib import Path
@@ -133,6 +134,7 @@ def get_platform(os_name: str) -> str:
 def check_binary(binary_name: str) -> tuple[bool, str]:
     """Check if a binary is available in PATH."""
     try:
+        env = {**os.environ, "PATH": os.environ.get("PATH", "") + ":/usr/games:/usr/local/games"}
         result = subprocess.run(  # nosec B607 B602 - command -v requires shell
             f"command -v {binary_name}",
             shell=True,
@@ -140,6 +142,7 @@ def check_binary(binary_name: str) -> tuple[bool, str]:
             text=True,
             timeout=5,
             check=False,
+            env=env,
         )
         if result.returncode == 0:
             path = result.stdout.strip()
