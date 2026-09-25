@@ -25,7 +25,7 @@ BINARY_NAME_MAP = {
     "python3-pip": "pip3",
     "awscli": "aws",
     "azure-cli": "az",
-    "impacket": "impacket-smbserver",
+    "impacket": "smbserver.py",  # pipx/pip expose impacket examples by their real names
 }
 
 # Platform-specific binary name overrides
