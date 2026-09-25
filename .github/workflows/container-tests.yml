@@ -190,28 +190,30 @@ jobs:
       - name: 🐳 Load test container
         run: docker load < neosetup-test-${{ matrix.os.name }}.tar.gz
 
-      - name: 📦 Install the operator's tools (actual install — tools role)
-        run: |
-          docker run --rm \
-            -v "$(pwd):/neosetup" \
-            -w /neosetup/neosetup \
-            "neosetup-test-${{ matrix.os.name }}" \
-            /opt/ansible-venv/bin/ansible-playbook playbooks/site.yml \
-              --tags tools \
-              --connection local \
-              -i "localhost," \
-              -e "neosetup_operator=${{ matrix.operator }}"
-
-      - name: 🔬 Verify the expected binaries are installed
+      # Install AND verify in ONE container. Two separate `docker run --rm`
+      # invocations installed the tools into the first (ephemeral) container, then
+      # verify inspected a fresh one that only had what the Dockerfile baked in, so
+      # verify could never pass. Chaining them in one container fixes it. See #132.
+      - name: 🔬 Install the operator's tools, then verify the binaries
         run: |
           docker run --rm \
             -v "$(pwd):/neosetup" \
             -w /neosetup \
             "neosetup-test-${{ matrix.os.name }}" \
-            /opt/ansible-venv/bin/python3 .github/scripts/test_binary_validation.py \
-              --os "${{ matrix.os.name }}" \
-              --operator "${{ matrix.operator }}" \
-              -v
+            bash -c '
+              set -e
+              cd /neosetup/neosetup
+              /opt/ansible-venv/bin/ansible-playbook playbooks/site.yml \
+                --tags tools \
+                --connection local \
+                -i "localhost," \
+                -e "neosetup_operator=${{ matrix.operator }}"
+              cd /neosetup
+              /opt/ansible-venv/bin/python3 .github/scripts/test_binary_validation.py \
+                --os "${{ matrix.os.name }}" \
+                --operator "${{ matrix.operator }}" \
+                -v
+            '
 
   # ============================================================================
   # PERFORMANCE TESTING ACROSS OS

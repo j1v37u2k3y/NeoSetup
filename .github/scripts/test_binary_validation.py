@@ -29,9 +29,10 @@ BINARY_NAME_MAP = {
 
 # Platform-specific binary name overrides
 PLATFORM_BINARY_MAP = {
-    "debian": {"fd": "fdfind"},
-    "ubuntu": {"fd": "fdfind"},
-    # macOS and RHEL use 'fd' directly
+    # Debian/Ubuntu rename these binaries to avoid package collisions.
+    "debian": {"fd": "fdfind", "bat": "batcat"},
+    "ubuntu": {"fd": "fdfind", "bat": "batcat"},
+    # macOS and RHEL use 'fd' / 'bat' directly
 }
 
 # Tools that require special handling or should be skipped in container tests
