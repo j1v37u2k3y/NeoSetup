@@ -8,21 +8,37 @@
       failed_when: false
       changed_when: false
 
-    - name: "📥 Download and install act"
+    - name: "📁 Ensure ~/.local/bin exists"
+      file:
+        path: "{{ ansible_env.HOME }}/.local/bin"
+        state: directory
+        mode: "0755"
+      when: act_check.rc != 0
+
+    - name: "📥 Download and install act into ~/.local/bin"
+      # nektos' install.sh honors `-b <bindir>`; install straight to the target
+      # instead of guessing where the tarball unpacked. Non-fatal (#128/#129):
+      # a failed download must not abort the whole tools run.
       shell: |
-        curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
-        mkdir -p ~/.local/bin
-        mv ./bin/act ~/.local/bin/act 2>/dev/null || mv ./act ~/.local/bin/act 2>/dev/null || true
+        set -o pipefail
+        curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh \
+          | bash -s -- -b "{{ ansible_env.HOME }}/.local/bin"
+      args:
+        executable: /bin/bash
       when: act_check.rc != 0
       register: act_install
       changed_when: act_install.rc == 0
+      failed_when: false
 
     - name: "✅ Verify act installation"
-      command: ~/.local/bin/act --version
+      command: "{{ ansible_env.HOME }}/.local/bin/act --version"
       register: act_version
+      failed_when: false
       changed_when: false
 
-    - name: "📝 Display act version"
+    - name: "📝 Display act status"
       debug:
-        msg: "Act installed: {{ act_version.stdout }}"
-      when: act_version.rc == 0
+        msg: >-
+          {{ 'Act installed: ' + act_version.stdout
+             if act_version.rc == 0
+             else 'Act not installed (non-fatal) — see #129' }}
