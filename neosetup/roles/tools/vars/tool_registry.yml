@@ -152,20 +152,22 @@ tool_registry:
   tldr:
     description: "Simplified man pages"
     category: power_user
+    install_method: pip
     packages:
-      darwin: tldr
-      ubuntu: tldr
-      debian: tldr
-      redhat: tldr
+      pip: tldr
 
   yq:
     description: "YAML processor"
     category: power_user
+    install_method: custom
+    custom_install: github_binary_installer
     packages:
       darwin: yq
-      ubuntu: yq
-      debian: yq
-      redhat: yq
+    github_binary:
+      repo: mikefarah/yq
+      bin: yq
+      asset_amd64: "yq_linux_amd64"
+      asset_arm64: "yq_linux_arm64"
 
   jq:
     description: "JSON processor"

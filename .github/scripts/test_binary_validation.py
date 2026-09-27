@@ -51,6 +51,15 @@ SKIP_IN_CONTAINER = {
     "jupyter",  # Requires display
 }
 
+# Genuinely unavailable on specific distros — skip in verify rather than fake it
+# (honest coverage). Verified: cmatrix/grc are not in EPEL 9; neofetch is dropped
+# from Debian rolling (kali/parrot) but present elsewhere (incl. EPEL).
+UNAVAILABLE_ON = {
+    "neofetch": {"kali-rolling", "parrot-security"},
+    "cmatrix": {"centos-stream-9", "rocky-9", "almalinux-9"},
+    "grc": {"centos-stream-9", "rocky-9", "almalinux-9"},
+}
+
 # Custom installation tools that may not be in PATH without shell init
 CUSTOM_INSTALL_TOOLS = {
     "pyenv",
@@ -210,6 +219,10 @@ def validate_operator_tools(
 
     passed, failed, failures = 0, 0, []
     for tool in sorted(tools):
+        if os_name in UNAVAILABLE_ON.get(tool, set()):
+            if verbose:
+                print(f"skip {tool}: not packaged on {os_name}")
+            continue
         result = validate_single_tool(tool, platform, tool_registry, verbose)
         if result == "pass":
             passed += 1
