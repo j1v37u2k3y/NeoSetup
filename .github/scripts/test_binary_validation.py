@@ -161,14 +161,19 @@ def check_binary(binary_name: str) -> tuple[bool, str]:
         return False, str(e)
 
 
-def should_skip_tool(tool: str, packages: dict, platform: str) -> str | None:
+def should_skip_tool(tool: str, packages: dict, platform: str, has_custom: bool = False) -> str | None:
     """Check if a tool should be skipped. Returns skip reason or None."""
     if tool in SKIP_IN_CONTAINER:
         return "platform-specific"
-    if not packages and tool not in CUSTOM_INSTALL_TOOLS:
+    # Tools with a custom installer (e.g. github_binary_installer, pyenv, gh)
+    # install on every platform (usually to /usr/local/bin) — verify them, don't
+    # skip just because they carry no distro-package name.
+    if has_custom or tool in CUSTOM_INSTALL_TOOLS:
+        return None
+    if not packages:
         return f"no package for {platform}"
     has_platform_pkg = platform in packages or "pip" in packages
-    if not has_platform_pkg and tool not in CUSTOM_INSTALL_TOOLS:
+    if not has_platform_pkg:
         return f"not available on {platform}"
     return None
 
@@ -178,7 +183,7 @@ def validate_single_tool(tool: str, platform: str, tool_registry: dict, verbose:
     tool_info = tool_registry.get(tool, {})
     packages = tool_info.get("packages", {})
 
-    skip_reason = should_skip_tool(tool, packages, platform)
+    skip_reason = should_skip_tool(tool, packages, platform, has_custom="custom_install" in tool_info)
     if skip_reason:
         if verbose:
             print(f"⏭️  {tool}: Skipped ({skip_reason})")
