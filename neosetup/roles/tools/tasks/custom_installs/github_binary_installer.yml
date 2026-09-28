@@ -36,15 +36,22 @@
         - ansible_os_family != 'Darwin'
       block:
         - name: "🌐 Resolve latest release for {{ ghb.repo }}"
+          # The unauthenticated GitHub API blips under matrix load; retry so a
+          # transient hiccup doesn't drop a tool from an otherwise-green run.
           uri:
             url: "https://api.github.com/repos/{{ ghb.repo }}/releases/latest"
             return_content: yes
+            status_code: 200
           register: ghb_release
+          retries: 6
+          delay: 10
+          until: ghb_release.status is defined and ghb_release.status == 200
 
         - name: "🏷️  Record tag / version / asset for {{ item }}"
           set_fact:
             ghb_tag: "{{ ghb_release.json.tag_name }}"
             ghb_ver: "{{ ghb_release.json.tag_name | regex_replace('^v', '') }}"
+          when: ghb_release.status | default(0) == 200
 
         - name: "🧮 Select the asset for this architecture"
           set_fact:
@@ -71,6 +78,11 @@
             url: "https://github.com/{{ ghb.repo }}/releases/download/{{ ghb_tag }}/{{ ghb_asset }}"
             dest: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
             mode: "0644"
+          register: ghb_dl
+          retries: 3
+          delay: 5
+          until: ghb_dl is succeeded
+          when: ghb_tag is defined
 
         # Some releases ship a bare binary (e.g. yq's yq_linux_amd64) rather
         # than an archive; only extract + search when the asset is an archive.
