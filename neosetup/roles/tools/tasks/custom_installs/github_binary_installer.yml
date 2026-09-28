@@ -72,28 +72,43 @@
             dest: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
             mode: "0644"
 
-        - name: "📦 Extract {{ ghb_asset }}"
+        # Some releases ship a bare binary (e.g. yq's yq_linux_amd64) rather
+        # than an archive; only extract + search when the asset is an archive.
+        - name: "📦 Extract {{ ghb_asset }} (archive assets)"
           unarchive:
             src: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
             dest: "{{ ghb_tmp.path }}"
             remote_src: yes
+          when: ghb_asset is search('\\.(tar|tgz|zip)')
 
-        - name: "🔎 Locate the {{ ghb_bin }} binary"
+        - name: "🔎 Locate the {{ ghb_bin }} binary (archive assets)"
           find:
             paths: "{{ ghb_tmp.path }}"
             patterns: "{{ ghb_bin }}"
             recurse: yes
             file_type: file
           register: ghb_found
+          when: ghb_asset is search('\\.(tar|tgz|zip)')
 
-        - name: "🚚 Install {{ ghb_bin }} -> /usr/local/bin"
+        - name: "🚚 Install {{ ghb_bin }} from archive -> /usr/local/bin"
           become: yes
           copy:
             src: "{{ ghb_found.files[0].path }}"
             dest: "/usr/local/bin/{{ ghb_bin }}"
             mode: "0755"
             remote_src: yes
-          when: ghb_found.files | length > 0
+          when:
+            - ghb_asset is search('\\.(tar|tgz|zip)')
+            - ghb_found.files | default([]) | length > 0
+
+        - name: "🚚 Install {{ ghb_bin }} (bare binary) -> /usr/local/bin"
+          become: yes
+          copy:
+            src: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
+            dest: "/usr/local/bin/{{ ghb_bin }}"
+            mode: "0755"
+            remote_src: yes
+          when: ghb_asset is not search('\\.(tar|tgz|zip)')
 
         - name: "🧹 Clean up"
           file:

@@ -27,20 +27,26 @@
         name: gh
         state: present
 
-- name: "🐙 Install GitHub CLI on RedHat/CentOS"
+- name: "🐙 Install GitHub CLI on RedHat/Fedora"
   when: platform_key == 'redhat'
   become: yes
   block:
-    - name: "📥 Add GitHub CLI repository"
-      yum_repository:
-        name: gh-cli
-        description: GitHub CLI
-        baseurl: https://cli.github.com/packages/rpm
-        gpgkey: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x23F3D4EA75716059
-        gpgcheck: yes
-        enabled: yes
+    - name: "🔍 Check if gh is already installed"
+      command: which gh
+      register: gh_check_rh
+      failed_when: false
+      changed_when: false
 
-    - name: "📦 Install GitHub CLI"
-      package:
-        name: gh
-        state: present
+    - name: "📥 Add the official gh-cli dnf repo and install gh"
+      # GitHub's documented method. The .repo file ships the correct gpg key,
+      # which is more reliable than a hand-built yum_repository + keyserver key
+      # (the old approach poisoned the whole dnf transaction and gh never
+      # installed, even on Fedora where it's in the default repos). See #132.
+      shell: |
+        dnf install -y dnf-plugins-core 2>/dev/null || true
+        dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo 2>/dev/null || true
+        dnf install -y gh
+      when: gh_check_rh.rc != 0
+      register: gh_rh_install
+      changed_when: gh_rh_install.rc == 0
+      failed_when: false
