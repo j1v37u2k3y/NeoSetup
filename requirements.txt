@@ -35,4 +35,4 @@ jsonschema>=4.0.0
 pyyaml>=6.0.3
 
 # Release Management (Semantic Versioning via Conventional Commits)
-commitizen>=3.13.0
+commitizen>=4.19.0
