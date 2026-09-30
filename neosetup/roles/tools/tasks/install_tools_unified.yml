@@ -85,6 +85,7 @@
         - tool_registry[item].install_method | default('brew') != 'cask'
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
+      ignore_errors: yes
 
     - name: "🍎 Install cask applications via Homebrew"
       homebrew_cask:
@@ -99,6 +100,10 @@
         - tool_registry[item].install_method | default('brew') == 'cask'
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [cask]"
+      # A single unavailable/disabled cask (e.g. a Gatekeeper-disabled app, or a
+      # GUI cask whose pkg needs an interactive sudo) must not abort the whole
+      # macOS run — match the Linux tasks' best-effort behavior.
+      ignore_errors: yes
 
 # WSL2 installation using apt (most WSL2 instances are Ubuntu-based)
 - name: "🪟 Install tools on WSL2"

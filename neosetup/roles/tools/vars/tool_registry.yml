@@ -280,11 +280,11 @@ tool_registry:
       darwin: burp-suite
 
   bloodhound:
-    description: "Active Directory attack-path mapping (GUI; macOS cask, Linux installer in Phase 3b)"
+    description: "Active Directory attack-path mapping (GUI; no working installer — see note)"
     category: security
-    install_method: cask
-    packages:
-      darwin: bloodhound
+    # No installer: the Homebrew cask was DISABLED upstream on 2026-09-01 (fails
+    # the macOS Gatekeeper check) and the Linux installer is deferred. Kept in the
+    # registry for the offsec category; skipped everywhere until an installer lands.
 
   # File managers
   ranger:
