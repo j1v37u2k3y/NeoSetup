@@ -158,10 +158,9 @@ jobs:
   verify-tool-installs:
     name: 🔬 Install+verify ${{ matrix.operator }} on ${{ matrix.os.name }}
     runs-on: ubuntu-latest
-    # Non-voting: this reports per-distro tool-install coverage (the arsenal is
-    # still being packaged cross-distro) without gating the matrix. Builds and
-    # the 🧪 Test jobs remain the hard gate.
-    continue-on-error: true
+    # Voting gate: every declared tool must install and its binary resolve on all
+    # 9 distros × 3 operators (tools genuinely unavailable on a distro are skipped
+    # in the check, not faked). Flipped from non-voting once the matrix hit 27/27.
     needs: build-test-containers
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:

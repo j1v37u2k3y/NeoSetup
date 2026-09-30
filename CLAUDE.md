@@ -88,10 +88,12 @@ Eight operators ship and are all registered in `group_vars/all/operators.yml`. I
 
 - **base**: Essential tools with enhanced configuration and validation
 - **matrix**: Matrix theme with custom shell functions (matrix_mode, wake_up, enter_matrix); extends base
-- **jiveturkey**: Power-user setup with productivity + networking tools (nmap, netcat) and Docker-based
-  security functions; extends matrix. Note: the heavier security/DevOps arsenal (wireshark, sqlmap, gobuster,
-  ffuf, john, hashcat, kubectl, helm, awscli, terraform, ansible) is **planned/deferred**, not yet installed
-  (needs per-platform packaging + installers).
+- **jiveturkey**: Power-user setup extending matrix — productivity + modern-CLI tools, networking (nmap,
+  netcat), Docker-based security functions, plus the composable tool categories it opts into. The registered
+  tool sets install **and are verified** across all 9 test distros via the voting `verify-tool-installs` gate.
+  The heaviest offsec binaries and cloud CLIs that still lack cross-distro installers (e.g. sqlmap, gobuster,
+  ffuf, john, hashcat, wireshark, kubectl, helm, terraform) remain **deferred** — honestly skipped by the gate
+  rather than faked — and are tracked in GitHub Issues.
 - **macos**: macOS integration (Homebrew, productivity apps, window management); extends base
 - **windows_wsl**: Windows WSL2 integration and interoperability; extends base
 - **python_dev**: Python toolchain (pyenv, poetry, pipx, linters, jupyter); extends base
@@ -106,7 +108,9 @@ Eight operators ship and are all registered in `group_vars/all/operators.yml`. I
 - **Docker Pre-commit**: All 20 linting hooks run in Docker for local/CI parity
 - **Security Scanning**: CodeQL, Trivy, Bandit, Safety, and detect-secrets integration
 - **Quality Assurance**: Custom ansible-lint rules and Matrix theme validation
-- **Multi-Platform Testing**: Docker containers for Ubuntu, Debian, CentOS, Fedora
+- **Multi-Platform Testing**: 9-distro × 3-operator container matrix (Ubuntu 22.04/24.04, Debian 12, Kali,
+  Parrot, CentOS Stream 9, Rocky 9, Alma 9, Fedora 40) with a **voting `verify-tool-installs` gate** that
+  installs each operator's tools and checks every expected binary resolves
 - **Performance Benchmarking**: <5 minute installation target with automated testing
 
 ## Common Commands
