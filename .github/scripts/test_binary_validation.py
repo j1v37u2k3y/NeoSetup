@@ -161,6 +161,27 @@ def check_binary(binary_name: str) -> tuple[bool, str]:
         return False, str(e)
 
 
+def check_cask(cask_name: str) -> tuple[bool, str]:
+    """Check if a Homebrew cask (GUI app) is installed.
+
+    GUI casks install an .app bundle rather than a binary on PATH, so
+    `command -v` can never find them — query Homebrew directly instead."""
+    try:
+        result = subprocess.run(  # nosec B607 B602 - fixed `brew list --cask` subcommand
+            f"brew list --cask {cask_name}",
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode == 0:
+            return True, f"cask:{cask_name}"
+        return False, ""
+    except (subprocess.TimeoutExpired, OSError) as e:
+        return False, str(e)
+
+
 def should_skip_tool(tool: str, packages: dict, platform: str, has_custom: bool = False) -> str | None:
     """Check if a tool should be skipped. Returns skip reason or None."""
     if tool in SKIP_IN_CONTAINER:
@@ -188,6 +209,20 @@ def validate_single_tool(tool: str, platform: str, tool_registry: dict, verbose:
         if verbose:
             print(f"⏭️  {tool}: Skipped ({skip_reason})")
         return "skip"
+
+    # macOS GUI casks install an .app bundle, not a PATH binary — `command -v`
+    # can never see them (it would false-fail an installed app, and false-fail a
+    # cask that legitimately needs a manual/interactive install). Verify via brew
+    # instead, and treat a missing cask as a soft warning like a custom install.
+    if platform == "darwin" and tool_info.get("install_method") == "cask":
+        cask = packages.get("darwin", tool)
+        found, where = check_cask(cask)
+        if found:
+            print(f"✅ {tool} (cask {cask}): {where}" if verbose else f"✅ {tool}")
+            return "pass"
+        if verbose:
+            print(f"⚠️  {tool} (cask {cask}): not installed (GUI cask — may need manual install)")
+        return "custom"
 
     binary = get_binary_name(tool, platform)
     found, path = check_binary(binary)
