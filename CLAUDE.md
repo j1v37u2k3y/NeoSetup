@@ -89,11 +89,15 @@ Eight operators ship and are all registered in `group_vars/all/operators.yml`. I
 - **base**: Essential tools with enhanced configuration and validation
 - **matrix**: Matrix theme with custom shell functions (matrix_mode, wake_up, enter_matrix); extends base
 - **jiveturkey**: Power-user setup extending matrix — productivity + modern-CLI tools, networking (nmap,
-  netcat), Docker-based security functions, plus the composable tool categories it opts into. The registered
-  tool sets install **and are verified** across all 9 test distros via the voting `verify-tool-installs` gate.
-  The heaviest offsec binaries and cloud CLIs that still lack cross-distro installers (e.g. sqlmap, gobuster,
-  ffuf, john, hashcat, wireshark, kubectl, helm, terraform) remain **deferred** — honestly skipped by the gate
-  rather than faked — and are tracked in GitHub Issues.
+  netcat), Docker-based security functions, plus the composable tool categories it opts into (currently
+  `offsec`). The registered tool sets install **and are verified** across the test-distro matrix by the
+  voting `verify-tool-installs` gate. The offsec apt tools (sqlmap, gobuster, ffuf, john, hashcat, wireshark)
+  install and verify on the Debian-family distros (Ubuntu/Debian/Kali/Parrot); on the RHEL-family distros
+  they are honestly skipped, since they are not in the default repos. Three offsec tools are not yet verified
+  on Linux and are **deferred** rather than faked: `nuclei` and `burp-suite` install on macOS (brew/cask) but
+  still need a Linux installer, and `bloodhound` has no working installer on any platform. The cloud CLIs
+  (kubectl, helm, terraform, azure-cli) have custom installers but are not part of any shipping operator's
+  tool set yet. Deferred work is tracked in GitHub Issues.
 - **macos**: macOS integration (Homebrew, productivity apps, window management); extends base
 - **windows_wsl**: Windows WSL2 integration and interoperability; extends base
 - **python_dev**: Python toolchain (pyenv, poetry, pipx, linters, jupyter); extends base
