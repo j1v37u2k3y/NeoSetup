@@ -208,10 +208,20 @@
         {{ neosetup_pipx }} install
         {{ tool_registry[item].packages.pip | default(tool_registry[item].packages.pipx) }}
       register: pipx_install
-      # pipx exits non-zero when a package is already installed or has no apps
-      # (e.g. a pure library); neither is fatal for a best-effort tools run.
-      failed_when: false
+      # A package that is already installed, or a pure library with no apps, is not
+      # a failure. Anything else that exits non-zero is a genuine install failure:
+      # surface it (reported per item with `...ignoring`) instead of hiding it under
+      # a blanket `failed_when: false`, which previously let a failed install (e.g.
+      # impacket on macOS) vanish and leave the CLIs silently absent. ignore_errors
+      # keeps it non-fatal so one bad package can't abort the best-effort tools run
+      # (matching the apt/cask tasks).
+      failed_when:
+        - pipx_install.rc is defined
+        - pipx_install.rc != 0
+        - "'already seems to be installed' not in (pipx_install.stdout | default(''))"
+        - "'No apps associated' not in (pipx_install.stderr | default(''))"
       changed_when: "'installed package' in (pipx_install.stdout | default(''))"
+      ignore_errors: yes
       loop: "{{ tools_to_install | unique }}"
       when:
         - item in tool_registry
