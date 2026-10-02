@@ -85,14 +85,15 @@ tool_registry:
       debian: cmatrix
       redhat: cmatrix
 
-  neofetch:
-    description: "System info with ASCII art"
+  fastfetch:
+    description: "System info with ASCII art (maintained neofetch successor)"
     category: matrix
+    install_method: custom
+    custom_install: fastfetch_installer
+    # macOS: Homebrew. Linux: official .deb/.rpm from GitHub releases (fastfetch is
+    # not yet in the apt LTS repos). neofetch was retired upstream — see #156.
     packages:
-      darwin: neofetch
-      ubuntu: neofetch
-      debian: neofetch
-      redhat: neofetch
+      darwin: fastfetch
 
   lolcat:
     description: "Rainbow text output"
@@ -762,7 +763,7 @@ operator_tool_sets:
 
   matrix:
     - cmatrix
-    - neofetch
+    - fastfetch
     - lolcat
     - figlet
     - cowsay
@@ -864,7 +865,7 @@ tool_sets:
     - btop
   matrix_fun:
     - cmatrix
-    - neofetch
+    - fastfetch
     - lolcat
     - figlet
     - cowsay

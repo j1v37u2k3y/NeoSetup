@@ -28,7 +28,7 @@ shell_config:
     # Matrix-themed navigation
     "matrix": "cmatrix"
     "rain": "cmatrix -b"
-    "neo": "neofetch"
+    "neo": "fastfetch"
     # Fun commands
     "hack": "echo '🎭 Hacking the Matrix...'"
     "redpill": "echo '🔴💊 Welcome to the real world'"

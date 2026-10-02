@@ -1,0 +1,101 @@
+---
+# fastfetch installer (#156). neofetch is archived upstream and has been dropped
+# from Homebrew and from the Debian-rolling repos (Kali/Parrot); fastfetch is the
+# maintained successor but is not yet in the apt LTS repos (Ubuntu 22.04/24.04,
+# Debian 12), so install it from the project's official release artifacts on Linux
+# (.deb / .rpm) and via Homebrew on macOS. Verified installing + running on
+# debian-12, ubuntu-22.04, fedora-40 and centos-stream-9 (EL9).
+- name: "ℹ️  Install fastfetch ({{ tool_registry['fastfetch'].description | default('') }})"
+  vars:
+    # The release assets use amd64 / aarch64 in their filenames for both .deb and .rpm.
+    ff_arch: "{{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+  block:
+    - name: "🔍 Is fastfetch already installed?"
+      command: which fastfetch
+      register: ff_which
+      failed_when: false
+      changed_when: false
+
+    - name: "🍎 Install fastfetch via Homebrew (macOS)"
+      homebrew:
+        name: fastfetch
+        state: present
+      when:
+        - ff_which.rc != 0
+        - ansible_os_family == 'Darwin'
+
+    - name: "🐧 Install fastfetch from the official release (Linux)"
+      when:
+        - ff_which.rc != 0
+        - ansible_os_family != 'Darwin'
+      become: yes
+      block:
+        - name: "🌐 Resolve the latest fastfetch release"
+          # The unauthenticated GitHub API blips under matrix load; retry so a
+          # transient hiccup doesn't drop fastfetch from an otherwise-green run.
+          uri:
+            url: "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest"
+            return_content: yes
+            status_code: 200
+          register: ff_release
+          retries: 6
+          delay: 10
+          until: ff_release.status is defined and ff_release.status == 200
+
+        - name: "🏷️  Record the release tag"
+          set_fact:
+            ff_tag: "{{ ff_release.json.tag_name }}"
+          when: ff_release.status | default(0) == 200
+
+        - name: "📁 Temp workdir"
+          tempfile:
+            state: directory
+          register: ff_tmp
+          when: ff_tag is defined
+
+        - name: "📦 Install fastfetch from the official .deb (Debian/Ubuntu)"
+          when:
+            - ff_tag is defined
+            - platform_key in ['ubuntu', 'debian']
+          block:
+            - name: "⬇️  Download fastfetch .deb"
+              get_url:
+                url: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ ff_tag }}/fastfetch-linux-{{ ff_arch }}.deb"
+                dest: "{{ ff_tmp.path }}/fastfetch.deb"
+                mode: "0644"
+              register: ff_deb_dl
+              retries: 3
+              delay: 5
+              until: ff_deb_dl is succeeded
+
+            - name: "📦 Install the fastfetch .deb"
+              apt:
+                deb: "{{ ff_tmp.path }}/fastfetch.deb"
+                state: present
+
+        - name: "📦 Install fastfetch from the official .rpm (RHEL family)"
+          when:
+            - ff_tag is defined
+            - platform_key == 'redhat'
+          block:
+            - name: "⬇️  Download fastfetch .rpm"
+              get_url:
+                url: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ ff_tag }}/fastfetch-linux-{{ ff_arch }}.rpm"
+                dest: "{{ ff_tmp.path }}/fastfetch.rpm"
+                mode: "0644"
+              register: ff_rpm_dl
+              retries: 3
+              delay: 5
+              until: ff_rpm_dl is succeeded
+
+            - name: "📦 Install the fastfetch .rpm"
+              dnf:
+                name: "{{ ff_tmp.path }}/fastfetch.rpm"
+                disable_gpg_check: yes
+                state: present
+
+        - name: "🧹 Clean up"
+          file:
+            path: "{{ ff_tmp.path }}"
+            state: absent
+          when: ff_tmp.path is defined
