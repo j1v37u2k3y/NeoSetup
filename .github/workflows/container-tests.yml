@@ -288,6 +288,62 @@ jobs:
           done
 
   # ============================================================================
+  # macOS NATIVE INSTALL + VERIFY (issue #153, part 2)
+  # macOS runners can't use the Linux test containers, so run the playbook
+  # natively on the runner, then verify with the cask-aware checker. Gated to PRs
+  # touching the tool path (via the pull_request paths filter) + the nightly
+  # schedule + manual dispatch — macOS runner minutes bill ~10x Linux, so this
+  # does NOT run on every push/workflow_run. One runner installs base then
+  # jiveturkey (jiveturkey reuses base's brew installs) to keep minutes down.
+  # ============================================================================
+
+  verify-tool-installs-macos:
+    name: 🍎 Install+verify on macOS
+    runs-on: macos-latest
+    if: >-
+      github.event_name == 'pull_request'
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v7
+
+      - name: 🐍 Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Install Ansible + collections
+        run: |
+          python -m pip install --upgrade pip
+          # `packaging` is required by the community.general.homebrew module but is
+          # not a hard dependency of ansible-core, so install it explicitly.
+          pip install -r neosetup/requirements-runtime.txt packaging
+          ansible-galaxy install -r neosetup/requirements.yml
+
+      - name: 🍎 Install + verify base and jiveturkey
+        env:
+          # Pin the module interpreter to this step's Python (where ansible + its
+          # module deps live). Otherwise Ansible auto-discovers the brew-managed
+          # python@3.x, which lacks `packaging` and breaks the homebrew module.
+          ANSIBLE_PYTHON_INTERPRETER: ${{ steps.setup-python.outputs.python-path }}
+        run: |
+          for op in base jiveturkey; do
+            echo "::group::install+verify $op on macOS"
+            ( cd neosetup && ansible-playbook playbooks/site.yml \
+                --tags tools \
+                --connection local \
+                -i "localhost," \
+                -e "neosetup_operator=$op" )
+            python .github/scripts/test_binary_validation.py \
+              --os darwin \
+              --operator "$op" \
+              -v
+            echo "::endgroup::"
+          done
+
+  # ============================================================================
   # PERFORMANCE TESTING ACROSS OS
   # ============================================================================
 
