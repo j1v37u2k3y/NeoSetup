@@ -309,6 +309,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: 🐍 Set up Python
+        id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -316,10 +317,17 @@ jobs:
       - name: 📦 Install Ansible + collections
         run: |
           python -m pip install --upgrade pip
-          pip install -r neosetup/requirements-runtime.txt
+          # `packaging` is required by the community.general.homebrew module but is
+          # not a hard dependency of ansible-core, so install it explicitly.
+          pip install -r neosetup/requirements-runtime.txt packaging
           ansible-galaxy install -r neosetup/requirements.yml
 
       - name: 🍎 Install + verify base and jiveturkey
+        env:
+          # Pin the module interpreter to this step's Python (where ansible + its
+          # module deps live). Otherwise Ansible auto-discovers the brew-managed
+          # python@3.x, which lacks `packaging` and breaks the homebrew module.
+          ANSIBLE_PYTHON_INTERPRETER: ${{ steps.setup-python.outputs.python-path }}
         run: |
           for op in base jiveturkey; do
             echo "::group::install+verify $op on macOS"
