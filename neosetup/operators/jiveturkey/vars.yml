@@ -10,9 +10,19 @@ extends: "matrix"
 
 # Composable tool-set categories — jiveturkey's arsenal.
 # offsec = the full red-team kit (see tool_sets in roles/tools/vars/tool_registry.yml).
+#
+# offsec is scoped to Linux only: on macOS the red-team work happens in a Kali VM,
+# so the heavy offsec kit (sqlmap / gobuster / ffuf / john / hashcat / wireshark /
+# nuclei / impacket / burp-suite / bloodhound) is not installed natively. The
+# terminal, productivity and modern-CLI sets — and nmap / netcat, which live in
+# jiveturkey's own operator set — still install on every platform.
 # cloud + devops get added once their categories land (Phases 2/3b).
-tool_categories:
-  - offsec
+#
+#   tool_categories:             # (flat list) categories installed on ALL platforms
+#   tool_categories_by_platform: # categories scoped to a platform family: all|linux|darwin
+tool_categories_by_platform:
+  linux:
+    - offsec
 
 # Shell configuration (extends matrix)
 shell_config:

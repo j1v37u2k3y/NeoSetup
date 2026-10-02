@@ -62,7 +62,27 @@ operator_metadata:
       items:
         type: string
         enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
-      description: "Composable tool-set categories this operator opts into (see tool_sets in tool_registry.yml)"
+      description: "Composable tool-set categories this operator opts into on every platform (see tool_sets)"
+
+    tool_categories_by_platform:
+      type: object
+      properties:
+        all:
+          type: array
+          items:
+            type: string
+            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+        linux:
+          type: array
+          items:
+            type: string
+            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+        darwin:
+          type: array
+          items:
+            type: string
+            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+      description: "Tool-set categories scoped by platform family (all | linux | darwin; wsl counts as linux)"
 
 # Shell configuration schema
 shell_config:
