@@ -28,6 +28,24 @@
         'unknown'
       }}
 
+# macOS vs Linux (wsl counts as linux) — used to scope opt-in tool categories.
+- name: "🧭 Detect platform family"
+  set_fact:
+    platform_family: "{{ 'darwin' if platform_key == 'darwin' else 'linux' }}"
+
+# Composable categories an operator opts into:
+#   tool_categories             -> installed on every platform (flat list)
+#   tool_categories_by_platform -> scoped by family (keys: all | linux | darwin)
+# e.g. jiveturkey opts into `offsec` on linux only (macOS red-team work is a Kali VM).
+- name: "🧭 Resolve tool categories for this platform"
+  set_fact:
+    selected_tool_categories: >-
+      {{
+        (tool_categories | default([]))
+        + ((tool_categories_by_platform | default({}))['all'] | default([]))
+        + ((tool_categories_by_platform | default({}))[platform_family] | default([]))
+      }}
+
 - name: "📦 Determine tools to install (composed across the operator inheritance spine)"
   set_fact:
     tools_to_install: >-
@@ -40,7 +58,7 @@
             | flatten
           )
         + (
-            (tool_categories | default([]))
+            (selected_tool_categories | default([]))
             | select('in', tool_sets | default({}))
             | map('extract', tool_sets | default({}))
             | flatten

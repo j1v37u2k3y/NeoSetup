@@ -87,16 +87,37 @@ def get_binary_name(tool_name: str, platform: str = "") -> str:
     return BINARY_NAME_MAP.get(tool_name, tool_name)
 
 
+def operator_categories(op_vars: dict, platform: str) -> list:
+    """Categories an operator opts into for a platform: the flat ``tool_categories``
+    (all platforms) plus ``tool_categories_by_platform`` entries for ``all`` and the
+    platform family (``darwin``, else ``linux`` -- wsl counts as ``linux``). Mirrors
+    the installer's platform-family resolution."""
+    categories = list(op_vars.get("tool_categories") or [])
+    by_platform = op_vars.get("tool_categories_by_platform") or {}
+    if by_platform:
+        family = "darwin" if platform == "darwin" else "linux"
+        categories += list(by_platform.get("all") or [])
+        categories += list(by_platform.get(family) or [])
+    return categories
+
+
 def get_operator_tools(
     registry: dict,
     operator: str,
     group_vars_path: Path | None = None,
     operators_dir: Path | None = None,
+    platform: str = "",
 ) -> set:
     """Compose an operator's expected tools exactly like install_tools_unified.yml:
-    modern_cli + operator_tool_sets across the inheritance spine + tool_categories
-    (via tool_sets) + tools_config.additional_tools. Reads inheritance from
-    group_vars and the operator's own vars so it stays correct as operators change."""
+    modern_cli + operator_tool_sets across the inheritance spine + opted-in tool
+    categories (via tool_sets) + tools_config.additional_tools. Reads inheritance
+    from group_vars and the operator's own vars so it stays correct as operators
+    change.
+
+    Categories come from two keys in the operator vars: ``tool_categories`` (a flat
+    list installed on every platform) and ``tool_categories_by_platform`` (a map
+    scoped by platform family -- ``all`` | ``linux`` | ``darwin`` -- where ``wsl``
+    counts as ``linux``). This must mirror the installer's platform-family logic."""
     operator_sets = registry.get("operator_tool_sets", {})
     tool_sets = registry.get("tool_sets", {})
 
@@ -117,7 +138,7 @@ def get_operator_tools(
         if op_vars_path.exists():
             with open(op_vars_path, encoding="utf-8") as f:
                 ov = yaml.safe_load(f) or {}
-            for category in ov.get("tool_categories", []) or []:
+            for category in operator_categories(ov, platform):
                 tools |= set(tool_sets.get(category, []))
             tools |= set((ov.get("tools_config") or {}).get("additional_tools") or [])
 
@@ -249,9 +270,9 @@ def validate_operator_tools(
 ) -> tuple[int, int, list]:
     """Validate all tools for an operator are installed."""
     group_vars_path, operators_dir = source_paths
-    tools = get_operator_tools(registry, operator, group_vars_path, operators_dir)
     tool_registry = registry.get("tool_registry", {})
     platform = get_platform(os_name)
+    tools = get_operator_tools(registry, operator, group_vars_path, operators_dir, platform)
 
     print(f"\n{'=' * 60}")
     print(f"Validating {operator} operator ({len(tools)} tools)")

@@ -62,32 +62,50 @@ These are **named, reusable bundles** — the unit of "a combo."
 
 ### 3.2 Operators opt in
 
-An operator declares which category sets it wants, in addition to what it inherits:
+An operator declares which category sets it wants, in addition to what it inherits. Two keys are
+available:
+
+- `tool_categories` — a flat list, installed on **every** platform.
+- `tool_categories_by_platform` — categories scoped to a **platform family** (`all` | `linux` | `darwin`;
+  `wsl` counts as `linux`). Use this when a category only makes sense on some platforms.
 
 ```yaml
 # operators/jiveturkey/vars.yml
-tool_categories: [offsec, cloud, devops]       # jiveturkey's combo (offsec = the full kit)
+# offsec is scoped to Linux only — on macOS the red-team work happens in a Kali VM, so the heavy
+# kit is not installed natively. nmap/netcat still install everywhere (they are in jiveturkey's own
+# operator set, not the offsec category).
+tool_categories_by_platform:
+  linux: [offsec]
 ```
 
 ```yaml
 # a hypothetical shared/community operator — someone else's combo
-tool_categories: [security, python]            # pentester who scripts in Python
+tool_categories: [security, python]            # on every platform: a pentester who scripts in Python
 ```
 
 ### 3.3 Composition algorithm (extends the current one)
 
 ```
+platform_family = darwin if platform == darwin else linux        # wsl counts as linux
+selected_categories =
+    (op.tool_categories | default([]))                           # every platform
+  + (op.tool_categories_by_platform.all | default([]))           # every platform
+  + (op.tool_categories_by_platform[platform_family] | default([]))  # this family only
+
 tools_to_install =
     tool_sets.core
   + tool_sets.modern_cli
   + UNION( operator_tool_sets[o]  for o in (operator_inheritance[op] + [op]) )   # existing spine
-  + UNION( tool_sets[c]           for c in (op.tool_categories | default([])) )  # NEW: opted-in categories
+  + UNION( tool_sets[c]           for c in selected_categories )                 # opted-in categories
   + tools_config.additional_tools
 ```
 
 Backward compatible: the existing operator-keyed `operator_tool_sets` and the inheritance spine stay
-exactly as they are. Category sets are **additive**. `unique` de-dupes overlaps (someone opting into
-`core` + `python` where both list a shared tool just gets it once).
+exactly as they are, and a flat `tool_categories` list behaves as before. Category sets are **additive**.
+`unique` de-dupes overlaps (someone opting into `core` + `python` where both list a shared tool just gets
+it once). The installer (`install_tools_unified.yml`) and the verify gate (`test_binary_validation.py`,
+`operator_categories()`) resolve categories with the **same** platform-family logic, so the "expected"
+set the gate checks always matches what the installer installs.
 
 > Migration note: over time, `base`'s and `matrix`'s operator-keyed sets can be re-expressed as the
 > `core` / `matrix_fun` categories, collapsing the two mechanisms into one. Not required for v1.
@@ -144,6 +162,8 @@ remote-exec debt for these tools).
 
 - Add `tool_categories` to `schema/operator_schema.yml` — `type: array`, items `type: string` with an
   `enum` of the defined category names (so a typo like `secuirty` fails validation loudly).
+- Add `tool_categories_by_platform` — `type: object` with `all` / `linux` / `darwin` properties, each an
+  array of the same category `enum` (same typo protection, scoped by platform family).
 - Extend `validate_operator.py`'s registry-membership check to also confirm each `tool_categories`
   entry is a real key in `tool_sets`, and that every tool inside those sets is a `tool_registry` key.
 - The install-time fail-loud assert already covers the composed result — no change needed there beyond
