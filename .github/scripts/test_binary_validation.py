@@ -52,12 +52,10 @@ SKIP_IN_CONTAINER = {
 }
 
 # Genuinely unavailable on specific distros — skip in verify rather than fake it
-# (honest coverage). Verified: cmatrix/grc are not in EPEL 9; neofetch is dropped
-# from Debian rolling (kali/parrot) and was removed from Homebrew (archived
-# upstream in 2024), so it is unavailable on macOS too — migration to fastfetch is
-# tracked in #156. It is still present elsewhere (incl. EPEL).
+# (honest coverage). Verified: cmatrix/grc are not in EPEL 9. (neofetch was retired
+# upstream and replaced by fastfetch, which installs on every platform via a custom
+# installer — see #156 — so it no longer needs an availability skip.)
 UNAVAILABLE_ON = {
-    "neofetch": {"kali-rolling", "parrot-security", "darwin"},
     "cmatrix": {"centos-stream-9", "rocky-9", "almalinux-9"},
     "grc": {"centos-stream-9", "rocky-9", "almalinux-9"},
 }

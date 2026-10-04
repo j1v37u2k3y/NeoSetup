@@ -49,7 +49,7 @@ shell_config:
     # Matrix aliases (inherited from matrix operator)
     "matrix": "cmatrix"
     "rain": "cmatrix -b"
-    "neo": "neofetch"
+    "neo": "fastfetch"
     "hack": "echo '🎭 Hacking the Matrix...'"
     "redpill": "echo '🔴💊 Welcome to the real world'"
     "bluepill": "echo '🔵💊 Back to sleep...'"
@@ -294,7 +294,7 @@ shell_functions:
 
 # Tools configuration (extends matrix)
 matrix_greeting: "🚀 Welcome back, JiveTurkey! Let's build something awesome!"
-startup_command: "neofetch 2>/dev/null || echo '$matrix_greeting'"
+startup_command: "fastfetch 2>/dev/null || echo '$matrix_greeting'"
 
 # JiveTurkey-specific configurations
 jiveturkey_config:
