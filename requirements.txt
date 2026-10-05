@@ -22,7 +22,7 @@ bandit>=1.9.4
 safety==3.8.1
 
 # Documentation Tools
-markdown>=3.4.0
+markdown>=3.11
 
 # Testing Framework (future)
 molecule>=26.9.0
