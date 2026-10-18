@@ -7,7 +7,7 @@
 
 - name: "🔗 Load operator variables in inheritance order"
   include_vars: "../../../operators/{{ item }}/vars.yml"
-  loop: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+  loop: "{{ ((operator_inheritance[neosetup_operator] | default([])) | reverse | list) + [neosetup_operator] }}"
   loop_control:
     label: "Loading {{ item }} shell config"
   when:
