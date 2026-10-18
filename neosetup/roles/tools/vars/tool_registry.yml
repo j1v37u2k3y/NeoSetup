@@ -764,102 +764,11 @@ tool_registry:
     packages:
       # Azure CLI requires custom installation
 
-# Tool sets by operator
-operator_tool_sets:
-  base:
-    - htop
-    - tree
-    - jq
-    - curl
-    - wget
-    - yamllint
-    - act
-    - pre-commit
-
-  matrix:
-    - cmatrix
-    - fastfetch
-    - lolcat
-    - figlet
-    - cowsay
-    - fortune
-
-  jiveturkey:
-    - ncdu
-    - httpie
-    - tldr
-    - yq
-    - nmap
-    - netcat
-    - ranger
-    - mc
-    - shellcheck
-    - lazygit
-    - gh
-    # Monitoring / observability
-    - glances
-    - duf
-    - procs
-    # Git statistics
-    - git-quick-stats
-    # Log viewing
-    - lnav
-    - grc
-    - multitail
-
-  modern_cli:
-    - eza
-    - bat
-    - ripgrep
-    - fd
-    - fzf
-    - delta
-    - btop
-
-  macos:
-    - duti
-    - mas
-    - mackup
-    - stats
-    - rectangle
-
-  windows_wsl:
-    - wslu
-    - build-essential
-    - python3-pip
-    - powershell
-
-  python_dev:
-    - pyenv
-    - poetry
-    - pipx
-    - black
-    - flake8
-    - mypy
-    - isort
-    - pytest
-    - ipython
-    - jupyter
-    - cookiecutter
-
-  nodejs_dev:
-    - nvm
-
-  go_dev:
-    - go
-
-  cloud_tools:
-    - awscli
-    - kubectl
-    - helm
-    - terraform
-    - docker-compose
-
-# Composable category tool sets. Operators opt in via `tool_categories: [...]`;
-# the installer unions these with the inheritance-spine sets.
+# Composable category tool sets. Each operator opts into one or more of these
+# via group_vars/all/operators.yml:operator_tool_categories (installed across
+# the inheritance spine) or via its own vars.yml:tool_categories /
+# tool_categories_by_platform (leaf-only). The installer unions both.
 # See docs/architecture/composable-tool-sets.md.
-# Phase 1 defines only fully-registered categories; security/offsec/cloud/devops
-# arrive in later phases alongside their tool registrations and installers.
 tool_sets:
   core:
     - htop
@@ -885,6 +794,32 @@ tool_sets:
     - figlet
     - cowsay
     - fortune
+  # jiveturkey's own power-user set: productivity + modern-CLI + networking
+  # staples that aren't in any shared category. The red-team arsenal is
+  # separate — jiveturkey opts into `offsec` on Linux-only via
+  # tool_categories_by_platform.
+  jiveturkey_tools:
+    - ncdu
+    - httpie
+    - tldr
+    - yq
+    - nmap
+    - netcat
+    - ranger
+    - mc
+    - shellcheck
+    - lazygit
+    - gh
+    # Monitoring / observability
+    - glances
+    - duf
+    - procs
+    # Git statistics
+    - git-quick-stats
+    # Log viewing
+    - lnav
+    - grc
+    - multitail
   python:
     - pyenv
     - poetry
@@ -907,6 +842,11 @@ tool_sets:
     - mackup
     - stats
     - rectangle
+  windows_wsl:
+    - wslu
+    - build-essential
+    - python3-pip
+    - powershell
   # Lighter shared security CLI set (cross-platform: apt + brew)
   security:
     - nmap

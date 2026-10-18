@@ -48,8 +48,9 @@ nodejs_config:
 # Tool configuration
 tools_config:
   # Node.js tooling is installed by the nvm ecosystem installer, NOT the generic
-  # package loop: `nvm` (via operator_tool_sets.nodejs_dev in the tool registry)
-  # brings Node.js/npm, and nodejs_dev_config.global_packages lists the global
+  # package loop: `nvm` (via the `node` tool_sets category, opted into by
+  # nodejs_dev's operator_tool_categories entry) brings Node.js/npm, and
+  # nodejs_dev_config.global_packages lists the global
   # npm CLIs to install. npm/yarn/pnpm/tsc/eslint/... are not apt/brew/pip
   # packages, so listing them here would silently no-op.
   additional_tools: []

@@ -101,7 +101,7 @@ def operator_categories(op_vars: dict, platform: str) -> list:
     return categories
 
 
-def get_operator_tools(
+def get_operator_tools(  # pylint: disable=too-many-locals
     registry: dict,
     operator: str,
     group_vars_path: Path | None = None,
@@ -109,38 +109,40 @@ def get_operator_tools(
     platform: str = "",
 ) -> set:
     """Compose an operator's expected tools exactly like install_tools_unified.yml:
-    modern_cli + operator_tool_sets across the inheritance spine + opted-in tool
-    categories (via tool_sets) + tools_config.additional_tools. Reads inheritance
-    from group_vars and the operator's own vars so it stays correct as operators
-    change.
+    the union of tool_sets categories opted into across the inheritance spine
+    (via group_vars/all/operators.yml:operator_tool_categories) plus leaf-only
+    opt-ins (via the operator's vars.yml:tool_categories /
+    tool_categories_by_platform) plus tools_config.additional_tools.
 
-    Categories come from two keys in the operator vars: ``tool_categories`` (a flat
-    list installed on every platform) and ``tool_categories_by_platform`` (a map
-    scoped by platform family -- ``all`` | ``linux`` | ``darwin`` -- where ``wsl``
-    counts as ``linux``). This must mirror the installer's platform-family logic."""
-    operator_sets = registry.get("operator_tool_sets", {})
+    Reads inheritance and the spine category-map from group_vars so it stays
+    correct as operators are added. Platform-family resolution mirrors the
+    installer: ``darwin`` for macOS; ``linux`` otherwise (``wsl`` counts as
+    linux)."""
     tool_sets = registry.get("tool_sets", {})
 
-    tools = set(operator_sets.get("modern_cli", []))
-
-    # Inheritance spine (dynamic, from group_vars) + the operator itself.
-    inheritance = {}
+    inheritance: dict = {}
+    operator_tool_categories: dict = {}
     if group_vars_path and group_vars_path.exists():
         with open(group_vars_path, encoding="utf-8") as f:
             gv = yaml.safe_load(f) or {}
         inheritance = gv.get("operator_inheritance", {}) or {}
-    for op in (inheritance.get(operator, []) or []) + [operator]:
-        tools |= set(operator_sets.get(op, []))
+        operator_tool_categories = gv.get("operator_tool_categories", {}) or {}
 
-    # The operator's opted-in categories + additional_tools (from its vars.yml).
+    categories: list = []
+    for op in (inheritance.get(operator, []) or []) + [operator]:
+        categories += list(operator_tool_categories.get(op, []) or [])
+
+    tools: set = set()
     if operators_dir:
         op_vars_path = operators_dir / operator / "vars.yml"
         if op_vars_path.exists():
             with open(op_vars_path, encoding="utf-8") as f:
                 ov = yaml.safe_load(f) or {}
-            for category in operator_categories(ov, platform):
-                tools |= set(tool_sets.get(category, []))
+            categories += operator_categories(ov, platform)
             tools |= set((ov.get("tools_config") or {}).get("additional_tools") or [])
+
+    for category in categories:
+        tools |= set(tool_sets.get(category, []))
 
     return tools
 

@@ -54,16 +54,16 @@ jobs:
       matrix:
         os:
           # Debian-based
-          - { name: 'ubuntu-22.04', dockerfile: 'Dockerfile.ubuntu-22.04' }
-          - { name: 'ubuntu-24.04', dockerfile: 'Dockerfile.ubuntu-24.04' }
-          - { name: 'debian-12', dockerfile: 'Dockerfile.debian-12' }
-          - { name: 'kali-rolling', dockerfile: 'Dockerfile.kali-rolling' }
-          - { name: 'parrot-security', dockerfile: 'Dockerfile.parrot-security' }
+          - { name: 'ubuntu-22.04', base_image: 'ubuntu:22.04', pkg_mgr: 'apt', use_uv: '1' }
+          - { name: 'ubuntu-24.04', base_image: 'ubuntu:24.04', pkg_mgr: 'apt', use_uv: '0' }
+          - { name: 'debian-12', base_image: 'debian:12', pkg_mgr: 'apt', use_uv: '1' }
+          - { name: 'kali-rolling', base_image: 'kalilinux/kali-rolling', pkg_mgr: 'apt', use_uv: '0' }
+          - { name: 'parrot-security', base_image: 'parrotsec/core', pkg_mgr: 'apt', use_uv: '0' }
           # RHEL-based
-          - { name: 'centos-stream-9', dockerfile: 'Dockerfile.centos-stream-9' }
-          - { name: 'rocky-9', dockerfile: 'Dockerfile.rocky-9' }
-          - { name: 'almalinux-9', dockerfile: 'Dockerfile.almalinux-9' }
-          - { name: 'fedora-40', dockerfile: 'Dockerfile.fedora-40' }
+          - { name: 'centos-stream-9', base_image: 'quay.io/centos/centos:stream9', pkg_mgr: 'dnf', use_uv: '1' }
+          - { name: 'rocky-9', base_image: 'rockylinux:9', pkg_mgr: 'dnf', use_uv: '1' }
+          - { name: 'almalinux-9', base_image: 'almalinux:9', pkg_mgr: 'dnf', use_uv: '1' }
+          - { name: 'fedora-40', base_image: 'fedora:40', pkg_mgr: 'dnf', use_uv: '0' }
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v7
@@ -80,7 +80,11 @@ jobs:
 
       - name: 🔨 Build test container for ${{ matrix.os.name }}
         run: |
-          docker build -f docker/${{ matrix.os.dockerfile }} -t neosetup-test-${{ matrix.os.name }} .
+          docker build -f docker/Dockerfile \
+            --build-arg BASE_IMAGE=${{ matrix.os.base_image }} \
+            --build-arg PKG_MGR=${{ matrix.os.pkg_mgr }} \
+            --build-arg USE_UV=${{ matrix.os.use_uv }} \
+            -t neosetup-test-${{ matrix.os.name }} .
 
       - name: 📦 Export container
         run: |
@@ -241,9 +245,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - { name: 'ubuntu-24.04', dockerfile: 'Dockerfile.ubuntu-24.04' }  # apt family
-          - { name: 'debian-12', dockerfile: 'Dockerfile.debian-12' }  # apt family
-          - { name: 'fedora-40', dockerfile: 'Dockerfile.fedora-40' }  # dnf family
+          - { name: 'ubuntu-24.04', base_image: 'ubuntu:24.04', pkg_mgr: 'apt', use_uv: '0' }  # apt family
+          - { name: 'debian-12', base_image: 'debian:12', pkg_mgr: 'apt', use_uv: '1' }  # apt family
+          - { name: 'fedora-40', base_image: 'fedora:40', pkg_mgr: 'dnf', use_uv: '0' }  # dnf family
     steps:
       - name: 🔍 Checkout code
         uses: actions/checkout@v7
@@ -257,7 +261,12 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
 
       - name: 🔨 Build test container for ${{ matrix.os.name }}
-        run: docker build -f docker/${{ matrix.os.dockerfile }} -t neosetup-test-${{ matrix.os.name }} .
+        run: |
+          docker build -f docker/Dockerfile \
+            --build-arg BASE_IMAGE=${{ matrix.os.base_image }} \
+            --build-arg PKG_MGR=${{ matrix.os.pkg_mgr }} \
+            --build-arg USE_UV=${{ matrix.os.use_uv }} \
+            -t neosetup-test-${{ matrix.os.name }} .
 
       - name: 🔬 Install + verify base and jiveturkey
         env:

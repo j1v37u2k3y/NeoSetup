@@ -46,23 +46,37 @@
         + ((tool_categories_by_platform | default({}))[platform_family] | default([]))
       }}
 
+# Compose the tool list from one source of truth: tool_sets categories.
+# Spine-level categories come from group_vars/all/operators.yml:
+# operator_tool_categories (unioned across the inheritance spine, so every
+# operator picks up base's core + modern_cli automatically). Leaf-level
+# categories come from the operator's own vars.yml via `tool_categories` and
+# `tool_categories_by_platform` (jiveturkey's offsec-on-linux opt-in lives
+# there). Both resolve against the same tool_sets map in tool_registry.yml.
+- name: "🧩 Union categories for this operator (spine + leaf)"
+  set_fact:
+    _spine_ops: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+- name: "🧩 Union categories for this operator (spine + leaf)"
+  set_fact:
+    _all_tool_categories: >-
+      {{
+        (
+          (_spine_ops | select('in', operator_tool_categories | default({})) | list
+            | map('extract', operator_tool_categories | default({})) | list | flatten)
+          + (selected_tool_categories | default([]))
+        )
+      }}
+
 - name: "📦 Determine tools to install (composed across the operator inheritance spine)"
   set_fact:
     tools_to_install: >-
       {{
-        (operator_tool_sets.modern_cli | default([]))
-        + (
-            ((operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator])
-            | select('in', operator_tool_sets)
-            | map('extract', operator_tool_sets)
-            | flatten
-          )
-        + (
-            (selected_tool_categories | default([]))
-            | select('in', tool_sets | default({}))
-            | map('extract', tool_sets | default({}))
-            | flatten
-          )
+        (
+          _all_tool_categories
+          | select('in', tool_sets | default({}))
+          | map('extract', tool_sets | default({}))
+          | flatten
+        )
         + (tools_config.additional_tools | default([]))
       }}
 
@@ -103,6 +117,7 @@
         - tool_registry[item].install_method | default('brew') != 'cask'
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
+      register: _tool_install_brew
       ignore_errors: yes
 
     - name: "🍎 Install cask applications via Homebrew"
@@ -121,6 +136,7 @@
       # A single unavailable/disabled cask (e.g. a Gatekeeper-disabled app, or a
       # GUI cask whose pkg needs an interactive sudo) must not abort the whole
       # macOS run — match the Linux tasks' best-effort behavior.
+      register: _tool_install_brew_cask
       ignore_errors: yes
 
 # WSL2 installation using apt (most WSL2 instances are Ubuntu-based)
@@ -155,6 +171,7 @@
         - (tool_registry[item].packages.ubuntu is defined) or (tool_registry[item].packages.debian is defined) or (platform_key in tool_registry[item].packages)
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }}) [WSL2]"
+      register: _tool_install_wsl_pkg
       ignore_errors: yes
 
 # Linux installation using package manager
@@ -197,6 +214,7 @@
         - platform_key in tool_registry[item].packages
       loop_control:
         label: "{{ item }} ({{ tool_registry[item].description | default('') }})"
+      register: _tool_install_linux_pkg
       ignore_errors: yes
 
 # Python CLI tools via pipx (#131).
@@ -225,7 +243,7 @@
       command: >-
         {{ neosetup_pipx }} install
         {{ tool_registry[item].packages.pip | default(tool_registry[item].packages.pipx) }}
-      register: pipx_install
+      register: _tool_install_pipx
       # A package that is already installed, or a pure library with no apps, is not
       # a failure. Anything else that exits non-zero is a genuine install failure:
       # surface it (reported per item with `...ignoring`) instead of hiding it under
@@ -234,11 +252,11 @@
       # keeps it non-fatal so one bad package can't abort the best-effort tools run
       # (matching the apt/cask tasks).
       failed_when:
-        - pipx_install.rc is defined
-        - pipx_install.rc != 0
-        - "'already seems to be installed' not in (pipx_install.stdout | default(''))"
-        - "'No apps associated' not in (pipx_install.stderr | default(''))"
-      changed_when: "'installed package' in (pipx_install.stdout | default(''))"
+        - _tool_install_pipx.rc is defined
+        - _tool_install_pipx.rc != 0
+        - "'already seems to be installed' not in (_tool_install_pipx.stdout | default(''))"
+        - "'No apps associated' not in (_tool_install_pipx.stderr | default(''))"
+      changed_when: "'installed package' in (_tool_install_pipx.stdout | default(''))"
       ignore_errors: yes
       loop: "{{ tools_to_install | unique }}"
       when:
@@ -250,14 +268,19 @@
         label: "{{ item }} [pipx]"
 
 # Custom installations
-# `apply: ignore_errors` propagates into the INCLUDED tasks (ignore_errors on the
-# include statement itself does not), so one broken installer is reported per-item
-# but never aborts the whole tools play. See GitHub #128.
+# Each custom installer runs through _custom_install_capture.yml, a block/rescue
+# wrapper that keeps one broken installer from aborting the tools play AND
+# captures its failure for the aggregator below. Direct `apply: ignore_errors`
+# on this include is NOT used: it propagates into inner tasks and would prevent
+# rescue from firing, which is exactly the S7 aggregation gap this replaces
+# (`register` on a looped include_tasks only sees per-iteration include
+# metadata, not inner-task pass/fail). See GitHub #128.
+- name: "📊 Initialize custom-install failure accumulator"
+  set_fact:
+    _custom_install_failures: []
+
 - name: "🔧 Handle custom tool installations"
-  include_tasks:
-    file: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
-    apply:
-      ignore_errors: yes
+  include_tasks: _custom_install_capture.yml
   loop: "{{ tools_to_install | unique }}"
   when:
     - item in tool_registry
@@ -265,8 +288,65 @@
   loop_control:
     label: "{{ item }} (custom install)"
 
+# Aggregate every ignored install failure into one list so a 60-tool run can
+# tell at a glance what landed and what didn't. Direct-module loops above
+# (`_tool_install_brew`, `_tool_install_linux_pkg`, …) register the module's
+# own per-item result, so `.failed: true` carries the item name and msg.
+# Custom installers can't be captured that way — register on a looped
+# include_tasks sees only include metadata, not inner-task failures — so
+# _custom_install_capture.yml records them into `_custom_install_failures`
+# via block/rescue instead, and we union that here.
+- name: "📊 Aggregate tool-install failures"
+  set_fact:
+    tools_install_failures: >-
+      {{
+        (
+          (
+            (_tool_install_brew.results | default([]))
+            + (_tool_install_brew_cask.results | default([]))
+            + (_tool_install_wsl_pkg.results | default([]))
+            + (_tool_install_linux_pkg.results | default([]))
+            + (_tool_install_pipx.results | default([]))
+          )
+          | selectattr('failed', 'defined')
+          | selectattr('failed')
+          | list
+        )
+        + (_custom_install_failures | default([]))
+      }}
+
+- name: "❌ Report tool-install failures (non-strict)"
+  debug:
+    msg: >-
+      {{ tools_install_failures | length }} tool install(s) failed and were
+      ignored on operator '{{ neosetup_operator }}' / {{ platform_key }}
+      (set neosetup_strict_tools=true to fail the role):
+      {{
+        tools_install_failures
+        | map(attribute='item')
+        | list
+      }}
+  when:
+    - tools_install_failures | length > 0
+    - not (neosetup_strict_tools | default(false) | bool)
+
+- name: "🛑 Fail on tool-install failures (strict mode)"
+  fail:
+    msg: >-
+      {{ tools_install_failures | length }} tool install(s) failed on operator
+      '{{ neosetup_operator }}' / {{ platform_key }}
+      (neosetup_strict_tools is true):
+      {{
+        tools_install_failures
+        | map(attribute='item')
+        | list
+      }}
+  when:
+    - tools_install_failures | length > 0
+    - neosetup_strict_tools | default(false) | bool
+
 - name: "✅ Tool installation complete"
   debug:
     msg: |
       Planned {{ tools_to_install | unique | length }} tools for operator '{{ neosetup_operator }}' on {{ platform_key }}.
-      See the per-task results above for actual install status — skips and failures are reported per item.
+      Ignored failures aggregated above: {{ tools_install_failures | length }}.

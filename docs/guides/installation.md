@@ -87,9 +87,9 @@ make dry-run OPERATOR=matrix
 make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv"
 ```
 
-> **Note**: `make` accepts any registered operator via `OPERATOR=<name>` (all 8 operators). The `./setup`
-> wrapper only knows `base`, `matrix`, and `jiveturkey` — for the others (`python_dev`, `nodejs_dev`,
-> `go_dev`, `macos`, `windows_wsl`) use `make install OPERATOR=<name>`.
+> **Note**: Both entry points accept any registered operator. `./setup` reads `available_operators` from
+> `neosetup/group_vars/all/operators.yml` at startup, and `make install OPERATOR=<name>` passes the name
+> straight through to Ansible, so adding a ninth operator to `available_operators` makes it work in both.
 
 ## 💊 Operator Guide
 
@@ -144,13 +144,17 @@ Choose your reality with different operator configurations:
   from containers, so no host install is required)
 - Power-user aliases and productivity functions
 
-> **Not yet installed**: the heavier security/DevOps arsenal (wireshark, sqlmap, gobuster, ffuf, john,
-> hashcat, kubectl, helm, awscli, terraform, ansible) is **planned/deferred** — it needs per-platform
-> packaging and installers before it ships. Don't expect these on a fresh `jiveturkey` install today.
+> **What installs today**: on Debian-family Linux (Ubuntu/Debian/Kali/Parrot), jiveturkey's `offsec` opt-in
+> installs the apt-packaged offsec tools (sqlmap, gobuster, ffuf, john, hashcat, wireshark); on the RHEL
+> family they are honestly skipped (not in default repos). `nuclei` / `burp-suite` currently install on macOS
+> only (Linux installers deferred); `bloodhound` has no working installer yet; and the cloud CLIs (kubectl,
+> helm, terraform, azure-cli) have installers but are not part of any shipping operator's tool set yet. See
+> [docs/architecture/composable-tool-sets.md](../architecture/composable-tool-sets.md) for the authoritative
+> status.
 
 ### Other Operators
 
-Install any of these with `make install OPERATOR=<name>`:
+Install any of these with `./setup install <name>` or `make install OPERATOR=<name>`:
 
 - **python_dev** - Python toolchain (pyenv, poetry, pipx, black, flake8, mypy, pytest, jupyter)
 - **nodejs_dev** - Node.js environment (nvm)

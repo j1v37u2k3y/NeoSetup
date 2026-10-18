@@ -132,27 +132,35 @@ def test_docker_files():
         print(f"{YELLOW}⚠️ docker/ directory not found. Run from project root.{RESET}")
         return False
 
-    dockerfiles = list(docker_dir.glob("Dockerfile.*"))
-    if not dockerfiles:
-        print(f"{YELLOW}⚠️ No Dockerfiles found in docker/ directory{RESET}")
+    dockerfile = docker_dir / "Dockerfile"
+    if not dockerfile.exists():
+        print(f"{YELLOW}⚠️ docker/Dockerfile not found{RESET}")
         return False
 
-    # Validate each Dockerfile with docker build --check (dry-run)
+    # The consolidated Dockerfile is parameterized; check it once per package
+    # family so apt- and dnf-specific branches are both exercised.
+    families = [
+        ("apt",    "debian:12",  "1"),
+        ("dnf",    "fedora:40",  "0"),
+    ]
     passed = 0
-    for dockerfile in sorted(dockerfiles):
+    for pkg_mgr, base_image, use_uv in families:
         result = run_command(
-            f"docker build --check -f {dockerfile} .",
+            f"docker build --check -f {dockerfile} "
+            f"--build-arg BASE_IMAGE={base_image} "
+            f"--build-arg PKG_MGR={pkg_mgr} "
+            f"--build-arg USE_UV={use_uv} .",
             check=False,
             capture_output=True
         )
         if result and result.returncode == 0:
-            print(f"  ✅ {dockerfile.name}")
+            print(f"  ✅ Dockerfile [{pkg_mgr}]")
             passed += 1
         else:
-            print(f"  ❌ {dockerfile.name} - syntax error")
+            print(f"  ❌ Dockerfile [{pkg_mgr}] - syntax error")
 
-    print(f"{GREEN}✅ Validated {passed}/{len(dockerfiles)} Docker container files{RESET}")
-    return passed == len(dockerfiles)
+    print(f"{GREEN}✅ Validated {passed}/{len(families)} Dockerfile variants{RESET}")
+    return passed == len(families)
 
 def run_pre_commit_test():
     """Run pre-commit on all files"""
@@ -185,8 +193,12 @@ def show_completion_info():
     print(f"  {CYAN}cd neosetup && make lint{RESET}                       # Run ansible-lint")
     print()
     print(f"{BOLD}🐳 Docker testing:{RESET}")
-    print(f"  {CYAN}docker build -f docker/Dockerfile.ubuntu-22.04 -t test-ubuntu .{RESET}")
-    print(f"  {CYAN}docker build -f docker/Dockerfile.rocky-9 -t test-rocky .{RESET}")
+    print(f"  {CYAN}docker build -f docker/Dockerfile \\{RESET}")
+    print(f"  {CYAN}    --build-arg BASE_IMAGE=ubuntu:22.04 --build-arg PKG_MGR=apt --build-arg USE_UV=1 \\{RESET}")
+    print(f"  {CYAN}    -t test-ubuntu .{RESET}")
+    print(f"  {CYAN}docker build -f docker/Dockerfile \\{RESET}")
+    print(f"  {CYAN}    --build-arg BASE_IMAGE=rockylinux:9 --build-arg PKG_MGR=dnf --build-arg USE_UV=1 \\{RESET}")
+    print(f"  {CYAN}    -t test-rocky .{RESET}")
     print()
     print_matrix("Ready to hack the Matrix! 💊")
 

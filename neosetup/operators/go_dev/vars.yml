@@ -47,8 +47,9 @@ go_config:
 # Tool configuration
 tools_config:
   # Go tooling is installed by the go ecosystem installer, NOT the generic
-  # package loop: `go` (via operator_tool_sets.go_dev in the tool registry)
-  # brings the toolchain, and go_dev_config.go_install_tools lists the tools to
+  # package loop: `go` (via the `go` tool_sets category, opted into by go_dev's
+  # operator_tool_categories entry) brings the toolchain, and
+  # go_dev_config.go_install_tools lists the tools to
   # `go install`. These are go-install targets, not apt/brew/pip packages, so
   # listing them here would silently no-op.
   additional_tools: []

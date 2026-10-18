@@ -1,7 +1,23 @@
 # Composable Tool Sets — Design Spec
 
-> Status: **Proposed** (2026-09-23) · Owner: j1v37u2k3y · Depends on: the fail-loud install gate and
-> enforcing operator validator now on `main`.
+> Status: **Adopted** (2026-10-17) · Owner: j1v37u2k3y · The migration from
+> `operator_tool_sets` is complete. Composition is driven by `tool_sets` +
+> `tool_categories` only; the legacy per-operator baked lists have been removed.
+>
+> **Chosen shape (S8):** `tool_sets` is the only tool-list source of truth.
+> Each operator opts into one or more category names via two surfaces, both
+> resolved against the same `tool_sets` map:
+>
+> - `group_vars/all/operators.yml:operator_tool_categories` — map of
+>   operator → categories, unioned across the inheritance spine. Replaces the
+>   old `operator_tool_sets` map while preserving its spine-union semantics.
+> - the operator's own `vars.yml:tool_categories` and
+>   `tool_categories_by_platform` — leaf-only opt-ins (jiveturkey's
+>   `offsec` on Linux lives here).
+>
+> The old `operator_tool_sets` structure is gone from `tool_registry.yml`.
+> Behavior is preserved exactly — the eight shipping operators compose the
+> same tool list they did before the migration.
 
 ## 1. Why this exists (the mission)
 
@@ -27,13 +43,17 @@ but not installed).
 
 Three things landed on `main` this cycle that make an honest tool buildout **safe**:
 
-- **Inheritance composition** — the installer unions `operator_tool_sets` across the full spine
-  (`(operator_inheritance[op] + [op])`), not just the leaf operator.
+- **Inheritance composition** — the installer unions each spine operator's
+  `operator_tool_categories` entry across the full spine
+  (`(operator_inheritance[op] + [op])`), resolves each category against `tool_sets`,
+  and adds the leaf operator's own `tool_categories` / `tool_categories_by_platform`.
 - **Fail-loud gate** — `install_tools_unified.yml` asserts every declared tool is a `tool_registry`
   key. A typo'd or unregistered tool now **stops the run loudly** instead of silently installing
   nothing (the old silent-gate bug).
-- **Enforcing validator** — `validate_operator.py` now checks types, patterns, and
-  registry-membership, so bad tool references are caught at validation time.
+- **Enforcing validator** — `validate_operator.py` checks types, patterns,
+  registry-membership of `additional_tools`, and that every opted-in category
+  resolves against `tool_sets` and expands to registered tools, so bad references
+  are caught at validation time.
 
 Net: we can add tools and *trust they land*, or find out immediately if they don't.
 
@@ -83,32 +103,30 @@ tool_categories_by_platform:
 tool_categories: [security, python]            # on every platform: a pentester who scripts in Python
 ```
 
-### 3.3 Composition algorithm (extends the current one)
+### 3.3 Composition algorithm
 
 ```
 platform_family = darwin if platform == darwin else linux        # wsl counts as linux
-selected_categories =
+spine_categories =
+    UNION( operator_tool_categories[o] for o in (operator_inheritance[op] + [op]) )
+leaf_categories =
     (op.tool_categories | default([]))                           # every platform
   + (op.tool_categories_by_platform.all | default([]))           # every platform
   + (op.tool_categories_by_platform[platform_family] | default([]))  # this family only
 
 tools_to_install =
-    tool_sets.core
-  + tool_sets.modern_cli
-  + UNION( operator_tool_sets[o]  for o in (operator_inheritance[op] + [op]) )   # existing spine
-  + UNION( tool_sets[c]           for c in selected_categories )                 # opted-in categories
+    UNION( tool_sets[c] for c in (spine_categories + leaf_categories) )
   + tools_config.additional_tools
 ```
 
-Backward compatible: the existing operator-keyed `operator_tool_sets` and the inheritance spine stay
-exactly as they are, and a flat `tool_categories` list behaves as before. Category sets are **additive**.
-`unique` de-dupes overlaps (someone opting into `core` + `python` where both list a shared tool just gets
-it once). The installer (`install_tools_unified.yml`) and the verify gate (`test_binary_validation.py`,
-`operator_categories()`) resolve categories with the **same** platform-family logic, so the "expected"
-set the gate checks always matches what the installer installs.
-
-> Migration note: over time, `base`'s and `matrix`'s operator-keyed sets can be re-expressed as the
-> `core` / `matrix_fun` categories, collapsing the two mechanisms into one. Not required for v1.
+`tool_sets` is the single source of truth for category contents. Opt-ins come from two surfaces, both
+resolved against the same `tool_sets` map: `operator_tool_categories` for spine-union semantics
+(every operator's spine includes base's `core` + `modern_cli` automatically), and the operator's own
+`vars.yml` for leaf-only opt-ins (jiveturkey's `offsec` on Linux lives there). Category sets are
+**additive**; `unique` de-dupes overlaps (someone opting into `core` + `python` where both list a shared
+tool just gets it once). The installer (`install_tools_unified.yml`) and the verify gate
+(`test_binary_validation.py`, `operator_categories()`) resolve categories with the **same**
+platform-family logic, so the "expected" set the gate checks always matches what the installer installs.
 
 ## 4. Tool taxonomy & packaging (honest coverage)
 
@@ -211,8 +229,9 @@ real-ansible composition test + `validate_operator --all`) before merge. Each is
 
 ## 10. Backward compatibility & risks
 
-- **Compatible:** existing operators keep working — operator-keyed sets + inheritance are untouched;
-  categories are additive.
+- **Compatible:** every shipping operator composes the same tool list it did before the migration.
+  The old operator-keyed `operator_tool_sets` map has been retired; the same tools now flow through
+  `operator_tool_categories` → `tool_sets`, with inheritance preserved by the spine union.
 - **Risk — package accuracy:** the classic trap. Mitigated three ways: honest-coverage rule (§4),
   the fail-loud gate (a wrong name stops the run), and the container matrix (proves coverage per
   distro).
@@ -229,8 +248,9 @@ real-ansible composition test + `validate_operator --all`) before merge. Each is
    (burpsuite, metasploit, bloodhound, impacket, responder, netexec + the security CLI tools);
    `security` stays as a lighter shared set others can pick.
 3. **Opt-in field** — `tool_categories` (array of category names).
-4. **base/matrix migration** — **deferred** (not Phase 1). base/matrix keep their operator-keyed sets
-   for now; collapsing them into `core`/`matrix_fun` categories is a later cleanup.
+4. **base/matrix migration** — **complete** (S8). base and matrix no longer carry operator-keyed sets;
+   their tools are expressed as the `core` / `modern_cli` / `matrix_fun` categories via
+   `operator_tool_categories`, resolving against the same `tool_sets` map as every other opt-in.
 
 **`offsec` honest-coverage note:** the kit is **Kali/Parrot-native** — apt provides
 metasploit-framework, burpsuite, bloodhound, sqlmap, gobuster, ffuf, nuclei, hashcat, john, impacket,
@@ -241,5 +261,5 @@ installers where they don't ship). The fail-loud gate keeps any gap loud, never 
 
 ---
 
-*This spec is the blueprint; nothing here is built yet. The frame (composition + fail-loud gate +
-validator) is on `main` and ready to carry it.*
+*The frame (composition + fail-loud gate + validator) is on `main` and the migration described
+above is complete; each phase ships its own tool coverage behind the same guarantees.*
