@@ -78,7 +78,7 @@ repos:
 
       - id: safety
         name: safety dependency check
-        entry: bash -c 'safety check || echo "⚠️ Security vulnerabilities found"'
+        entry: safety scan --short-report
         language: system
         pass_filenames: false
 
