@@ -10,6 +10,41 @@ import subprocess
 import argparse
 from pathlib import Path
 
+import re
+
+
+def _load_available_operators(neosetup_dir: Path) -> list:
+  """Read `available_operators` from group_vars/all/operators.yml.
+
+  Scans the file directly rather than depending on PyYAML, since this script
+  runs before Ansible is installed. Falls back to the historical trio if the
+  file is missing or the block cannot be found.
+  """
+  fallback = ["base", "matrix", "jiveturkey"]
+  operators_yml = neosetup_dir / "group_vars" / "all" / "operators.yml"
+  if not operators_yml.is_file():
+    return fallback
+  try:
+    text = operators_yml.read_text(encoding="utf-8")
+  except OSError:
+    return fallback
+  # Find `available_operators:` and collect indented `- name` entries that follow.
+  match = re.search(r"(?m)^available_operators:\s*$", text)
+  if not match:
+    return fallback
+  ops: list = []
+  for line in text[match.end():].splitlines():
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+      continue
+    item = re.match(r"-\s+([A-Za-z0-9_]+)\s*$", stripped)
+    if item:
+      ops.append(item.group(1))
+      continue
+    # Any non-list, non-comment line ends the block.
+    break
+  return ops or fallback
+
 
 class MatrixSetup:
   """Matrix-themed setup automation wrapper for Ansible"""
@@ -17,7 +52,7 @@ class MatrixSetup:
   def __init__(self):
     self.script_dir = Path(__file__).parent.resolve()
     self.neosetup_dir = self.script_dir / "neosetup"
-    self.operators = ["base", "matrix", "jiveturkey"]
+    self.operators = _load_available_operators(self.neosetup_dir)
 
   def banner(self):
     """Display Matrix-themed banner"""
@@ -246,10 +281,12 @@ class MatrixSetup:
 
 def main():
   """Main entry point"""
+  _script_dir = Path(__file__).parent.resolve()
+  _available_operators = _load_available_operators(_script_dir / "neosetup")
   parser = argparse.ArgumentParser(
     description="🐇 NeoSetup - Matrix-themed Ansible automation",
     formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog="""
+    epilog=f"""
 Examples:
   ./setup                        # Interactive mode
   ./setup install jiveturkey     # Full installation
@@ -257,7 +294,7 @@ Examples:
   ./setup docker                # Install Docker only
   ./setup dry-run              # See what would change
 
-Available operators: base, matrix, jiveturkey
+Available operators: {', '.join(_available_operators)}
         """
   )
 
@@ -266,17 +303,17 @@ Available operators: base, matrix, jiveturkey
   # Install command
   install_parser = subparsers.add_parser("install", help="Full installation")
   install_parser.add_argument("operator", nargs="?", default="jiveturkey",
-                              choices=["base", "matrix", "jiveturkey"])
+                              choices=_available_operators)
 
   # Shell command
   shell_parser = subparsers.add_parser("shell", help="Configure shell")
   shell_parser.add_argument("operator", nargs="?", default="jiveturkey",
-                            choices=["base", "matrix", "jiveturkey"])
+                            choices=_available_operators)
 
   # Tmux command
   tmux_parser = subparsers.add_parser("tmux", help="Configure tmux")
   tmux_parser.add_argument("operator", nargs="?", default="matrix",
-                           choices=["base", "matrix", "jiveturkey"])
+                           choices=_available_operators)
 
   # Docker command
   docker_parser = subparsers.add_parser("docker", help="Install Docker")
@@ -284,7 +321,7 @@ Available operators: base, matrix, jiveturkey
   # Tools command
   tools_parser = subparsers.add_parser("tools", help="Install CLI tools")
   tools_parser.add_argument("operator", nargs="?", default="jiveturkey",
-                            choices=["base", "matrix", "jiveturkey"])
+                            choices=_available_operators)
 
   # Status command
   status_parser = subparsers.add_parser("status", help="Check status")
@@ -292,7 +329,7 @@ Available operators: base, matrix, jiveturkey
   # Dry-run command
   dryrun_parser = subparsers.add_parser("dry-run", help="Show what would change")
   dryrun_parser.add_argument("operator", nargs="?", default="jiveturkey",
-                             choices=["base", "matrix", "jiveturkey"])
+                             choices=_available_operators)
 
   # Commit command
   commit_parser = subparsers.add_parser("commit", help="Smart commit")
