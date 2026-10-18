@@ -14,18 +14,20 @@
 #     (confirmed on v2.70.0); pinning the digest in-tree is the available
 #     verification mechanism and is strictly stronger than fetching a sidecar
 #     from the same release URL as the artifact. `disable_gpg_check: yes` is
-#     therefore dropped — no upstream signing key exists to vendor, and the
-#     digest check above is the gate.
+#     still required on the dnf task because the RPM is unsigned upstream —
+#     no signing key exists to vendor — but it is now defensible: the sha256
+#     check above is the integrity gate and dnf is only trusted to install
+#     the already-verified bytes.
 - name: "ℹ️  Install fastfetch ({{ tool_registry['fastfetch'].description | default('') }})"
   vars:
     # The release assets use amd64 / aarch64 in their filenames for both .deb and .rpm.
     ff_arch: "{{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
     ff_tag: "2.70.0"
     ff_sha256:
-      deb_amd64: "06e9a1be9a863dc815f8a31a6b1abec7b29967be30084ffcc29c1bca072d801b"
-      deb_aarch64: "25053651486d97b8731dd6bc59e725944e39adcdcd903741334c1c3282a7281d"
-      rpm_amd64: "27f57335728abbf980a36e755dcaac746e35a0fc631601df018ab0471c49161b"
-      rpm_aarch64: "7380aca7cfa60ae1563057a6d992ca352a094a7ef23c6cf4a68d7b0f96252553"
+      deb_amd64: "06e9a1be9a863dc815f8a31a6b1abec7b29967be30084ffcc29c1bca072d801b"    # pragma: allowlist secret
+      deb_aarch64: "25053651486d97b8731dd6bc59e725944e39adcdcd903741334c1c3282a7281d"  # pragma: allowlist secret
+      rpm_amd64: "27f57335728abbf980a36e755dcaac746e35a0fc631601df018ab0471c49161b"    # pragma: allowlist secret
+      rpm_aarch64: "7380aca7cfa60ae1563057a6d992ca352a094a7ef23c6cf4a68d7b0f96252553"  # pragma: allowlist secret
   block:
     - name: "🔍 Is fastfetch already installed?"
       command: which fastfetch
@@ -88,8 +90,15 @@
               until: ff_rpm_dl is succeeded
 
             - name: "📦 Install the fastfetch .rpm"
+              # fastfetch does not GPG-sign its RPMs upstream (confirmed on
+              # v2.70.0), so dnf's GPG check is force-skipped. The sha256
+              # digest pinned above and verified on get_url is the actual
+              # integrity gate — a swapped release artifact refuses to
+              # download, so this skip only trusts dnf to install the
+              # already-verified bytes.
               dnf:
                 name: "{{ ff_tmp.path }}/fastfetch.rpm"
+                disable_gpg_check: yes
                 state: present
 
         - name: "🧹 Clean up"

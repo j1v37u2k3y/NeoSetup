@@ -76,9 +76,9 @@ repos:
         files: \.py$
         args: ['-r', '.']
 
-      - id: safety
-        name: safety dependency check
-        entry: safety scan --short-report
+      - id: pip-audit
+        name: pip-audit dependency check
+        entry: pip-audit --requirement requirements.txt
         language: system
         pass_filenames: false
 
