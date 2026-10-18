@@ -26,6 +26,21 @@ available_operators:
 # Default operator if none specified
 default_operator: "jiveturkey"
 
+# Composable tool-sets opt-ins — operator → list of tool_sets categories.
+# The installer unions these across the inheritance spine and resolves each
+# category against roles/tools/vars/tool_registry.yml:tool_sets. See
+# docs/architecture/composable-tool-sets.md for why this shape replaces the
+# earlier operator_tool_sets map.
+operator_tool_categories:
+  base: [ "core", "modern_cli" ]
+  matrix: [ "matrix_fun" ]
+  jiveturkey: [ "jiveturkey_tools" ]
+  macos: [ "macos" ]
+  windows_wsl: [ "windows_wsl" ]
+  python_dev: [ "python" ]
+  nodejs_dev: [ "node" ]
+  go_dev: [ "go" ]
+
 # Operator metadata
 operators:
   base:

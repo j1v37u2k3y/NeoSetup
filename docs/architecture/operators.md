@@ -57,9 +57,11 @@ shell_config:
   oh_my_zsh_theme: "powerlevel10k/powerlevel10k"   # Overrides base
 ```
 
-Installed tools aren't listed in each `vars.yml` directly — they come from the tool sets in
-`roles/tools/vars/tool_registry.yml` (`operator_tool_sets`), composed across the operator's inheritance
-chain, plus anything in `tools_config.additional_tools`.
+Installed tools aren't listed in each `vars.yml` directly — they come from the composable `tool_sets`
+categories in `roles/tools/vars/tool_registry.yml`. Each operator opts into one or more categories via
+`group_vars/all/operators.yml:operator_tool_categories` (unioned across the inheritance spine) and/or its
+own `vars.yml:tool_categories` / `tool_categories_by_platform` (leaf-only), plus anything in
+`tools_config.additional_tools`.
 
 ### 2. Ansible Implementation
 
@@ -72,13 +74,19 @@ across that chain — for example:
 operator_inheritance:
   jiveturkey: ["matrix", "base"]   # flat, ordered list of ancestors
 
+operator_tool_categories:
+  base: [core, modern_cli]
+  matrix: [matrix_fun]
+  jiveturkey: [jiveturkey_tools]
+
 # roles/tools/tasks/install_tools_unified.yml (simplified)
-- name: Determine tools to install (composed across the inheritance spine)
-  set_fact:
+- set_fact:
     tools_to_install: >-
-      {{ (operator_tool_sets.modern_cli | default([]))
-         + ((operator_inheritance[neosetup_operator] | default([]) + [neosetup_operator])
-              | select('in', operator_tool_sets) | map('extract', operator_tool_sets) | flatten)
+      {{ (((operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator])
+             | select('in', operator_tool_categories) | map('extract', operator_tool_categories)
+             | flatten
+         + (selected_tool_categories | default([])))
+         | select('in', tool_sets) | map('extract', tool_sets) | flatten
          + (tools_config.additional_tools | default([])) }}
 ```
 

@@ -61,7 +61,7 @@ operator_metadata:
       type: array
       items:
         type: string
-        enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+        enum: [ "core", "modern_cli", "matrix_fun", "jiveturkey_tools", "python", "node", "go", "macos", "windows_wsl", "security", "offsec", "cloud" ]
       description: "Composable tool-set categories this operator opts into on every platform (see tool_sets)"
 
     tool_categories_by_platform:
@@ -71,17 +71,17 @@ operator_metadata:
           type: array
           items:
             type: string
-            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+            enum: [ "core", "modern_cli", "matrix_fun", "jiveturkey_tools", "python", "node", "go", "macos", "windows_wsl", "security", "offsec", "cloud" ]
         linux:
           type: array
           items:
             type: string
-            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+            enum: [ "core", "modern_cli", "matrix_fun", "jiveturkey_tools", "python", "node", "go", "macos", "windows_wsl", "security", "offsec", "cloud" ]
         darwin:
           type: array
           items:
             type: string
-            enum: [ "core", "modern_cli", "matrix_fun", "python", "node", "go", "macos", "security", "offsec", "cloud" ]
+            enum: [ "core", "modern_cli", "matrix_fun", "jiveturkey_tools", "python", "node", "go", "macos", "windows_wsl", "security", "offsec", "cloud" ]
       description: "Tool-set categories scoped by platform family (all | linux | darwin; wsl counts as linux)"
 
 # Shell configuration schema

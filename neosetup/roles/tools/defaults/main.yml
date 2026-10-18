@@ -14,7 +14,9 @@ neosetup_set_env_vars: true
 # this flag is the only way to turn the aggregate into a hard failure.
 neosetup_strict_tools: false
 
-# Tool sets live in roles/tools/vars/tool_registry.yml (operator_tool_sets + tool_sets);
-# operators opt in via their tool_categories / tools_config.additional_tools.
+# Tool sets live in roles/tools/vars/tool_registry.yml:tool_sets; operators opt
+# in via group_vars/all/operators.yml:operator_tool_categories (installed across
+# the inheritance spine) or their own vars.yml:tool_categories /
+# tool_categories_by_platform (leaf-only).
 # The legacy essential_tools/modern_tools/matrix_tools/power_tools lists here were
 # dead (read by no task) and were removed.
