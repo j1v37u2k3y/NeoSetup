@@ -19,7 +19,7 @@ pylint>=4.0.6
 # Security Scanning
 detect-secrets>=1.5.0
 bandit>=1.9.4
-safety==3.8.1
+pip-audit>=2.7.0
 
 # Documentation Tools
 markdown>=3.4.0
