@@ -14,8 +14,11 @@ tool_registry:
     github_binary:
       repo: eza-community/eza
       bin: eza
+      tag: v0.23.5
       asset_amd64: "eza_x86_64-unknown-linux-gnu.tar.gz"
       asset_arm64: "eza_aarch64-unknown-linux-gnu.tar.gz"
+      asset_sha256_amd64: "35c70c5c43c29108075e58b893234c67ef585f0b53a7eaf8e9e7d4eec9f339b4"
+      asset_sha256_arm64: "40b87ae8628aa2ff0f0d2dc24ab52f689631366385c3da630bae745671fd71ec"
 
   bat:
     description: "Cat with syntax highlighting"
@@ -63,8 +66,11 @@ tool_registry:
     github_binary:
       repo: dandavison/delta
       bin: delta
+      tag: "0.20.1"
       asset_amd64: "delta-{{ ghb_ver }}-x86_64-unknown-linux-gnu.tar.gz"
       asset_arm64: "delta-{{ ghb_ver }}-aarch64-unknown-linux-gnu.tar.gz"
+      asset_sha256_amd64: "50f08c879f84c81ceb220e476491a7f492d2c9c671e79918cc44badf961a6240"
+      asset_sha256_arm64: "da7f4338f593572ff426ae153e0870e2fdc72729416eff551b40cdeb67940db8"
 
   btop:
     description: "Modern top replacement"
@@ -167,8 +173,11 @@ tool_registry:
     github_binary:
       repo: mikefarah/yq
       bin: yq
+      tag: v4.54.1
       asset_amd64: "yq_linux_amd64"
       asset_arm64: "yq_linux_arm64"
+      asset_sha256_amd64: "8e34fc298390875de416e6a4afcb8cabeceb25d9aa8506c1a2f9353cf702ea5f"
+      asset_sha256_arm64: "189088da0c6429ec5178dfaab1a114805f6cab0b61b165ab236efedf1d57a71b"
 
   jq:
     description: "JSON processor"
@@ -326,8 +335,11 @@ tool_registry:
     github_binary:
       repo: jesseduffield/lazygit
       bin: lazygit
+      tag: v0.66.2
       asset_amd64: "lazygit_{{ ghb_ver }}_Linux_x86_64.tar.gz"
       asset_arm64: "lazygit_{{ ghb_ver }}_Linux_arm64.tar.gz"
+      asset_sha256_amd64: "158efc9ddfa1241fab5fb3526bb442c8dc6c4b1904d73213b9e4e93e03c52034"
+      asset_sha256_arm64: "79a3161eeb642f0473e23db6341f7baabd4a5933e921a9c1167c5d5c765c41a4"
 
   gh:
     description: "GitHub CLI"
@@ -664,8 +676,11 @@ tool_registry:
     github_binary:
       repo: dalance/procs
       bin: procs
+      tag: v0.14.12
       asset_amd64: "procs-v{{ ghb_ver }}-x86_64-linux.zip"
       asset_arm64: "procs-v{{ ghb_ver }}-aarch64-linux.zip"
+      asset_sha256_amd64: "81964faf9d5cd0e9f399d5d0954fb6fe4d4d9f7d3cbec4507633df5a45b11713"
+      asset_sha256_arm64: "74b4f82acc6fe553cbd5af20ba0baac420b42bef9bb0cbb38fef14b8317d9f91"
 
   # Git statistics and visualization tools
   git-quick-stats:

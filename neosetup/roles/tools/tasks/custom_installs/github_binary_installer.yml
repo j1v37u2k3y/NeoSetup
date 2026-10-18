@@ -1,15 +1,23 @@
 ---
 # Generic GitHub-release single-binary installer (#130).
-# For single-binary tools (eza, delta, lazygit, procs, ...) that ship as GitHub
-# release archives rather than distro packages. Reads per-tool params from
-# tool_registry[item].github_binary:
-#   repo         owner/name                              (required)
-#   bin          installed binary name                   (default: item)
-#   asset_amd64  x86_64 asset filename                   (required for Linux)
-#   asset_arm64  aarch64 asset filename                  (optional; falls back to amd64)
-# Asset names may reference {{ ghb_ver }} (release tag minus a leading 'v') or
-# {{ ghb_tag }} (raw tag) — Ansible templates them recursively after we resolve
-# the latest release. macOS still uses Homebrew via packages.darwin.
+# For single-binary tools (eza, delta, lazygit, procs, yq, ...) that ship as
+# GitHub release archives rather than distro packages. Reads per-tool params
+# from tool_registry[item].github_binary:
+#   repo                owner/name                             (required)
+#   bin                 installed binary name                  (default: item)
+#   tag                 pinned release tag, e.g. v0.23.5       (required for Linux)
+#   asset_amd64         x86_64 asset filename                  (required for Linux)
+#   asset_arm64         aarch64 asset filename                 (optional; falls back to amd64)
+#   asset_sha256_amd64  sha256 hex digest of the x86_64 asset  (required for Linux)
+#   asset_sha256_arm64  sha256 hex digest of the aarch64 asset (required if asset_arm64 is used)
+# Asset names may reference {{ ghb_ver }} (tag minus a leading 'v') or
+# {{ ghb_tag }} (raw tag) — Ansible templates them recursively after the
+# tag fact is set. macOS still uses Homebrew via packages.darwin.
+#
+# `/releases/latest` resolution is deliberately NOT supported: unverified
+# downloads landing in /usr/local/bin are a supply-chain hole (rick-review
+# 🔴 #1). Every tool must pin its tag and ship its asset hashes; `get_url`
+# refuses the install on mismatch.
 - name: "🐙 Install {{ item }} ({{ tool_registry[item].description | default('') }})"
   vars:
     ghb: "{{ tool_registry[item].github_binary }}"
@@ -35,30 +43,35 @@
         - ghb_which.rc != 0
         - ansible_os_family != 'Darwin'
       block:
-        - name: "🌐 Resolve latest release for {{ ghb.repo }}"
-          # The unauthenticated GitHub API blips under matrix load; retry so a
-          # transient hiccup doesn't drop a tool from an otherwise-green run.
-          uri:
-            url: "https://api.github.com/repos/{{ ghb.repo }}/releases/latest"
-            return_content: yes
-            status_code: 200
-          register: ghb_release
-          retries: 6
-          delay: 10
-          until: ghb_release.status is defined and ghb_release.status == 200
+        - name: "✅ Require pinned tag + sha256 digests for {{ item }}"
+          assert:
+            that:
+              - ghb.tag is defined
+              - ghb.asset_sha256_amd64 is defined
+              - (ansible_architecture not in ['aarch64', 'arm64'])
+                or (ghb.asset_arm64 is not defined)
+                or (ghb.asset_sha256_arm64 is defined)
+            fail_msg: >-
+              tool_registry.{{ item }}.github_binary must declare 'tag:' and
+              'asset_sha256_amd64:' (plus 'asset_sha256_arm64:' when
+              'asset_arm64:' is set). Unverified /releases/latest downloads
+              are refused by policy.
 
-        - name: "🏷️  Record tag / version / asset for {{ item }}"
+        - name: "🏷️  Record tag / version for {{ item }}"
           set_fact:
-            ghb_tag: "{{ ghb_release.json.tag_name }}"
-            ghb_ver: "{{ ghb_release.json.tag_name | regex_replace('^v', '') }}"
-          when: ghb_release.status | default(0) == 200
+            ghb_tag: "{{ ghb.tag }}"
+            ghb_ver: "{{ ghb.tag | regex_replace('^v', '') }}"
 
-        - name: "🧮 Select the asset for this architecture"
+        - name: "🧮 Select the asset + sha256 for this architecture"
           set_fact:
             ghb_asset: >-
               {{ ghb.asset_arm64
                  if (ansible_architecture in ['aarch64', 'arm64'] and ghb.asset_arm64 is defined)
                  else ghb.asset_amd64 }}
+            ghb_sha256: >-
+              {{ ghb.asset_sha256_arm64
+                 if (ansible_architecture in ['aarch64', 'arm64'] and ghb.asset_arm64 is defined)
+                 else ghb.asset_sha256_amd64 }}
 
         - name: "🗜️  Ensure unzip is present (zip assets)"
           become: yes
@@ -73,16 +86,16 @@
             state: directory
           register: ghb_tmp
 
-        - name: "⬇️  Download {{ ghb_asset }}"
+        - name: "⬇️  Download {{ ghb_asset }} (sha256-verified)"
           get_url:
             url: "https://github.com/{{ ghb.repo }}/releases/download/{{ ghb_tag }}/{{ ghb_asset }}"
             dest: "{{ ghb_tmp.path }}/{{ ghb_asset }}"
             mode: "0644"
+            checksum: "sha256:{{ ghb_sha256 | trim }}"
           register: ghb_dl
           retries: 3
           delay: 5
           until: ghb_dl is succeeded
-          when: ghb_tag is defined
 
         # Some releases ship a bare binary (e.g. yq's yq_linux_amd64) rather
         # than an archive; only extract + search when the asset is an archive.
