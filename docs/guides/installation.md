@@ -144,9 +144,13 @@ Choose your reality with different operator configurations:
   from containers, so no host install is required)
 - Power-user aliases and productivity functions
 
-> **Not yet installed**: the heavier security/DevOps arsenal (wireshark, sqlmap, gobuster, ffuf, john,
-> hashcat, kubectl, helm, awscli, terraform, ansible) is **planned/deferred** — it needs per-platform
-> packaging and installers before it ships. Don't expect these on a fresh `jiveturkey` install today.
+> **What installs today**: on Debian-family Linux (Ubuntu/Debian/Kali/Parrot), jiveturkey's `offsec` opt-in
+> installs the apt-packaged offsec tools (sqlmap, gobuster, ffuf, john, hashcat, wireshark); on the RHEL
+> family they are honestly skipped (not in default repos). `nuclei` / `burp-suite` currently install on macOS
+> only (Linux installers deferred); `bloodhound` has no working installer yet; and the cloud CLIs (kubectl,
+> helm, terraform, azure-cli) have installers but are not part of any shipping operator's tool set yet. See
+> [docs/architecture/composable-tool-sets.md](../architecture/composable-tool-sets.md) for the authoritative
+> status.
 
 ### Other Operators
 

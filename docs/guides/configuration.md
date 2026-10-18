@@ -55,10 +55,14 @@ jiveturkey (extends matrix)
 └── Extensive git/docker/kubectl aliases
 ```
 
-> **Note**: jiveturkey's heavier security/DevOps arsenal (wireshark, sqlmap, gobuster, ffuf, john, hashcat,
-> kubectl, helm, awscli, terraform, ansible) is **planned/deferred** — it is declared in the operator but not
-> yet wired into installation (it needs per-platform packaging + installers). A fresh `jiveturkey` install
-> gives you nmap/netcat plus the Docker-based security functions, not the full toolkit.
+> **Note**: jiveturkey opts into the `offsec` category on Linux. The apt-packaged offsec tools (sqlmap,
+> gobuster, ffuf, john, hashcat, wireshark) install and verify on the Debian family (Ubuntu/Debian/Kali/Parrot)
+> and are honestly skipped on the RHEL family (not in default repos). `nuclei` / `burp-suite` currently install
+> on macOS only (Linux installers deferred), and `bloodhound` has no working installer on any platform yet. The
+> cloud CLIs (kubectl, helm, terraform, azure-cli) have installers but are not part of any shipping operator's
+> tool set yet. See
+> [docs/architecture/composable-tool-sets.md](../architecture/composable-tool-sets.md) for the authoritative
+> status.
 
 ## ⚙️ Customizing Configuration
 

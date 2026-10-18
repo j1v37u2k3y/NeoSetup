@@ -71,9 +71,10 @@ base (essentials)
 ./setup install jiveturkey
 # Gets: nmap, netcat + productivity/observability tools (lazygit, glances, httpie, lnav, ...)
 # Plus: Docker-based security functions (impacket, metasploit, SMB/HTTP servers) that run tools from containers
-# Result: a power-user environment with networking + container-based security tooling
-# Planned/deferred (not yet installed): wireshark, sqlmap, gobuster, ffuf, john, hashcat, kubectl, helm,
-#   awscli, terraform, ansible
+# Plus (Debian-family Linux via the offsec opt-in): sqlmap, gobuster, ffuf, john, hashcat, wireshark
+# Deferred (see docs/architecture/composable-tool-sets.md for the authoritative status):
+#   nuclei/burp-suite (macOS only; Linux installers pending), bloodhound (no installer yet),
+#   cloud CLIs kubectl/helm/terraform/azure-cli (installers exist but no operator opts into cloud yet)
 ```
 
 **Developer using Matrix:**
