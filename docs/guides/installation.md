@@ -87,9 +87,9 @@ make dry-run OPERATOR=matrix
 make install OPERATOR=jiveturkey ANSIBLE_FLAGS="-vvv"
 ```
 
-> **Note**: `make` accepts any registered operator via `OPERATOR=<name>` (all 8 operators). The `./setup`
-> wrapper only knows `base`, `matrix`, and `jiveturkey` — for the others (`python_dev`, `nodejs_dev`,
-> `go_dev`, `macos`, `windows_wsl`) use `make install OPERATOR=<name>`.
+> **Note**: Both entry points accept any registered operator. `./setup` reads `available_operators` from
+> `neosetup/group_vars/all/operators.yml` at startup, and `make install OPERATOR=<name>` passes the name
+> straight through to Ansible, so adding a ninth operator to `available_operators` makes it work in both.
 
 ## 💊 Operator Guide
 
@@ -150,7 +150,7 @@ Choose your reality with different operator configurations:
 
 ### Other Operators
 
-Install any of these with `make install OPERATOR=<name>`:
+Install any of these with `./setup install <name>` or `make install OPERATOR=<name>`:
 
 - **python_dev** - Python toolchain (pyenv, poetry, pipx, black, flake8, mypy, pytest, jupyter)
 - **nodejs_dev** - Node.js environment (nvm)
