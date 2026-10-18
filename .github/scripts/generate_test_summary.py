@@ -37,7 +37,7 @@ def generate_summary():
     }
 
     # Critical jobs that must pass
-    critical_jobs = ["pre-commit", "ansible-syntax"]
+    critical_jobs = ["pre-commit", "security-scan", "ansible-syntax"]
 
     if summary_path:
         try:

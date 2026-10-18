@@ -72,11 +72,9 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: python
-        continue-on-error: true
 
       - name: 🔍 Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
-        continue-on-error: true  # Allow failure if code scanning not enabled
 
       - name: 🔍 Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
