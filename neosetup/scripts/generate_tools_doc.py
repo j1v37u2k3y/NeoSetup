@@ -2,8 +2,9 @@
 """
 Generate TOOLS.md documentation from tool_registry.yml
 
-This script reads the tool registry and generates a markdown document
-showing all tools available for each operator with descriptions.
+This script reads the tool registry and the operator spine (inheritance +
+``operator_tool_categories``) plus each operator's own ``vars.yml`` to compose
+the exact tool list each operator installs, then renders it as markdown.
 """
 
 import sys
@@ -12,103 +13,135 @@ from pathlib import Path
 import yaml
 
 
-def load_tool_registry(registry_path: Path) -> dict:
-    """Load the tool registry YAML file."""
-    with open(registry_path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+def load_yaml(path: Path) -> dict:
+    """Load a YAML file into a dict (empty dict when missing or empty)."""
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 
-def calculate_operator_counts(operator_sets: dict) -> dict:
-    """Calculate tool counts including inheritance for each operator."""
-    base = set(operator_sets.get("base", []))
-    matrix = set(operator_sets.get("matrix", []))
-    jiveturkey = set(operator_sets.get("jiveturkey", []))
-    modern_cli = set(operator_sets.get("modern_cli", []))
+def compose_operator_tools(
+    operator: str,
+    inheritance: dict,
+    operator_tool_categories: dict,
+    tool_sets: dict,
+    operator_vars: dict,
+) -> set:
+    """Compose the full tool set an operator installs.
 
-    return {
-        "base_count": len(base),
-        "matrix_count": len(matrix),
-        "jiveturkey_count": len(jiveturkey),
-        "modern_cli_count": len(modern_cli),
-        "matrix_total": len(base | matrix | modern_cli),
-        "jiveturkey_total": len(base | matrix | jiveturkey | modern_cli),
+    Mirrors ``install_tools_unified.yml``: spine categories from
+    ``operator_tool_categories`` (across ``operator_inheritance`` + self), plus
+    the operator's own ``tool_categories`` and every value of
+    ``tool_categories_by_platform``, plus ``tools_config.additional_tools``.
+    Each category resolves against ``tool_sets``.
+    """
+    categories: list = []
+    for op in list(inheritance.get(operator, []) or []) + [operator]:
+        categories += list(operator_tool_categories.get(op, []) or [])
+
+    categories += list(operator_vars.get("tool_categories") or [])
+    by_platform = operator_vars.get("tool_categories_by_platform") or {}
+    if isinstance(by_platform, dict):
+        for cats in by_platform.values():
+            categories += list(cats or [])
+
+    tools: set = set()
+    for category in categories:
+        tools |= set(tool_sets.get(category, []) or [])
+
+    additional = (operator_vars.get("tools_config") or {}).get("additional_tools") or []
+    tools |= {t for t in additional if isinstance(t, str)}
+    return tools
+
+
+def compose_all_operators(
+    inheritance: dict,
+    operator_tool_categories: dict,
+    tool_sets: dict,
+    operators_dir: Path,
+) -> dict:
+    """Return a dict of operator_name -> sorted tool list for every operator."""
+    composed: dict = {}
+    for operator in operator_tool_categories.keys():
+        op_vars = load_yaml(operators_dir / operator / "vars.yml")
+        composed[operator] = sorted(
+            compose_operator_tools(operator, inheritance, operator_tool_categories, tool_sets, op_vars)
+        )
+    return composed
+
+
+def render_doc(
+    tool_registry: dict,
+    tool_sets: dict,
+    composed_operators: dict,
+    inheritance: dict,
+) -> str:
+    """Render the TOOLS.md markdown from composed operator tool lists."""
+    operator_descriptions = {
+        "base": "Essential development tools included with every installation.",
+        "matrix": "Matrix-themed tools layered on top of base.",
+        "jiveturkey": "Power-user setup with the full red-team arsenal (offsec on Linux).",
+        "macos": "macOS-specific utilities for system integration.",
+        "windows_wsl": "Tools for Windows Subsystem for Linux integration.",
+        "python_dev": "Python development toolchain.",
+        "nodejs_dev": "Node.js development environment.",
+        "go_dev": "Go toolchain and go-install developer tools.",
     }
 
-
-def generate_tools_doc(registry: dict) -> str:  # pylint: disable=too-many-locals
-    """Generate markdown documentation from the tool registry."""
-    tool_registry = registry.get("tool_registry", {})
-    operator_sets = registry.get("operator_tool_sets", {})
-    counts = calculate_operator_counts(operator_sets)
+    def inherits_from(operator: str) -> str:
+        chain = list(inheritance.get(operator, []) or [])
+        return " + ".join(chain) if chain else "-"
 
     doc = """# NeoSetup Tools Reference
 
 > **Auto-generated** - Do not edit manually. Run `python3 neosetup/scripts/generate_tools_doc.py` to regenerate.
 
-This document lists all tools installed by each NeoSetup operator.
+This document lists all tools installed by each NeoSetup operator, composed from the
+category tool-sets each operator opts into (see
+[composable-tool-sets.md](docs/architecture/composable-tool-sets.md)).
 
 ## Operator Inheritance
 
-```
-base (essential tools)
-  └── matrix (base + matrix-themed tools)
-        └── jiveturkey (base + matrix + power-user tools)
-```
-
-## Quick Reference
-
-| Operator | Inherits From | Unique Tools | Total Tools |
-|----------|---------------|--------------|-------------|
-| `base` | - | {base_count} | {base_count} |
-| `matrix` | base | {matrix_count} | {matrix_total} |
-| `jiveturkey` | base + matrix | {jiveturkey_count} | {jiveturkey_total} |
-
-> **Note**: All operators also include `modern_cli` tools ({modern_cli_count} tools) for enhanced terminal experience.
-
----
-
+| Operator | Inherits From | Total Tools |
+|----------|---------------|-------------|
 """
-    doc = doc.format(**counts)
+    for operator, tools in composed_operators.items():
+        doc += f"| `{operator}` | {inherits_from(operator)} | {len(tools)} |\n"
 
-    # Document each operator set
-    operator_descriptions = {
-        "base": "Essential development tools included with every installation.",
-        "matrix": "Matrix-themed tools for the cyberpunk aesthetic.",
-        "jiveturkey": "Power-user tools for advanced workflows.",
-        "modern_cli": "Modern replacements for classic Unix tools.",
-        "macos_tools": "macOS-specific utilities for system integration.",
-        "windows_wsl": "Tools for Windows Subsystem for Linux integration.",
-        "python_dev": "Python development toolchain.",
-        "cloud_tools": "Cloud and DevOps tools for AWS, Kubernetes, etc.",
-    }
+    doc += "\n---\n\n"
 
-    for operator, tools in operator_sets.items():
+    for operator, tools in composed_operators.items():
         description = operator_descriptions.get(operator, "")
         doc += f"## {operator.replace('_', ' ').title()}\n\n"
-
         if description:
             doc += f"{description}\n\n"
-
         doc += "| Tool | Description | Category |\n"
         doc += "|------|-------------|----------|\n"
-
-        for tool_name in sorted(tools):
+        for tool_name in tools:
             tool_info = tool_registry.get(tool_name, {})
             tool_desc = tool_info.get("description", "No description available")
             category = tool_info.get("category", "general")
             doc += f"| `{tool_name}` | {tool_desc} | {category} |\n"
-
         doc += "\n---\n\n"
 
-    # Add full tool reference
-    doc += """## Full Tool Registry
+    doc += "## Category Tool Sets\n\n"
+    doc += "Named, reusable bundles operators compose. See `tool_sets` in `tool_registry.yml`.\n\n"
+    for category, members in tool_sets.items():
+        doc += f"### `{category}`\n\n"
+        if not members:
+            doc += "_(empty)_\n\n"
+            continue
+        for tool_name in sorted(members):
+            tool_info = tool_registry.get(tool_name, {})
+            tool_desc = tool_info.get("description", "No description available")
+            doc += f"- `{tool_name}` — {tool_desc}\n"
+        doc += "\n"
 
-Complete list of all tools available in NeoSetup.
-
-| Tool | Description | Category | Platforms |
-|------|-------------|----------|-----------|
-"""
-
+    doc += "---\n\n## Full Tool Registry\n\n"
+    doc += "Complete list of all tools available in NeoSetup.\n\n"
+    doc += "| Tool | Description | Category | Platforms |\n"
+    doc += "|------|-------------|----------|-----------|\n"
     for tool_name, tool_info in sorted(tool_registry.items()):
         desc = tool_info.get("description", "No description")
         category = tool_info.get("category", "general")
@@ -127,10 +160,10 @@ Tools are automatically installed based on your chosen operator:
 # Install with base operator (minimal)
 make install OPERATOR=base
 
-# Install with matrix operator (includes base + matrix tools)
+# Install with matrix operator (base + matrix-themed tools)
 make install OPERATOR=matrix
 
-# Install with jiveturkey operator (includes base + matrix + power-user tools)
+# Install with jiveturkey operator (base + matrix + power-user + offsec on Linux)
 make install OPERATOR=jiveturkey
 ```
 
@@ -141,7 +174,7 @@ To request a new tool, open an issue with the `operator` label or submit a PR ad
 
 ---
 
-*Generated from `neosetup/roles/tools/vars/tool_registry.yml`*
+*Generated from `neosetup/roles/tools/vars/tool_registry.yml` + `neosetup/group_vars/all/operators.yml` + each operator's `vars.yml`.*
 """
 
     return doc
@@ -149,28 +182,36 @@ To request a new tool, open an issue with the `operator` label or submit a PR ad
 
 def main():
     """Main function to generate tools documentation."""
-    # Determine paths
     script_dir = Path(__file__).parent
-    registry_path = script_dir.parent / "roles" / "tools" / "vars" / "tool_registry.yml"
-    output_path = script_dir.parent.parent / "TOOLS.md"
+    neosetup_dir = script_dir.parent
+    registry_path = neosetup_dir / "roles" / "tools" / "vars" / "tool_registry.yml"
+    group_vars_path = neosetup_dir / "group_vars" / "all" / "operators.yml"
+    operators_dir = neosetup_dir / "operators"
+    output_path = neosetup_dir.parent / "TOOLS.md"
 
-    # Allow custom output path
     if len(sys.argv) > 1:
         output_path = Path(sys.argv[1])
 
-    # Check registry exists
     if not registry_path.exists():
         print(f"Error: Tool registry not found at {registry_path}")
         sys.exit(1)
 
-    # Load and generate
     print(f"Loading tool registry from {registry_path}")
-    registry = load_tool_registry(registry_path)
+    registry = load_yaml(registry_path)
+    tool_registry = registry.get("tool_registry", {})
+    tool_sets = registry.get("tool_sets", {})
+
+    print(f"Loading operator spine from {group_vars_path}")
+    group_vars = load_yaml(group_vars_path)
+    inheritance = group_vars.get("operator_inheritance", {}) or {}
+    operator_tool_categories = group_vars.get("operator_tool_categories", {}) or {}
+
+    print("Composing per-operator tool lists...")
+    composed = compose_all_operators(inheritance, operator_tool_categories, tool_sets, operators_dir)
 
     print("Generating documentation...")
-    doc = generate_tools_doc(registry)
+    doc = render_doc(tool_registry, tool_sets, composed, inheritance)
 
-    # Write output
     output_path.write_text(doc, encoding="utf-8")
     print(f"Generated {output_path}")
 
