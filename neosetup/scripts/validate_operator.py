@@ -78,7 +78,8 @@ class OperatorValidator:
         """Initialize validator with schema file."""
         self.schema = self._load_schema(schema_path)
         self.results: List[ValidationResult] = []
-        self.tool_registry_keys, self.operator_tool_sets = self._load_tool_registry(schema_path)
+        self.tool_registry_keys, self.tool_sets = self._load_tool_registry(schema_path)
+        self.operator_inheritance, self.operator_tool_categories = self._load_operator_spine(schema_path)
 
     def _load_schema(self, schema_path: str) -> Dict:
         """Load validation schema from YAML file."""
@@ -90,7 +91,7 @@ class OperatorValidator:
             sys.exit(1)
 
     def _load_tool_registry(self, schema_path: str):
-        """Load registered tool names and operator tool-sets from the registry.
+        """Load registered tool names and composable tool_sets from the registry.
 
         The registry lives at ``roles/tools/vars/tool_registry.yml`` relative to
         the neosetup root (the schema's grandparent directory). If it cannot be
@@ -103,8 +104,23 @@ class OperatorValidator:
         except (OSError, yaml.YAMLError):
             return set(), {}
         registry = data.get("tool_registry") or {}
-        tool_sets = data.get("operator_tool_sets") or {}
+        tool_sets = data.get("tool_sets") or {}
         return set(registry.keys()), tool_sets
+
+    def _load_operator_spine(self, schema_path: str):
+        """Load operator inheritance and spine category opt-ins from group_vars.
+
+        ``operator_inheritance`` and ``operator_tool_categories`` live together
+        in ``group_vars/all/operators.yml``. If the file is missing or malformed,
+        spine-aware validation is skipped rather than failing hard.
+        """
+        gv_path = Path(schema_path).parent.parent / "group_vars" / "all" / "operators.yml"
+        try:
+            with open(gv_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+        except (OSError, yaml.YAMLError):
+            return {}, {}
+        return data.get("operator_inheritance") or {}, data.get("operator_tool_categories") or {}
 
     def validate_operator(self, operator_path: str) -> List[ValidationResult]:
         """Validate a single operator configuration."""
@@ -379,10 +395,15 @@ class OperatorValidator:
     def _validate_registered_tools(self, operator: Dict) -> None:
         """Flag tools referenced by an operator that are not in the tool registry.
 
-        Every name in ``tools_config.additional_tools`` (and, when the operator
-        name maps to an ``operator_tool_sets`` entry, the members of that set)
-        must be a key in ``roles/tools/vars/tool_registry.yml`` -- otherwise the
-        installer silently skips it (``when: item in tool_registry``).
+        Every name in ``tools_config.additional_tools`` must be a key in
+        ``roles/tools/vars/tool_registry.yml`` -- otherwise the installer
+        silently skips it (``when: item in tool_registry``).
+
+        Composable tool-set opt-ins (``tool_categories`` /
+        ``tool_categories_by_platform`` on this operator, plus any spine entries
+        for its name in ``group_vars/all/operators.yml:operator_tool_categories``)
+        are validated against ``tool_sets``: each referenced category must exist,
+        and every tool each category expands to must be a tool_registry key.
         """
         if not self.tool_registry_keys:
             return
@@ -401,16 +422,65 @@ class OperatorValidator:
                         )
                     )
 
+        self._validate_tool_categories(operator)
+
+    def _validate_tool_categories(self, operator: Dict) -> None:
+        """Resolve the operator's full category opt-ins and validate them.
+
+        Mirrors ``install_tools_unified.yml`` composition: unions spine entries
+        from ``operator_tool_categories`` (across ``operator_inheritance`` +
+        self) with the operator's own ``tool_categories`` and every value of
+        ``tool_categories_by_platform``. Each category must exist in
+        ``tool_sets``; every tool each expands to must be in ``tool_registry``.
+        """
         operator_name = operator.get("operator_name")
-        members = self.operator_tool_sets.get(operator_name) if operator_name else None
-        for tool in members or []:
+
+        spine_categories: List[str] = []
+        if operator_name:
+            spine = list(self.operator_inheritance.get(operator_name, []) or []) + [operator_name]
+            for op in spine:
+                spine_categories += list(self.operator_tool_categories.get(op, []) or [])
+
+        for field, category in self._iter_leaf_category_refs(operator):
+            self._check_category(field, category)
+
+        for category in spine_categories:
+            self._check_category(f"operator_tool_categories.{operator_name}", category)
+
+    def _iter_leaf_category_refs(self, operator: Dict):
+        """Yield (field_name, category) pairs from the operator's own vars.yml."""
+        for category in operator.get("tool_categories") or []:
+            if isinstance(category, str):
+                yield "tool_categories", category
+
+        by_platform = operator.get("tool_categories_by_platform") or {}
+        if isinstance(by_platform, dict):
+            for scope, categories in by_platform.items():
+                for category in categories or []:
+                    if isinstance(category, str):
+                        yield f"tool_categories_by_platform.{scope}", category
+
+    def _check_category(self, field: str, category: str) -> None:
+        """Validate a single category reference and its tool-set membership."""
+        if category not in self.tool_sets:
+            self.results.append(
+                ValidationResult(
+                    ValidationLevel.ERROR,
+                    field,
+                    f"Category '{category}' is not defined in tool_sets",
+                    f"Add '{category}' to roles/tools/vars/tool_registry.yml:tool_sets "
+                    f"or remove it from {field}",
+                )
+            )
+            return
+        for tool in self.tool_sets.get(category, []) or []:
             if isinstance(tool, str) and tool not in self.tool_registry_keys:
                 self.results.append(
                     ValidationResult(
                         ValidationLevel.ERROR,
-                        f"operator_tool_sets.{operator_name}",
-                        f"Tool '{tool}' in operator_tool_sets['{operator_name}'] is not registered",
-                        f"Add '{tool}' to the tool registry or remove it from the tool set",
+                        f"tool_sets.{category}",
+                        f"Tool '{tool}' in tool_sets['{category}'] is not registered",
+                        f"Add '{tool}' to the tool registry or remove it from the category",
                     )
                 )
 
