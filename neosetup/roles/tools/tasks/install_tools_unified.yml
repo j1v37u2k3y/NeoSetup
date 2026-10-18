@@ -46,23 +46,37 @@
         + ((tool_categories_by_platform | default({}))[platform_family] | default([]))
       }}
 
+# Compose the tool list from one source of truth: tool_sets categories.
+# Spine-level categories come from group_vars/all/operators.yml:
+# operator_tool_categories (unioned across the inheritance spine, so every
+# operator picks up base's core + modern_cli automatically). Leaf-level
+# categories come from the operator's own vars.yml via `tool_categories` and
+# `tool_categories_by_platform` (jiveturkey's offsec-on-linux opt-in lives
+# there). Both resolve against the same tool_sets map in tool_registry.yml.
+- name: "🧩 Union categories for this operator (spine + leaf)"
+  set_fact:
+    _spine_ops: "{{ (operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator] }}"
+- name: "🧩 Union categories for this operator (spine + leaf)"
+  set_fact:
+    _all_tool_categories: >-
+      {{
+        (
+          (_spine_ops | select('in', operator_tool_categories | default({})) | list
+            | map('extract', operator_tool_categories | default({})) | list | flatten)
+          + (selected_tool_categories | default([]))
+        )
+      }}
+
 - name: "📦 Determine tools to install (composed across the operator inheritance spine)"
   set_fact:
     tools_to_install: >-
       {{
-        (operator_tool_sets.modern_cli | default([]))
-        + (
-            ((operator_inheritance[neosetup_operator] | default([])) + [neosetup_operator])
-            | select('in', operator_tool_sets)
-            | map('extract', operator_tool_sets)
-            | flatten
-          )
-        + (
-            (selected_tool_categories | default([]))
-            | select('in', tool_sets | default({}))
-            | map('extract', tool_sets | default({}))
-            | flatten
-          )
+        (
+          _all_tool_categories
+          | select('in', tool_sets | default({}))
+          | map('extract', tool_sets | default({}))
+          | flatten
+        )
         + (tools_config.additional_tools | default([]))
       }}
 

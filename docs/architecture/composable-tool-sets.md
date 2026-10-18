@@ -1,7 +1,23 @@
 # Composable Tool Sets — Design Spec
 
-> Status: **Proposed** (2026-09-23) · Owner: j1v37u2k3y · Depends on: the fail-loud install gate and
-> enforcing operator validator now on `main`.
+> Status: **Adopted** (2026-10-17) · Owner: j1v37u2k3y · The migration from
+> `operator_tool_sets` is complete. Composition is driven by `tool_sets` +
+> `tool_categories` only; the legacy per-operator baked lists have been removed.
+>
+> **Chosen shape (S8):** `tool_sets` is the only tool-list source of truth.
+> Each operator opts into one or more category names via two surfaces, both
+> resolved against the same `tool_sets` map:
+>
+> - `group_vars/all/operators.yml:operator_tool_categories` — map of
+>   operator → categories, unioned across the inheritance spine. Replaces the
+>   old `operator_tool_sets` map while preserving its spine-union semantics.
+> - the operator's own `vars.yml:tool_categories` and
+>   `tool_categories_by_platform` — leaf-only opt-ins (jiveturkey's
+>   `offsec` on Linux lives here).
+>
+> The old `operator_tool_sets` structure is gone from `tool_registry.yml`.
+> Behavior is preserved exactly — the eight shipping operators compose the
+> same tool list they did before the migration.
 
 ## 1. Why this exists (the mission)
 
