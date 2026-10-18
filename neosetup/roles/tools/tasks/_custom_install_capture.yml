@@ -1,0 +1,29 @@
+---
+# S7 wrapper: run one custom installer with per-item failure capture.
+#
+# `register` on the looped `include_tasks` in install_tools_unified.yml only
+# captures per-iteration include metadata (item, included_file, skipped) —
+# never the pass/fail state of tasks inside the included file. With
+# `apply: ignore_errors: yes` suppressing inner failures, a broken
+# github_binary / fastfetch / other custom installer never reached the
+# end-of-run `tools_install_failures` summary. Wrapping each include in
+# block/rescue restores the per-item failure signal: rescue fires on genuine
+# inner failures, appends {item, failed, msg} to the shared accumulator, and
+# the play continues to the next tool. Direct-module paths (brew/apt/pipx)
+# already capture `.failed` on their own loop results and are unchanged.
+- name: "🔧 Run custom installer for {{ item }}"
+  block:
+    - name: "🔧 Include custom installer: {{ tool_registry[item].custom_install }}"
+      include_tasks: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
+  rescue:
+    - name: "⚠️  Record failed custom install for {{ item }}"
+      set_fact:
+        _custom_install_failures: >-
+          {{
+            (_custom_install_failures | default([]))
+            + [{
+                'item': item,
+                'failed': true,
+                'msg': (ansible_failed_result.msg | default('custom installer failed'))
+              }]
+          }}

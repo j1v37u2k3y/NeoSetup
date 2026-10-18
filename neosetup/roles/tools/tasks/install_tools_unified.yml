@@ -268,41 +268,51 @@
         label: "{{ item }} [pipx]"
 
 # Custom installations
-# `apply: ignore_errors` propagates into the INCLUDED tasks (ignore_errors on the
-# include statement itself does not), so one broken installer is reported per-item
-# but never aborts the whole tools play. See GitHub #128.
+# Each custom installer runs through _custom_install_capture.yml, a block/rescue
+# wrapper that keeps one broken installer from aborting the tools play AND
+# captures its failure for the aggregator below. Direct `apply: ignore_errors`
+# on this include is NOT used: it propagates into inner tasks and would prevent
+# rescue from firing, which is exactly the S7 aggregation gap this replaces
+# (`register` on a looped include_tasks only sees per-iteration include
+# metadata, not inner-task pass/fail). See GitHub #128.
+- name: "📊 Initialize custom-install failure accumulator"
+  set_fact:
+    _custom_install_failures: []
+
 - name: "🔧 Handle custom tool installations"
-  include_tasks:
-    file: "custom_installs/{{ tool_registry[item].custom_install }}.yml"
-    apply:
-      ignore_errors: yes
+  include_tasks: _custom_install_capture.yml
   loop: "{{ tools_to_install | unique }}"
   when:
     - item in tool_registry
     - tool_registry[item].custom_install is defined
   loop_control:
     label: "{{ item }} (custom install)"
-  register: _tool_install_custom
 
 # Aggregate every ignored install failure into one list so a 60-tool run can
-# tell at a glance what landed and what didn't. Each per-method loop above
-# `register`s its results; ignore_errors kept the role going, but each item's
-# `.failed: true` entry still carries its name and the module msg.
+# tell at a glance what landed and what didn't. Direct-module loops above
+# (`_tool_install_brew`, `_tool_install_linux_pkg`, …) register the module's
+# own per-item result, so `.failed: true` carries the item name and msg.
+# Custom installers can't be captured that way — register on a looped
+# include_tasks sees only include metadata, not inner-task failures — so
+# _custom_install_capture.yml records them into `_custom_install_failures`
+# via block/rescue instead, and we union that here.
 - name: "📊 Aggregate tool-install failures"
   set_fact:
     tools_install_failures: >-
       {{
         (
-          (_tool_install_brew.results | default([]))
-          + (_tool_install_brew_cask.results | default([]))
-          + (_tool_install_wsl_pkg.results | default([]))
-          + (_tool_install_linux_pkg.results | default([]))
-          + (_tool_install_pipx.results | default([]))
-          + (_tool_install_custom.results | default([]))
+          (
+            (_tool_install_brew.results | default([]))
+            + (_tool_install_brew_cask.results | default([]))
+            + (_tool_install_wsl_pkg.results | default([]))
+            + (_tool_install_linux_pkg.results | default([]))
+            + (_tool_install_pipx.results | default([]))
+          )
+          | selectattr('failed', 'defined')
+          | selectattr('failed')
+          | list
         )
-        | selectattr('failed', 'defined')
-        | selectattr('failed')
-        | list
+        + (_custom_install_failures | default([]))
       }}
 
 - name: "❌ Report tool-install failures (non-strict)"
