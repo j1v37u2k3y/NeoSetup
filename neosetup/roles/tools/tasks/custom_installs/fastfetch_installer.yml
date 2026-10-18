@@ -5,10 +5,27 @@
 # Debian 12), so install it from the project's official release artifacts on Linux
 # (.deb / .rpm) and via Homebrew on macOS. Verified installing + running on
 # debian-12, ubuntu-22.04, fedora-40 and centos-stream-9 (EL9).
+#
+# Supply-chain hardening (rick-review 🔴 #2):
+#   - The release tag is pinned here, not resolved from `/releases/latest`.
+#   - Each .deb / .rpm asset has its sha256 pinned alongside the tag below;
+#     `get_url` verifies the download and refuses on mismatch.
+#   - fastfetch does NOT publish `.sha256` sidecars or GPG-signed packages
+#     (confirmed on v2.70.0); pinning the digest in-tree is the available
+#     verification mechanism and is strictly stronger than fetching a sidecar
+#     from the same release URL as the artifact. `disable_gpg_check: yes` is
+#     therefore dropped — no upstream signing key exists to vendor, and the
+#     digest check above is the gate.
 - name: "ℹ️  Install fastfetch ({{ tool_registry['fastfetch'].description | default('') }})"
   vars:
     # The release assets use amd64 / aarch64 in their filenames for both .deb and .rpm.
     ff_arch: "{{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+    ff_tag: "2.70.0"
+    ff_sha256:
+      deb_amd64: "06e9a1be9a863dc815f8a31a6b1abec7b29967be30084ffcc29c1bca072d801b"
+      deb_aarch64: "25053651486d97b8731dd6bc59e725944e39adcdcd903741334c1c3282a7281d"
+      rpm_amd64: "27f57335728abbf980a36e755dcaac746e35a0fc631601df018ab0471c49161b"
+      rpm_aarch64: "7380aca7cfa60ae1563057a6d992ca352a094a7ef23c6cf4a68d7b0f96252553"
   block:
     - name: "🔍 Is fastfetch already installed?"
       command: which fastfetch
@@ -30,39 +47,21 @@
         - ansible_os_family != 'Darwin'
       become: yes
       block:
-        - name: "🌐 Resolve the latest fastfetch release"
-          # The unauthenticated GitHub API blips under matrix load; retry so a
-          # transient hiccup doesn't drop fastfetch from an otherwise-green run.
-          uri:
-            url: "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest"
-            return_content: yes
-            status_code: 200
-          register: ff_release
-          retries: 6
-          delay: 10
-          until: ff_release.status is defined and ff_release.status == 200
-
-        - name: "🏷️  Record the release tag"
-          set_fact:
-            ff_tag: "{{ ff_release.json.tag_name }}"
-          when: ff_release.status | default(0) == 200
-
         - name: "📁 Temp workdir"
           tempfile:
             state: directory
           register: ff_tmp
-          when: ff_tag is defined
 
         - name: "📦 Install fastfetch from the official .deb (Debian/Ubuntu)"
           when:
-            - ff_tag is defined
             - platform_key in ['ubuntu', 'debian']
           block:
-            - name: "⬇️  Download fastfetch .deb"
+            - name: "⬇️  Download fastfetch .deb (sha256-verified)"
               get_url:
                 url: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ ff_tag }}/fastfetch-linux-{{ ff_arch }}.deb"
                 dest: "{{ ff_tmp.path }}/fastfetch.deb"
                 mode: "0644"
+                checksum: "sha256:{{ ff_sha256['deb_' + ff_arch] }}"
               register: ff_deb_dl
               retries: 3
               delay: 5
@@ -75,14 +74,14 @@
 
         - name: "📦 Install fastfetch from the official .rpm (RHEL family)"
           when:
-            - ff_tag is defined
             - platform_key == 'redhat'
           block:
-            - name: "⬇️  Download fastfetch .rpm"
+            - name: "⬇️  Download fastfetch .rpm (sha256-verified)"
               get_url:
                 url: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ ff_tag }}/fastfetch-linux-{{ ff_arch }}.rpm"
                 dest: "{{ ff_tmp.path }}/fastfetch.rpm"
                 mode: "0644"
+                checksum: "sha256:{{ ff_sha256['rpm_' + ff_arch] }}"
               register: ff_rpm_dl
               retries: 3
               delay: 5
@@ -91,7 +90,6 @@
             - name: "📦 Install the fastfetch .rpm"
               dnf:
                 name: "{{ ff_tmp.path }}/fastfetch.rpm"
-                disable_gpg_check: yes
                 state: present
 
         - name: "🧹 Clean up"
