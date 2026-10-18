@@ -71,7 +71,8 @@ extends `base` directly.
 | `macos` | `base` | macOS integration (Homebrew, window management) |
 | `windows_wsl` | `base` | Windows WSL2 integration |
 
-The `./setup` shortcut covers `base`, `matrix`, and `jiveturkey`. Install any operator with `make`:
+The `./setup` shortcut accepts any registered operator (it reads `available_operators` from
+`group_vars/all/operators.yml`); `make` works too:
 
 ```bash
 cd neosetup

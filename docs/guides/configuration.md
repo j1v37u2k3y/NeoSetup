@@ -24,8 +24,8 @@ extend `base` directly.
 | `macos`       | `base`   | macOS integration (Homebrew, window management)        | macOS users                       |
 | `windows_wsl` | `base`   | Windows WSL2 integration and interoperability          | WSL2 users                        |
 
-Install any operator with `make install OPERATOR=<name>`. (The `./setup` wrapper only knows `base`,
-`matrix`, and `jiveturkey`; use `make` for the rest.)
+Install any operator with `./setup install <name>` or `make install OPERATOR=<name>` — both entry points
+accept any name in `available_operators` (`neosetup/group_vars/all/operators.yml`).
 
 ### Operator Inheritance
 
