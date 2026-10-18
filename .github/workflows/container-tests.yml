@@ -241,6 +241,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - { name: 'ubuntu-24.04', dockerfile: 'Dockerfile.ubuntu-24.04' }  # apt family
           - { name: 'debian-12', dockerfile: 'Dockerfile.debian-12' }  # apt family
           - { name: 'fedora-40', dockerfile: 'Dockerfile.fedora-40' }  # dnf family
     steps:
@@ -262,7 +263,7 @@ jobs:
         env:
           OS_NAME: ${{ matrix.os.name }}
         run: |
-          for op in base jiveturkey; do
+          for op in base matrix jiveturkey; do
             echo "::group::install+verify $op on $OS_NAME"
             docker run --rm \
               -e NEO_OP="$op" \
