@@ -71,7 +71,7 @@ def compose_all_operators(
     return composed
 
 
-def render_doc(
+def render_doc(  # pylint: disable=too-many-locals
     tool_registry: dict,
     tool_sets: dict,
     composed_operators: dict,
@@ -170,11 +170,13 @@ make install OPERATOR=jiveturkey
 ## Adding Custom Tools
 
 To request a new tool, open an issue with the `operator` label or submit a PR adding it to:
+
 - `neosetup/roles/tools/vars/tool_registry.yml`
 
 ---
 
-*Generated from `neosetup/roles/tools/vars/tool_registry.yml` + `neosetup/group_vars/all/operators.yml` + each operator's `vars.yml`.*
+*Generated from `neosetup/roles/tools/vars/tool_registry.yml` +
+`neosetup/group_vars/all/operators.yml` + each operator's `vars.yml`.*
 """
 
     return doc
