@@ -101,7 +101,7 @@ def operator_categories(op_vars: dict, platform: str) -> list:
     return categories
 
 
-def get_operator_tools(
+def get_operator_tools(  # pylint: disable=too-many-locals
     registry: dict,
     operator: str,
     group_vars_path: Path | None = None,

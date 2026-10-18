@@ -468,8 +468,7 @@ class OperatorValidator:
                     ValidationLevel.ERROR,
                     field,
                     f"Category '{category}' is not defined in tool_sets",
-                    f"Add '{category}' to roles/tools/vars/tool_registry.yml:tool_sets "
-                    f"or remove it from {field}",
+                    f"Add '{category}' to roles/tools/vars/tool_registry.yml:tool_sets " f"or remove it from {field}",
                 )
             )
             return
