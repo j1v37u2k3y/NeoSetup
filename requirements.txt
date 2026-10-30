@@ -22,7 +22,7 @@ bandit>=1.9.4
 pip-audit>=2.7.0
 
 # Documentation Tools
-markdown>=3.11.1
+markdown>=3.11.2
 
 # Testing Framework (future)
 molecule>=26.9.0
