@@ -26,7 +26,7 @@ markdown>=3.11.1
 
 # Testing Framework (future)
 molecule>=26.9.0
-molecule-docker>=2.0.0
+molecule-docker>=2.1.0
 pytest>=9.1.1
 pytest-ansible>=26.6.0
 
